@@ -17,6 +17,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/game/trophy.webp"
+          type="image/webp"
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

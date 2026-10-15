@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import RaceTrophy from "@/components/race-trophy";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
 import { TargetIcon } from "@solar-icons/react/linear/target";
 import { Chart2Icon } from "@solar-icons/react/linear/chart-2";
@@ -898,13 +899,7 @@ export default function Keylane({
         <div className="results" aria-live="polite">
           <div className="result-heading">
             <span className="result-icon" aria-hidden="true">
-              <Image
-                unoptimized
-                src="/game/trophy.webp"
-                alt=""
-                width={72}
-                height={72}
-              />
+              <RaceTrophy />
             </span>
             <div>
               <h2>

@@ -1268,6 +1268,11 @@ kbd {
   height: 100%;
   object-fit: contain;
 }
+.result-icon > svg {
+  width: 44px;
+  height: 44px;
+  color: var(--yellow);
+}
 .results {
   padding: 0 28px 8px;
 }
