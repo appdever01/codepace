@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
 import { TargetIcon } from "@solar-icons/react/linear/target";
 import { Chart2Icon } from "@solar-icons/react/linear/chart-2";
 import { UsersGroupRoundedIcon } from "@solar-icons/react/linear/users-group-rounded";
-import { ArrowRightUpIcon } from "@solar-icons/react/linear/arrow-right-up";
-import { ArrowRightIcon } from "@solar-icons/react/linear/arrow-right";
+import { StarIcon } from "@solar-icons/react/linear/star";
+import { FaGithub } from "react-icons/fa6";
 import { RestartIcon } from "@solar-icons/react/linear/restart";
 import { SettingsIcon } from "@solar-icons/react/linear/settings";
 import { KeyboardIcon } from "@solar-icons/react/linear/keyboard";
@@ -27,7 +28,6 @@ import { LogoutIcon } from "@solar-icons/react/linear/logout";
 import { AddCircleIcon } from "@solar-icons/react/linear/add-circle";
 import { LinkIcon } from "@solar-icons/react/linear/link";
 import { RefreshIcon } from "@solar-icons/react/linear/refresh";
-import { CodeSquareIcon } from "@solar-icons/react/linear/code-square";
 import { FireIcon } from "@solar-icons/react/bold-duotone/fire";
 import { CupStarIcon } from "@solar-icons/react/bold-duotone/cup-star";
 import { RocketIcon } from "@solar-icons/react/bold-duotone/rocket";
@@ -899,8 +899,14 @@ export default function Keylane({
       ) : (
         <div className="results" aria-live="polite">
           <div className="result-heading">
-            <span className="result-icon">
-              <FlagIcon />
+            <span className="result-icon" aria-hidden="true">
+              <Image
+                unoptimized
+                src="/game/trophy.webp"
+                alt=""
+                width={72}
+                height={72}
+              />
             </span>
             <div>
               <h2>
@@ -1039,6 +1045,29 @@ export default function Keylane({
           ))}
         </nav>
         <div className="header-tools">
+          <div className="github-links">
+            <a
+              href="https://github.com/aroach98/typerace"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View the open-source reference on GitHub"
+              title="Open-source reference: aroach98/typerace"
+            >
+              <FaGithub aria-hidden="true" />
+              <span className="github-label">GitHub</span>
+            </a>
+            <a
+              className="github-star"
+              href="https://github.com/aroach98/typerace"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Star the original typerace project on GitHub"
+              title="Support the original open-source racer"
+            >
+              <StarIcon aria-hidden="true" />
+              <span>Star</span>
+            </a>
+          </div>
           <button
             className="icon-button help-button"
             aria-label="Keyboard shortcuts"
@@ -1068,7 +1097,6 @@ export default function Keylane({
                 onClick={() => navigate("race")}
               >
                 Take another lap
-                <ArrowRightIcon />
               </button>
             </div>
             <div className="progress-summary">
@@ -1142,7 +1170,6 @@ export default function Keylane({
                     onClick={() => navigate("race")}
                   >
                     Start a race
-                    <ArrowRightIcon />
                   </button>
                 </div>
               )}
@@ -1169,7 +1196,6 @@ export default function Keylane({
                 }}
               >
                 Export results
-                <ArrowRightUpIcon />
               </button>
             </div>
           </>
@@ -1203,7 +1229,6 @@ export default function Keylane({
                 >
                   <UsersGroupRoundedIcon />
                   Race with friends
-                  <ArrowRightUpIcon />
                 </button>
               )}
               {room && (
@@ -1220,10 +1245,14 @@ export default function Keylane({
             {isFriends && !room ? (
               <div className="friends-layout">
                 <section className="friends-form">
-                  <div className="friends-graphic">
-                    <UsersGroupRoundedIcon />
-                    <span className="friend-dot one" />
-                    <span className="friend-dot two" />
+                  <div className="friends-graphic" aria-hidden="true">
+                    <Image
+                      unoptimized
+                      src="/game/rally-orange.webp"
+                      alt=""
+                      width={176}
+                      height={88}
+                    />
                   </div>
                   <h2>Create or join a room.</h2>
                   <p>Up to six racers. No accounts needed in the game.</p>
@@ -1290,7 +1319,6 @@ export default function Keylane({
                       onClick={() => void enterRoom(false)}
                     >
                       Join
-                      <ArrowRightIcon />
                     </button>
                   </div>
                   {roomError && (
@@ -1361,7 +1389,6 @@ export default function Keylane({
                         onClick={() => void copyInvite()}
                       >
                         Invite friends
-                        <ArrowRightUpIcon />
                       </button>
                     </div>
                   ) : (
@@ -1502,7 +1529,6 @@ export default function Keylane({
                             onClick={() => void roomAction("rematch")}
                           >
                             Next round
-                            <ArrowRightIcon />
                           </button>
                         )}
                         {room && phase === "finished" && !host && (
@@ -1627,11 +1653,22 @@ export default function Keylane({
                             />
                             <div
                               className="race-car"
+                              aria-hidden="true"
                               style={{
                                 transform: `translateX(calc(${Math.min(100, (racer.correct / Math.max(1, passage.length)) * 100)}% - 2px))`,
                               }}
                             >
-                              <CarIcon />
+                              <Image
+                                unoptimized
+                                src={
+                                  racer.id === ownId
+                                    ? "/game/rally-blue.webp"
+                                    : "/game/rally-orange.webp"
+                                }
+                                alt=""
+                                width={68}
+                                height={34}
+                              />
                             </div>
                             <FlagIcon className="finish-flag" />
                           </div>
@@ -1704,7 +1741,6 @@ export default function Keylane({
                             onClick={() => void roomAction("start")}
                           >
                             Start race
-                            <ArrowRightIcon />
                           </button>
                         ) : room.serverNow -
                             (room.players.find((p) => p.id === room.hostId)
@@ -1733,7 +1769,6 @@ export default function Keylane({
                       >
                         <TargetIcon />
                         Practice the keys you missed
-                        <ArrowRightIcon />
                       </button>
                     )}
                   <div className="race-footnote">
@@ -1749,12 +1784,14 @@ export default function Keylane({
                 <aside className="progress-sidebar">
                   <section className="daily-sprint">
                     <div className="daily-art" aria-hidden="true">
-                      <span className="daily-orbit" />
-                      <span className="daily-key key-one">K</span>
-                      <span className="daily-key key-two">L</span>
-                      <span className="daily-spark">
-                        <BoltIcon />
-                      </span>
+                      <Image
+                        unoptimized
+                        src="/game/canyon-circuit.webp"
+                        alt=""
+                        width={720}
+                        height={480}
+                        fetchPriority="high"
+                      />
                     </div>
                     <div className="daily-title">
                       <h2>Daily sprint</h2>
@@ -1764,7 +1801,7 @@ export default function Keylane({
                       </span>
                     </div>
                     <p>
-                      A fresh little challenge, every day. How fast can you go?
+                      Fifteen seconds. One canyon circuit. Beat your best lap.
                     </p>
                     <button
                       className="button daily-button"
@@ -1780,7 +1817,6 @@ export default function Keylane({
                       }}
                     >
                       Try today’s sprint
-                      <ArrowRightIcon />
                     </button>
                     {today.some((row) => row.mode === "Daily sprint") && (
                       <span className="daily-record">
@@ -1797,13 +1833,19 @@ export default function Keylane({
                   <section className="session-stats">
                     <div className="section-heading">
                       <h2>Your personal best</h2>
-                      <CupStarIcon />
                     </div>
                     <div className="personal-best">
                       <div>
                         <strong>{best || "—"}</strong>
                         <span>wpm</span>
-                        <BoltIcon />
+                        <Image
+                          unoptimized
+                          className="best-trophy"
+                          src="/game/trophy.webp"
+                          alt=""
+                          width={76}
+                          height={76}
+                        />
                       </div>
                       <p>
                         {history.length
@@ -1847,11 +1889,11 @@ export default function Keylane({
                     <div className="section-heading">
                       <h2>Recent races</h2>
                       <button
-                        className="icon-button"
+                        className="text-button history-link"
                         aria-label="See all race history"
                         onClick={() => navigate("progress")}
                       >
-                        <ArrowRightUpIcon />
+                        View all
                       </button>
                     </div>
                     {history.length ? (
@@ -1903,7 +1945,6 @@ export default function Keylane({
                         onClick={() => drill(weak.map(([key]) => key))}
                       >
                         Practice these keys
-                        <ArrowRightIcon />
                       </button>
                     )}
                   </section>
@@ -1939,9 +1980,8 @@ export default function Keylane({
             target="_blank"
             rel="noreferrer"
           >
-            <CodeSquareIcon />
-            Open-source credits
-            <ArrowRightUpIcon />
+            <FaGithub aria-hidden="true" />
+            Open-source reference
           </a>
           <button
             aria-label={
@@ -2050,7 +2090,6 @@ export default function Keylane({
                 onClick={() => setDialog(null)}
               >
                 Back to the keys
-                <ArrowRightIcon />
               </button>
             </div>
           ) : (

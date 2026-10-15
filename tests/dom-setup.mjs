@@ -1,4 +1,8 @@
 import { Window } from "happy-dom";
+import * as nodeModule from "node:module";
+import { resolve } from "./runtime-loader.mjs";
+if (nodeModule.registerHooks) nodeModule.registerHooks({ resolve });
+else nodeModule.register("./runtime-loader.mjs", import.meta.url);
 const window = new Window({ url: "http://127.0.0.1:5189/" });
 for (const key of [
   "window",
