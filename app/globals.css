@@ -1078,9 +1078,9 @@ kbd {
   color: var(--yellow);
 }
 .personal-best {
-  margin-top: 20px;
+  margin-top: 22px;
 }
-.personal-best > div {
+.best-score {
   display: flex;
   gap: 8px;
   align-items: baseline;
@@ -1090,25 +1090,25 @@ kbd {
   letter-spacing: -0.035em;
   color: var(--accent);
 }
-.personal-best > div > span {
+.best-score > span {
   font-size: 12px;
   color: var(--muted);
 }
-.best-trophy {
-  width: 76px;
-  height: 76px;
-  object-fit: contain;
-  margin-left: auto;
-  align-self: center;
+.personal-best h3 {
+  font-size: 21px;
+  font-weight: 550;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
 }
 .history-link {
   min-height: 44px;
   font-size: 11px;
 }
 .personal-best p {
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.65;
 }
 .mini-stats {
   margin-top: 20px;

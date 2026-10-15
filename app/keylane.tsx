@@ -1833,33 +1833,32 @@ export default function Keylane({
                   <section className="session-stats">
                     <div className="section-heading">
                       <h2>Your personal best</h2>
+                      <CupStarIcon aria-hidden="true" />
                     </div>
                     <div className="personal-best">
-                      <div>
-                        <strong>{best || "—"}</strong>
-                        <span>wpm</span>
-                        <Image
-                          unoptimized
-                          className="best-trophy"
-                          src="/game/trophy.webp"
-                          alt=""
-                          width={76}
-                          height={76}
-                        />
-                      </div>
+                      {history.length ? (
+                        <div className="best-score">
+                          <strong>{best}</strong>
+                          <span>wpm</span>
+                        </div>
+                      ) : (
+                        <h3>Set your first record.</h3>
+                      )}
                       <p>
                         {history.length
                           ? `Across ${history.length} ${history.length === 1 ? "completed race" : "completed races"}`
-                          : "Your first race sets the bar."}
+                          : "Finish a race to see your best speed here."}
                       </p>
                     </div>
                     <div className="mini-stats">
-                      <div>
-                        <span>Recent average</span>
-                        <b>
-                          {average || "—"} <small>wpm</small>
-                        </b>
-                      </div>
+                      {history.length > 0 && (
+                        <div>
+                          <span>Recent average</span>
+                          <b>
+                            {average} <small>wpm</small>
+                          </b>
+                        </div>
+                      )}
                       <div>
                         <span>Races today</span>
                         <b>{today.length}</b>
