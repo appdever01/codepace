@@ -18,8 +18,6 @@ import { CopyIcon } from "@solar-icons/react/linear/copy";
 import { CrownIcon } from "@solar-icons/react/bold-duotone/crown";
 import { VolumeLoudIcon } from "@solar-icons/react/linear/volume-loud";
 import { VolumeCrossIcon } from "@solar-icons/react/linear/volume-cross";
-import { SunIcon } from "@solar-icons/react/linear/sun";
-import { MoonIcon } from "@solar-icons/react/linear/moon";
 import { MaximizeIcon } from "@solar-icons/react/linear/maximize";
 import { MinimizeIcon } from "@solar-icons/react/linear/minimize";
 import { CarIcon } from "@solar-icons/react/bold-duotone/car";
@@ -1960,43 +1958,6 @@ export default function Keylane({
           </p>
         )}
       </main>
-      <footer className="footer">
-        <span className="footer-brand">
-          <span className="tiny-dot" />
-          Keylane · 2026
-        </span>
-        <div>
-          <button onClick={() => setDialog("help")}>How to play</button>
-          <a
-            href="https://www.figma.com/community/file/1166831539721848736"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Solar icons by 480 Design
-          </a>
-          <a
-            href="https://github.com/aroach98/typerace"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <FaGithub aria-hidden="true" />
-            Open-source reference
-          </a>
-          <button
-            aria-label={
-              settings.light ? "Switch to dark theme" : "Switch to light theme"
-            }
-            onClick={() =>
-              setSettings((previous) => ({
-                ...previous,
-                light: !previous.light,
-              }))
-            }
-          >
-            {settings.light ? <MoonIcon /> : <SunIcon />}
-          </button>
-        </div>
-      </footer>
       {message && (
         <div className="toast" role="status">
           <CheckCircleIcon />
@@ -2135,7 +2096,15 @@ export default function Keylane({
                 >
                   typerace
                 </a>
-                , used under the MIT license.
+                , used under the MIT license. Icons by{" "}
+                <a
+                  href="https://www.figma.com/community/file/1166831539721848736"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Solar / 480 Design
+                </a>
+                , used under CC BY 4.0.
               </p>
             </div>
           )}

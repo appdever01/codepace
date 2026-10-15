@@ -69,9 +69,11 @@ test("complete a corrected race, save it, inspect progress and reload it", async
       document.querySelector(".personal-best")?.textContent?.includes("24"),
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Switch to dark theme" }),
+      screen.getByRole("button", { name: "Open profile and settings" }),
     );
+    fireEvent.click(screen.getByRole("checkbox", { name: "Light theme" }));
     assert.equal(document.documentElement.dataset.theme, "dark");
+    fireEvent.click(screen.getByRole("button", { name: "Back to the keys" }));
     fireEvent.click(screen.getByRole("button", { name: "Enter focus mode" }));
     assert.ok(document.querySelector(".app.zen"));
     fireEvent.click(screen.getByRole("button", { name: "Practice" }));

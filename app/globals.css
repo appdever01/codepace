@@ -350,7 +350,7 @@ kbd {
 .main {
   width: 90%;
   max-width: 1280px;
-  margin: 43px auto 0;
+  margin: 43px auto 28px;
   flex: 1;
   outline: none;
 }
@@ -1382,44 +1382,6 @@ kbd {
 .room-standings span {
   color: var(--muted);
 }
-.footer {
-  width: 90%;
-  max-width: 1280px;
-  margin: 38px auto 0;
-  padding: 23px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: var(--muted);
-  gap: 20px;
-}
-.footer-brand {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-.footer-brand > .tiny-dot {
-  background: var(--orange);
-}
-.footer > div {
-  display: flex;
-  gap: 21px;
-  align-items: center;
-}
-.footer a,
-.footer button {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  padding: 0;
-  color: var(--muted);
-}
-.footer svg {
-  width: 15px;
-  height: 15px;
-}
 .toast {
   position: fixed;
   bottom: 24px;
@@ -2037,9 +1999,6 @@ td {
   .session-stats {
     padding: 19px;
   }
-  .footer {
-    width: 92%;
-  }
   .friends-layout {
     gap: 55px;
   }
@@ -2121,9 +2080,6 @@ td {
   }
   .racer-identity > div > span {
     font-size: 10px;
-  }
-  .footer {
-    width: 90%;
   }
   .progress-summary {
     grid-template-columns: 1fr 1fr;
@@ -2448,26 +2404,6 @@ td {
   }
   .recent-empty {
     padding: 18px;
-  }
-  .footer {
-    margin-top: 28px;
-    padding: 19px 0;
-    align-items: flex-start;
-    font-size: 10px;
-  }
-  .footer > div {
-    gap: 13px;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-  .footer a,
-  .footer button {
-    font-size: 9px;
-  }
-  .footer-brand {
-    font-size: 9px;
-    padding-top: 2px;
-    white-space: nowrap;
   }
   .results {
     padding: 0 20px 5px;
