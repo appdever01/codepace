@@ -962,23 +962,6 @@ kbd {
   color: var(--muted);
   max-width: 270px;
 }
-.race-footnote {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 20px;
-  font-size: 10px;
-  color: var(--muted);
-}
-.race-footnote > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.race-footnote svg {
-  height: 13px;
-  width: 13px;
-}
 .progress-sidebar {
   display: flex;
   flex-direction: column;
@@ -1414,8 +1397,7 @@ kbd {
   margin: auto;
 }
 .zen .progress-sidebar,
-.zen .invite-top,
-.zen .race-footnote {
+.zen .invite-top {
   display: none;
 }
 .zen .page-heading {
@@ -1998,9 +1980,6 @@ td {
   .daily-goal p {
     font-size: 9px;
   }
-  .race-footnote > span:last-child {
-    display: none;
-  }
   .session-stats {
     padding: 19px;
   }
@@ -2359,10 +2338,6 @@ td {
   .pace-options button {
     padding: 7px 10px;
     font-size: 10px;
-  }
-  .race-footnote {
-    font-size: 9px;
-    margin-top: 17px;
   }
   .progress-sidebar {
     grid-template-columns: 1fr;

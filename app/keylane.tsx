@@ -1764,15 +1764,6 @@ export default function Keylane({
                         Practice the keys you missed
                       </button>
                     )}
-                  <div className="race-footnote">
-                    <span>
-                      <CheckCircleIcon />
-                      {room
-                        ? "Rooms close after two hours."
-                        : "Pace bots are simulated opponents."}
-                    </span>
-                    <span>Your results stay on this device.</span>
-                  </div>
                 </div>
                 <aside className="progress-sidebar">
                   <section className="daily-sprint">
