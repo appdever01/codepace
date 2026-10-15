@@ -1,0 +1,60 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import React from "react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
+import Keylane from "../app/keylane";
+
+test("daily sprint records a real clean-key streak and replays the same daily text", async () => {
+  const clock = Date.now;
+  let offset = 0;
+  Date.now = () => clock() + offset;
+  const tick = async (time: number) => {
+    offset += time;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 130));
+    });
+  };
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    await act(async () => {
+      render(<Keylane />);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Try today’s sprint" }));
+    const input = screen.getByRole("textbox", {
+      name: /^Type this passage:/,
+    }) as HTMLTextAreaElement;
+    const text = input.labels![0].textContent!.replace(
+      "Type this passage: ",
+      "",
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Start daily sprint/ }));
+    await tick(3100);
+    fireEvent.change(input, { target: { value: text.slice(0, 50) } });
+    assert.equal(document.querySelector(".combo-chip b")?.textContent, "50");
+    await tick(15000);
+    const history = JSON.parse(localStorage.getItem("keylane:history")!);
+    assert.equal(history[0].mode, "Daily sprint");
+    assert.equal(history[0].wpm, 40);
+    assert.equal(history[0].accuracy, 100);
+    assert.equal(history[0].bestStreak, 50);
+    fireEvent.click(screen.getByRole("button", { name: /Race again/ }));
+    const repeated = screen.getByRole("textbox", {
+      name: /^Type this passage:/,
+    }) as HTMLTextAreaElement;
+    assert.equal(
+      repeated.labels![0].textContent!.replace("Type this passage: ", ""),
+      text,
+    );
+  } finally {
+    Date.now = clock;
+    cleanup();
+  }
+});
