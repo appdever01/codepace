@@ -28,7 +28,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
       render(<Keylane />);
       await pause(10);
     });
-    assert.ok(screen.getByRole("heading", { name: "Ready. Set. Type." }));
+    assert.ok(screen.getByRole("heading", { name: "Typing race", level: 1 }));
     fireEvent.click(screen.getByRole("button", { name: "15 s" }));
     fireEvent.click(screen.getByRole("button", { name: /Start race/ }));
     await tick(3100);
@@ -177,7 +177,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     assert.equal(document.querySelectorAll(".lane").length, 2);
     fireEvent.click(screen.getByRole("button", { name: "Leave room" }));
     await waitFor(() =>
-      assert.ok(screen.getByRole("heading", { name: "Ready. Set. Type." })),
+      assert.ok(screen.getByRole("heading", { name: "Typing race", level: 1 })),
     );
     assert.equal(sessionStorage.getItem("keylane:room"), null);
   } finally {

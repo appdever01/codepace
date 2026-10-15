@@ -1194,47 +1194,43 @@ export default function Keylane({
           </>
         ) : (
           <>
-            <div className="page-heading">
-              <div>
-                <h1>
-                  {isFriends
-                    ? room
-                      ? "Race with friends."
-                      : "Race with friends."
-                    : tab === "practice"
-                      ? "Practice typing."
-                      : "Ready. Set. Type."}
-                </h1>
-                <p>
-                  {isFriends
-                    ? room
-                      ? "Same passage. Same start. See who finds their rhythm."
-                      : "Create a private room and send your friends the link."
-                    : tab === "practice"
-                      ? "Find your rhythm with words, passages or your own text."
-                      : "Pick your pace. Race the clock. Make every key count."}
-                </p>
+            {tab === "race" ? (
+              <h1 className="sr-only">Typing race</h1>
+            ) : (
+              <div className="page-heading">
+                <div>
+                  <h1>
+                    {isFriends ? "Race with friends." : "Practice typing."}
+                  </h1>
+                  <p>
+                    {isFriends
+                      ? room
+                        ? "Same passage. Same start. See who finds their rhythm."
+                        : "Create a private room and send your friends the link."
+                      : "Find your rhythm with words, passages or your own text."}
+                  </p>
+                </div>
+                {!isFriends && (
+                  <button
+                    className="button secondary invite-top"
+                    onClick={() => navigate("friends")}
+                  >
+                    <UsersGroupRoundedIcon />
+                    Race with friends
+                  </button>
+                )}
+                {room && (
+                  <button
+                    className="button secondary"
+                    disabled={pending}
+                    onClick={() => void roomAction("leave")}
+                  >
+                    <LogoutIcon />
+                    Leave room
+                  </button>
+                )}
               </div>
-              {!isFriends && (
-                <button
-                  className="button secondary invite-top"
-                  onClick={() => navigate("friends")}
-                >
-                  <UsersGroupRoundedIcon />
-                  Race with friends
-                </button>
-              )}
-              {room && (
-                <button
-                  className="button secondary"
-                  disabled={pending}
-                  onClick={() => void roomAction("leave")}
-                >
-                  <LogoutIcon />
-                  Leave room
-                </button>
-              )}
-            </div>
+            )}
             {isFriends && !room ? (
               <div className="friends-layout">
                 <section className="friends-form">
@@ -1442,6 +1438,16 @@ export default function Keylane({
                         >
                           <SettingsIcon />
                         </button>
+                        {tab === "race" && (
+                          <button
+                            className="icon-button invite-top"
+                            aria-label="Race with friends"
+                            title="Race with friends"
+                            onClick={() => navigate("friends")}
+                          >
+                            <UsersGroupRoundedIcon />
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
