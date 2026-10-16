@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 const origin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
+console.log(`Checking rooms at ${origin}`);
 let checks = 0;
 async function request(path, data, session, status = 200, headers = {}) {
   const response = await fetch(origin + path, {

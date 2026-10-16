@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
 
 const origin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
+console.log(`Load testing rooms at ${origin}`);
 const timings = [];
 const sessions = [];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -95,6 +96,7 @@ try {
   };
   console.log(
     JSON.stringify({
+      origin,
       players: sessions.length,
       requests: timings.length,
       errors: 0,
