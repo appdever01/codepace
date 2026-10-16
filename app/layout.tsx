@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./immersive.css";
+import "./coding.css";
 
 export const metadata: Metadata = {
   title: "Keylane — Find your typing rhythm",

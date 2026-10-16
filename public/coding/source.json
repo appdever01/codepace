@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/neetcode-gh/leetcode",
+  "revision": "d5ebb3ea8bd4b52d605bc7aa179e22af684d31bb",
+  "license": "MIT",
+  "changes": "CRLF normalized; tabs expanded to four spaces; trailing whitespace at end of file removed. Files over 20,000 characters omitted.",
+  "problems": 410,
+  "solutions": {
+    "python": 341,
+    "javascript": 336,
+    "typescript": 236,
+    "java": 365,
+    "cpp": 314,
+    "go": 244,
+    "rust": 207
+  }
+}

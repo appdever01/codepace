@@ -1,0 +1,283 @@
+.code-practice {
+  margin-top: 28px;
+  min-width: 0;
+  color: var(--ink);
+}
+.code-controls,
+.code-filters {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.code-practice label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.code-practice select,
+.code-practice input,
+.code-practice textarea {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  max-width: 100%;
+}
+.code-practice select {
+  min-width: 140px;
+}
+.code-practice :is(select, input, textarea, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.code-practice :disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.code-practice .segments {
+  align-self: end;
+}
+.code-practice .segments button {
+  padding-inline: 16px;
+}
+.code-library {
+  margin-top: 20px;
+  border-block: 1px solid var(--line);
+}
+.code-library summary {
+  padding: 16px 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.code-library summary span {
+  margin-left: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.code-library fieldset {
+  border: 0;
+  padding: 0 0 16px;
+  margin: 0;
+  min-width: 0;
+}
+.code-search {
+  flex: 1 1 200px;
+}
+.code-filters > label {
+  flex: 1 1 140px;
+}
+.code-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 16px;
+  scrollbar-color: var(--muted) transparent;
+  scrollbar-width: thin;
+}
+.code-list > button {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13px;
+}
+.code-list > button:hover {
+  background: var(--surface-hover);
+}
+.code-list > button.selected {
+  background: var(--accent-soft);
+}
+.code-problem-number {
+  font: 12px var(--mono);
+  color: var(--muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+.code-problem-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.code-problem-name small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.code-difficulty,
+.code-completed {
+  font-size: 11px;
+  color: var(--muted);
+}
+.code-completed {
+  color: var(--accent);
+}
+.code-list-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.code-selection {
+  display: flex;
+  align-items: baseline;
+  gap: 12px 18px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  font-size: 12px;
+}
+.code-selection strong {
+  font-size: 16px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.code-selection > span {
+  color: var(--muted);
+}
+.code-practice a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.code-credit {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 12px 0 0;
+}
+.code-custom {
+  margin-top: 20px;
+}
+.code-custom > span {
+  font-size: 11px;
+}
+.code-practice .code-custom textarea {
+  min-height: 160px;
+  font: 13px/1.7 var(--mono);
+  resize: vertical;
+  tab-size: 4;
+}
+.slick-keylane .coding-panel .play-hud {
+  margin-top: 28px;
+}
+.slick-keylane .coding-panel .typing-surface {
+  height: clamp(260px, 42svh, 460px);
+  margin-top: 12px;
+}
+.slick-keylane .coding-panel .passage {
+  font: 15px/1.9 var(--mono);
+  white-space: pre;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+.code-line {
+  display: flex;
+  min-width: 0;
+  min-height: 1.9em;
+}
+.code-line-number {
+  color: var(--muted);
+  opacity: 0.75;
+  width: 4ch;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 2ch;
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  user-select: none;
+}
+.code-line-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1;
+  padding-right: 12px;
+}
+.code-line-content > span {
+  position: relative;
+}
+.code-newline {
+  opacity: 0.4;
+}
+.slick-keylane .coding-panel .typing-input {
+  font-size: 16px;
+}
+.coding-panel .passage-label {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .code-controls {
+    gap: 12px;
+  }
+  .code-controls > label {
+    flex: 1 1 120px;
+  }
+  .code-controls > .segments {
+    order: -1;
+    flex-basis: 100%;
+    display: flex;
+  }
+  .code-controls > .segments button {
+    flex: 1;
+    padding-inline: 8px;
+  }
+  .code-filters {
+    gap: 12px;
+  }
+  .code-filters > label {
+    flex: 1 1 calc(50% - 12px);
+  }
+  .code-filters > .code-search {
+    flex-basis: 100%;
+  }
+  .code-filters select {
+    min-width: 0;
+    width: 100%;
+  }
+  .code-library summary span {
+    display: block;
+    margin: 8px 0 0 18px;
+  }
+  .code-list > button {
+    padding-inline: 4px;
+    gap: 8px;
+  }
+  .code-selection {
+    gap: 10px 14px;
+  }
+  .code-selection strong {
+    width: 100%;
+  }
+  .slick-keylane .coding-panel .passage {
+    font-size: 13px;
+  }
+  .slick-keylane .coding-panel .play-hud {
+    flex-wrap: wrap;
+  }
+  .coding-panel .passage-label {
+    flex-basis: 100%;
+  }
+  .slick-keylane .coding-panel .combo-chip {
+    margin-left: 0;
+  }
+  .coding-panel .typing-bottom {
+    flex-wrap: wrap;
+  }
+}

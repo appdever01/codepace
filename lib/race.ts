@@ -22,6 +22,7 @@ export type RaceResult = {
   samples: number[];
   missed: Record<string, number>;
   bestStreak?: number;
+  coding?: { language: string; problemId?: string; completed: boolean };
 };
 
 export const emptyTyping = (): TypingState => ({
@@ -51,7 +52,14 @@ export function applyInput(
   for (let i = state.typed.length; i < value.length; i++) {
     if (value[i] !== target[i]) {
       errors++;
-      const key = target[i] === " " ? "space" : target[i];
+      const key =
+        target[i] === " "
+          ? "space"
+          : target[i] === "\n"
+            ? "enter"
+            : target[i] === "\t"
+              ? "tab"
+              : target[i];
       missed[key] = (missed[key] || 0) + 1;
     }
     if (value[i] === target[i] && prefix === i) {
@@ -108,6 +116,12 @@ export function readHistory(value: string | null): RaceResult[] {
           typeof row.date === "string" &&
           Number.isFinite(Date.parse(row.date)) &&
           typeof row.mode === "string" &&
+          (row.coding === undefined ||
+            (row.coding &&
+              typeof row.coding.language === "string" &&
+              typeof row.coding.completed === "boolean" &&
+              (row.coding.problemId === undefined ||
+                typeof row.coding.problemId === "string"))) &&
           Number.isFinite(row.wpm) &&
           row.wpm >= 0 &&
           row.wpm <= 1000 &&

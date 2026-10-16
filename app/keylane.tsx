@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import RaceTrophy from "@/components/race-trophy";
+import CodePractice from "@/components/code-practice";
+import CodePassage from "@/components/code-passage";
+import {
+  codeLanguages,
+  codeKeyLabel,
+  codeTabText,
+  type CodeExercise,
+} from "@/lib/coding";
 import { useBackgroundMusic } from "@/components/use-background-music";
 import { MusicNoteIcon } from "@solar-icons/react/linear/music-note";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
@@ -106,6 +114,9 @@ export default function Keylane({
   const phaseRef = useRef<Phase>("ready");
   const [mode, setMode] = useState<TextMode>("quotes");
   const [duration, setDuration] = useState(30);
+  const [codeDuration, setCodeDuration] = useState(0);
+  const [codeExercise, setCodeExercise] = useState<CodeExercise | null>(null);
+  const codeExerciseRef = useRef<CodeExercise | null>(null);
   const [passage, setPassage] = useState(() => makePassage("quotes", 74));
   const passageRef = useRef(passage);
   const [engine, setEngine] = useState(emptyTyping);
@@ -155,13 +166,15 @@ export default function Keylane({
   const offsetRef = useRef(0);
   const snapshotTimeRef = useRef(0);
   const sessionRef = useRef(session);
-  const configRef = useRef({ duration, mode, tab, daily });
+  const effectiveDuration =
+    mode === "code" && !session ? codeDuration : duration;
+  const configRef = useRef({ duration: effectiveDuration, mode, tab, daily });
   const audioRef = useRef<AudioContext | null>(null);
   useEffect(() => {
-    configRef.current = { duration, mode, tab, daily };
+    configRef.current = { duration: effectiveDuration, mode, tab, daily };
     sessionRef.current = session;
     passageRef.current = passage;
-  }, [duration, mode, tab, daily, session, passage]);
+  }, [effectiveDuration, mode, tab, daily, session, passage]);
 
   const changePhase = useCallback((value: Phase) => {
     phaseRef.current = value;
@@ -180,6 +193,19 @@ export default function Keylane({
     seqRef.current = 0;
     if (passageBox.current) passageBox.current.scrollTop = 0;
   }, []);
+  const codingStorageError = useCallback(() => setStorageWorks(false), []);
+  const selectCodeExercise = useCallback(
+    (exercise: CodeExercise | null) => {
+      codeExerciseRef.current = exercise;
+      setCodeExercise(exercise);
+      clearEngine();
+      changePhase("ready");
+      setPassage(exercise?.code || "");
+      passageRef.current = exercise?.code || "";
+      setFocused(false);
+    },
+    [clearEngine, changePhase],
+  );
   const finish = useCallback(
     (time: number) => {
       if (savedRef.current) return;
@@ -198,7 +224,18 @@ export default function Keylane({
             ? "Daily sprint"
             : config.tab === "race"
               ? "Race"
-              : config.mode,
+              : config.mode === "code" && codeExerciseRef.current
+                ? `${codeExerciseRef.current.kind === "leetcode" ? "LeetCode" : "Code"} · ${codeExerciseRef.current.title} · ${codeLanguages.find((l) => l.id === codeExerciseRef.current?.language)?.name}`
+                : config.mode,
+        ...(config.mode === "code" && !joined && codeExerciseRef.current
+          ? {
+              coding: {
+                language: codeExerciseRef.current.language,
+                problemId: codeExerciseRef.current.problemId,
+                completed: engineRef.current.typed === passageRef.current,
+              },
+            }
+          : {}),
         duration: Math.max(0.1, time / 1000),
         wpm: current.wpm,
         accuracy: current.accuracy,
@@ -457,7 +494,9 @@ export default function Keylane({
         return;
       }
       if (currentPhase === "countdown") changePhase("running");
-      const limit = configRef.current.duration * 1000;
+      const limit = configRef.current.duration
+        ? configRef.current.duration * 1000
+        : Infinity;
       setElapsed(Math.min(time, limit));
       const second = Math.floor(time / 1000);
       if (second > secondRef.current) {
@@ -482,18 +521,31 @@ export default function Keylane({
       clearEngine();
       changePhase("ready");
       setDaily(false);
-      setPassage(makePassage(nextMode, Date.now(), nextCustom, keys, seconds));
+      const nextPassage =
+        nextMode === "code"
+          ? codeExerciseRef.current?.code || ""
+          : makePassage(nextMode, Date.now(), nextCustom, keys, seconds);
+      setPassage(nextPassage);
+      passageRef.current = nextPassage;
       setFocused(false);
     },
     [custom, weakKeys, clearEngine, changePhase],
   );
   const begin = useCallback(() => {
     if (sessionRef.current || dialog) return;
+    if (configRef.current.mode === "code" && !codeExerciseRef.current) {
+      notify("Choose a code exercise first.");
+      return;
+    }
     if (configRef.current.mode === "custom" && passageRef.current.length < 30) {
       notify("Add at least 30 characters of custom text first.");
       return;
     }
-    if (phaseRef.current === "finished" && !daily)
+    if (
+      phaseRef.current === "finished" &&
+      !daily &&
+      configRef.current.mode !== "code"
+    )
       setPassage(
         makePassage(
           configRef.current.mode,
@@ -522,9 +574,15 @@ export default function Keylane({
   ]);
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
-      if (dialog || tab === "progress" || tab === "friends") return;
       if (
-        ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"].includes(
+        event.defaultPrevented ||
+        dialog ||
+        tab === "progress" ||
+        tab === "friends"
+      )
+        return;
+      if (
+        ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "SUMMARY"].includes(
           (event.target as HTMLElement).tagName,
         )
       )
@@ -542,8 +600,8 @@ export default function Keylane({
   function onInput(value: string) {
     if (phaseRef.current !== "running") return;
     const time = Date.now() - startRef.current;
-    if (time >= duration * 1000) {
-      finish(duration * 1000);
+    if (effectiveDuration && time >= effectiveDuration * 1000) {
+      finish(effectiveDuration * 1000);
       return;
     }
     const previous = engineRef.current;
@@ -673,7 +731,10 @@ export default function Keylane({
   const isBusy = phase === "running" || phase === "countdown";
   const isFriends = tab === "friends";
   const host = !!room && room.hostId === session?.id;
-  const remaining = Math.max(0, Math.ceil(duration - elapsed / 1000));
+  const remaining = effectiveDuration
+    ? Math.max(0, Math.ceil(effectiveDuration - elapsed / 1000))
+    : Math.floor(elapsed / 1000);
+  const isCoding = mode === "code" && !room;
   const localBots = [settings.pace - 20, settings.pace, settings.pace + 20].map(
     (pace, index) => ({
       id: `bot-${index}`,
@@ -743,21 +804,23 @@ export default function Keylane({
 
   const typingPanel = (
     <section
-      className={`typing-panel ${hasError ? "has-error" : ""}`}
+      className={`typing-panel ${hasError ? "has-error" : ""} ${isCoding ? "coding-panel" : ""}`}
       aria-label="Typing race"
     >
       <div className="typing-top">
         <div className="live-stats" aria-label="Live race statistics">
           <span
             className={
-              remaining <= 5 && phase === "running" ? "time-urgent" : ""
+              effectiveDuration && remaining <= 5 && phase === "running"
+                ? "time-urgent"
+                : ""
             }
           >
             <b>
               {String(Math.floor(remaining / 60)).padStart(2, "0")}:
               {String(remaining % 60).padStart(2, "0")}
             </b>
-            <span>Time</span>
+            <span>{effectiveDuration ? "Time" : "Elapsed"}</span>
           </span>
           <span>
             <b>{live.wpm}</b>
@@ -780,7 +843,9 @@ export default function Keylane({
             : daily
               ? "Daily sprint"
               : mode === "code"
-                ? "JavaScript"
+                ? codeExercise
+                  ? `${codeLanguages.find((l) => l.id === codeExercise.language)?.name} · ${codeExercise.title}`
+                  : "Choose an exercise"
                 : mode === "words"
                   ? weakKeys.length
                     ? "Focused words"
@@ -798,9 +863,11 @@ export default function Keylane({
         <span className="next-key">
           Next key{" "}
           <kbd>
-            {passage[engine.typed.length] === " "
-              ? "space"
-              : passage[engine.typed.length]?.toUpperCase() || "done"}
+            {isCoding
+              ? codeKeyLabel(passage[engine.typed.length])
+              : passage[engine.typed.length] === " "
+                ? "space"
+                : passage[engine.typed.length]?.toUpperCase() || "done"}
           </kbd>
         </span>
       </div>
@@ -809,37 +876,42 @@ export default function Keylane({
           <div
             className={`typing-surface ${phase === "running" && !focused ? "unfocused" : ""}`}
             onClick={() => {
-              if (phase === "ready" && !room) begin();
+              if (phase === "ready" && !room && (!isCoding || codeExercise))
+                begin();
               else inputRef.current?.focus();
             }}
           >
             <div className="passage" ref={passageBox} aria-hidden="true">
-              {(() => {
-                let start = 0;
-                const words = passage.split(" ");
-                return words.map((word, index) => {
-                  const base = start;
-                  const chunk = word + (index < words.length - 1 ? " " : "");
-                  start += chunk.length;
-                  let glyphOffset = 0;
-                  return (
-                    <span className="word" key={index}>
-                      {Array.from(chunk).map((char) => {
-                        const i = base + glyphOffset;
-                        glyphOffset += char.length;
-                        return (
-                          <span
-                            key={i}
-                            className={`${i < engine.typed.length ? (engine.typed.slice(i, i + char.length) === char ? "correct-char" : "wrong-char") : ""} ${i === engine.typed.length ? "caret" : ""}`}
-                          >
-                            {char}
-                          </span>
-                        );
-                      })}
-                    </span>
-                  );
-                });
-              })()}
+              {isCoding ? (
+                <CodePassage code={passage} typed={engine.typed} />
+              ) : (
+                (() => {
+                  let start = 0;
+                  const words = passage.split(" ");
+                  return words.map((word, index) => {
+                    const base = start;
+                    const chunk = word + (index < words.length - 1 ? " " : "");
+                    start += chunk.length;
+                    let glyphOffset = 0;
+                    return (
+                      <span className="word" key={index}>
+                        {Array.from(chunk).map((char) => {
+                          const i = base + glyphOffset;
+                          glyphOffset += char.length;
+                          return (
+                            <span
+                              key={i}
+                              className={`${i < engine.typed.length ? (engine.typed.slice(i, i + char.length) === char ? "correct-char" : "wrong-char") : ""} ${i === engine.typed.length ? "caret" : ""}`}
+                            >
+                              {char}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    );
+                  });
+                })()
+              )}
             </div>
             <label className="sr-only" htmlFor="typing-input">
               Type this passage: {passage}
@@ -865,6 +937,27 @@ export default function Keylane({
               }}
               onDrop={(event) => event.preventDefault()}
               onKeyDown={(event) => {
+                if (
+                  isCoding &&
+                  event.key === "Tab" &&
+                  !event.shiftKey &&
+                  !event.ctrlKey &&
+                  !event.metaKey &&
+                  !event.altKey
+                ) {
+                  event.preventDefault();
+                  onInput(
+                    engineRef.current.typed +
+                      codeTabText(
+                        passageRef.current,
+                        engineRef.current.typed.length,
+                      ),
+                  );
+                }
+                if (isCoding && event.key === "Enter") {
+                  event.preventDefault();
+                  onInput(engineRef.current.typed + "\n");
+                }
                 if (event.key === "Escape" && !room) {
                   event.preventDefault();
                   reset();
@@ -915,15 +1008,20 @@ export default function Keylane({
             >
               {hasError
                 ? "Backspace to fix the highlighted mistake."
-                : phase === "running"
-                  ? "Keep a steady rhythm. Accuracy comes first."
-                  : room
-                    ? "Everyone gets the same text and start time."
-                    : "The clock starts after the countdown."}
+                : isCoding
+                  ? "Enter for a new line. Tab for indentation. Shift+Tab to leave."
+                  : phase === "running"
+                    ? "Keep a steady rhythm. Accuracy comes first."
+                    : room
+                      ? "Everyone gets the same text and start time."
+                      : "The clock starts after the countdown."}
             </span>
             <span className="language">
               <span className="tiny-dot" />
-              English
+              {isCoding
+                ? codeLanguages.find((l) => l.id === codeExercise?.language)
+                    ?.name || "Code"
+                : "English"}
             </span>
           </div>
         </>
@@ -935,25 +1033,31 @@ export default function Keylane({
             </span>
             <div>
               <h2>
-                {live.correct === 0
-                  ? "Every start counts."
-                  : position === 1 && tab !== "practice"
-                    ? "That’s a winning rhythm."
-                    : "A good lap in the books."}
+                {isCoding
+                  ? engine.typed === passage
+                    ? "Code typed. Nicely done."
+                    : "Practice time complete."
+                  : live.correct === 0
+                    ? "Every start counts."
+                    : position === 1 && tab !== "practice"
+                      ? "That’s a winning rhythm."
+                      : "A good lap in the books."}
               </h2>
               <p>
-                {engine.strokes === 0
-                  ? "Start typing next time to save a result."
-                  : result &&
-                      result.wpm >
-                        Math.max(
-                          0,
-                          ...history
-                            .filter((row) => row.id !== result.id)
-                            .map((row) => row.wpm),
-                        )
-                    ? "A new personal best. Nicely done."
-                    : "Your next race is a fresh chance to improve."}
+                {isCoding
+                  ? `${live.correct} of ${passage.length} characters typed correctly.${codeExercise?.kind === "leetcode" ? " Try solving the problem on your own next." : ""}`
+                  : engine.strokes === 0
+                    ? "Start typing next time to save a result."
+                    : result &&
+                        result.wpm >
+                          Math.max(
+                            0,
+                            ...history
+                              .filter((row) => row.id !== result.id)
+                              .map((row) => row.wpm),
+                          )
+                      ? "A new personal best. Nicely done."
+                      : "Your next race is a fresh chance to improve."}
               </p>
             </div>
           </div>
@@ -1454,6 +1558,7 @@ export default function Keylane({
                             aria-pressed={mode === value}
                             className={mode === value ? "selected" : ""}
                             onClick={() => {
+                              if (value === "code") setTab("practice");
                               setMode(value);
                               setWeakKeys([]);
                               reset(value, custom, []);
@@ -1470,22 +1575,36 @@ export default function Keylane({
                         ))}
                       </div>
                       <div className="toolbar-end">
-                        <div className="times" aria-label="Race duration">
-                          {[15, 30, 60].map((seconds) => (
-                            <button
-                              key={seconds}
-                              disabled={isBusy}
-                              className={duration === seconds ? "selected" : ""}
-                              aria-pressed={duration === seconds}
-                              onClick={() => {
-                                setDuration(seconds);
-                                reset(mode, custom, weakKeys, seconds);
-                              }}
-                            >
-                              {seconds}
-                              <span>s</span>
-                            </button>
-                          ))}
+                        <div
+                          className="times"
+                          aria-label={
+                            isCoding
+                              ? "Code practice duration"
+                              : "Race duration"
+                          }
+                        >
+                          {(isCoding ? [0, 60, 180] : [15, 30, 60]).map(
+                            (seconds) => (
+                              <button
+                                key={seconds}
+                                disabled={isBusy}
+                                className={
+                                  effectiveDuration === seconds
+                                    ? "selected"
+                                    : ""
+                                }
+                                aria-pressed={effectiveDuration === seconds}
+                                onClick={() => {
+                                  if (isCoding) setCodeDuration(seconds);
+                                  else setDuration(seconds);
+                                  reset(mode, custom, weakKeys, seconds);
+                                }}
+                              >
+                                {seconds === 0 ? "Full code" : seconds}
+                                {seconds !== 0 && <span>s</span>}
+                              </button>
+                            ),
+                          )}
                         </div>
                         <span className="toolbar-divider" />
                         <button
@@ -1507,6 +1626,22 @@ export default function Keylane({
                         )}
                       </div>
                     </div>
+                  )}
+                  {isCoding && (
+                    <CodePractice
+                      disabled={isBusy}
+                      completed={history
+                        .filter(
+                          (row) =>
+                            row.coding?.completed && row.coding.problemId,
+                        )
+                        .map(
+                          (row) =>
+                            `${row.coding!.language}:${row.coding!.problemId}`,
+                        )}
+                      onChange={selectCodeExercise}
+                      onStorageError={codingStorageError}
+                    />
                   )}
                   {mode === "custom" && !room && (
                     <div className="custom-text">
@@ -1556,16 +1691,21 @@ export default function Keylane({
                           (phase === "ready" || phase === "finished") && (
                             <button
                               className="button primary start-button"
+                              disabled={isCoding && !codeExercise}
                               onClick={begin}
                             >
                               <RocketIcon />
-                              {phase === "finished"
-                                ? "Race again"
-                                : tab === "practice"
-                                  ? "Start practice"
-                                  : daily
-                                    ? "Start daily sprint"
-                                    : "Start race"}
+                              {isCoding
+                                ? phase === "finished"
+                                  ? "Practise again"
+                                  : "Start coding practice"
+                                : phase === "finished"
+                                  ? "Race again"
+                                  : tab === "practice"
+                                    ? "Start practice"
+                                    : daily
+                                      ? "Start daily sprint"
+                                      : "Start race"}
                               <kbd>enter</kbd>
                             </button>
                           )}
