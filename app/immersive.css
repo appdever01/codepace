@@ -1,0 +1,1042 @@
+.slick-keylane {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+.slick-keylane::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #04060a99, #04060ab8 45%, #04060a73),
+    url("/game/night-mountains.webp") center bottom / cover no-repeat;
+}
+
+:root[data-theme="light"] .slick-keylane::before {
+  background:
+    radial-gradient(ellipse at 0 70%, #cbdaf080, transparent 60%), var(--bg);
+}
+
+.slick-keylane .header {
+  width: 100%;
+  max-width: none;
+  padding: 28px 4.5%;
+  gap: 32px;
+  background: transparent;
+  border: 0;
+}
+
+.slick-keylane .brand {
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  gap: 10px;
+}
+
+.slick-keylane .brand-mark {
+  width: 28px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+
+.slick-keylane .brand-mark svg {
+  width: 28px;
+  height: 28px;
+}
+.slick-keylane .header nav {
+  background: transparent;
+  padding: 0;
+  gap: 6px;
+}
+.slick-keylane .header nav button {
+  min-height: 42px;
+  border-radius: 10px;
+  font-size: 13px;
+  padding: 9px 14px;
+  font-weight: 450;
+}
+.slick-keylane .header nav button > svg {
+  width: 17px;
+  height: 17px;
+}
+.slick-keylane .header nav .nav-active {
+  background: #a0b9eb12;
+  box-shadow: none;
+  color: var(--ink);
+}
+.slick-keylane .header-tools {
+  gap: 8px;
+}
+.slick-keylane .github-links {
+  border: 0;
+  background: #a0b9eb0b;
+  border-radius: 12px;
+}
+.slick-keylane .github-links a {
+  min-height: 40px;
+  font-size: 12px;
+  padding-inline: 12px;
+}
+.slick-keylane .github-star {
+  border-color: #a0b9eb14;
+}
+.slick-keylane .github-links svg {
+  width: 16px;
+  height: 16px;
+}
+.slick-keylane .profile-button {
+  background: var(--surface-hover);
+  color: var(--ink);
+  border: 0;
+  outline: none;
+  width: 40px;
+  height: 40px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 12px;
+}
+.slick-keylane .profile-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.slick-keylane .icon-button {
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  color: var(--muted);
+}
+.slick-keylane .icon-button:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.slick-keylane .icon-button > svg {
+  width: 20px;
+  height: 20px;
+}
+.slick-keylane .theme-button {
+  background: #a0b9eb0b;
+}
+.slick-keylane .help-button {
+  display: none;
+}
+.slick-keylane .main {
+  width: min(88%, 1160px);
+  max-width: 1160px;
+  margin: 28px auto 48px;
+}
+.slick-keylane .workspace {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+.slick-keylane .race-column {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100svh - 174px);
+  display: flex;
+  flex-direction: column;
+}
+.slick-keylane .race-toolbar {
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+.slick-keylane .segments {
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: 4px;
+  border-radius: 999px;
+  gap: 2px;
+}
+.slick-keylane .segments button {
+  min-height: 38px;
+  padding: 8px 22px;
+  font-size: 13px;
+  border-radius: 999px;
+  font-weight: 450;
+}
+.slick-keylane .segments .selected {
+  background: #a0b9eb1a;
+  color: var(--ink);
+  box-shadow: none;
+}
+.slick-keylane .toolbar-end {
+  gap: 10px;
+}
+.slick-keylane .times {
+  gap: 4px;
+}
+.slick-keylane .times button {
+  min-height: 38px;
+  min-width: 38px;
+  font-size: 13px;
+  font-weight: 450;
+  border-radius: 10px;
+}
+.slick-keylane .times .selected {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.slick-keylane .toolbar-divider {
+  height: 18px;
+  background: var(--line);
+}
+.slick-keylane .arena {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  padding-top: clamp(36px, 6svh, 76px);
+}
+.slick-keylane .arena:focus-within,
+.slick-keylane .arena:has(.has-error) {
+  box-shadow: none;
+}
+.slick-keylane .typing-top {
+  padding: 0;
+  justify-content: center;
+}
+.slick-keylane .live-stats {
+  gap: 0;
+  width: min(100%, 680px);
+  justify-content: center;
+}
+.slick-keylane .live-stats > span {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  position: relative;
+}
+.slick-keylane .live-stats > span + span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  height: 38px;
+  width: 1px;
+  background: var(--line);
+}
+.slick-keylane .live-stats b {
+  font: 400 clamp(30px, 3.1vw, 40px)/1.1 var(--mono);
+  margin: 0;
+  letter-spacing: -0.06em;
+  color: var(--ink);
+}
+.slick-keylane .live-stats > span:last-child b {
+  color: var(--ink);
+}
+.slick-keylane .live-stats small {
+  font-size: 0.74em;
+}
+.slick-keylane .live-stats > span > span {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.slick-keylane .play-hud {
+  padding: 0;
+  margin: clamp(40px, 7svh, 80px) 0 22px;
+  gap: 16px;
+  min-height: 24px;
+}
+.slick-keylane .passage-label {
+  font-size: 11px;
+  gap: 8px;
+  color: var(--muted);
+}
+.slick-keylane .passage-label svg {
+  width: 16px;
+  height: 16px;
+}
+.slick-keylane .combo-chip {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 0;
+  background: transparent;
+  gap: 6px;
+  color: var(--muted);
+}
+.slick-keylane .combo-chip b {
+  font-size: 11px;
+  font-weight: 500;
+}
+.slick-keylane .combo-active,
+.slick-keylane .combo-active svg {
+  color: var(--yellow);
+}
+.slick-keylane .next-key {
+  font-size: 10px;
+  gap: 8px;
+}
+.slick-keylane kbd {
+  background: #a0b9eb0e;
+  border: 1px solid var(--line);
+  border-bottom-width: 1px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.slick-keylane .typing-surface {
+  margin: 0;
+  height: 178px;
+}
+.slick-keylane .passage {
+  font: 400 clamp(25px, 2.5vw, 32px)/1.85 var(--mono);
+  letter-spacing: -0.035em;
+  color: var(--subtle);
+}
+.slick-keylane .correct-char {
+  color: var(--ink);
+}
+.slick-keylane .caret:before {
+  width: 2px;
+  left: -3px;
+  top: -3px;
+  bottom: -3px;
+  background: var(--accent);
+}
+.slick-keylane .typing-input {
+  font-size: 20px;
+}
+.slick-keylane .race-meter {
+  width: min(100%, 400px);
+  height: 3px;
+  margin: 42px auto 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #a0b9eb28;
+}
+.slick-keylane .race-meter > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  transition: transform 160ms var(--ease);
+  border-radius: inherit;
+}
+.slick-keylane .typing-bottom {
+  padding: 18px 0 0;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+}
+.slick-keylane .language {
+  display: none;
+}
+.slick-keylane .error-text {
+  color: var(--danger);
+}
+.slick-keylane .race-actions {
+  padding: 26px 0 32px;
+  gap: 20px;
+  justify-content: center;
+  position: relative;
+}
+.slick-keylane .button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+.slick-keylane .button.primary {
+  background: #1a62e0;
+  color: #fff;
+}
+.slick-keylane .button.primary:hover:not(:disabled) {
+  background: #1856c4;
+  color: #fff;
+}
+.slick-keylane .button.secondary {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+.slick-keylane .button.secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+.slick-keylane .button kbd {
+  background: #fff1;
+  border: 1px solid #fff3;
+  color: inherit;
+  margin-left: 18px;
+  font-size: 10px;
+}
+.slick-keylane .start-button {
+  min-width: 186px;
+}
+.slick-keylane .start-button > svg {
+  width: 17px;
+  height: 17px;
+}
+.slick-keylane .action-tools {
+  position: absolute;
+  right: 0;
+  top: 27px;
+  gap: 4px;
+}
+.slick-keylane .action-tools .icon-button {
+  width: 38px;
+  height: 42px;
+}
+.slick-keylane .music-credit {
+  color: var(--muted);
+  font-size: 12px;
+}
+.slick-keylane .music-credit a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.slick-keylane .countdown {
+  background: var(--bg);
+  border-radius: 16px;
+}
+.slick-keylane .countdown > span {
+  background: transparent;
+  border: 0;
+  font: 300 76px var(--mono);
+  color: var(--accent);
+}
+.slick-keylane .countdown p {
+  margin-top: 4px;
+}
+.slick-keylane .focus-prompt {
+  box-shadow: none;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 13px;
+}
+.slick-keylane .track-drawer {
+  margin-top: auto;
+  width: 100%;
+  padding-top: 16px;
+}
+.slick-keylane .track-drawer > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  border-radius: 12px;
+  background: #a0b9eb0a;
+}
+.slick-keylane .track-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+.slick-keylane .track-drawer > summary > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slick-keylane .track-drawer > summary svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+.slick-keylane .track-drawer > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.slick-keylane .grid-toggle {
+  color: var(--ink);
+  margin-left: 12px;
+  font-size: 11px;
+}
+.slick-keylane .grid-hide-label,
+.slick-keylane .track-drawer[open] .grid-show-label {
+  display: none;
+}
+.slick-keylane .track-drawer[open] .grid-hide-label {
+  display: inline;
+}
+.slick-keylane .track-panel {
+  margin-top: 8px;
+  padding: 20px 24px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: none;
+}
+.slick-keylane .track-heading h2 {
+  font-weight: 500;
+  font-size: 14px;
+}
+.slick-keylane .track-status {
+  font-size: 11px;
+}
+.slick-keylane .lane {
+  grid-template-columns: 150px minmax(68px, 1fr) 65px;
+  min-height: 60px;
+}
+.slick-keylane .lane + .lane {
+  border: 0;
+}
+.slick-keylane .lane-road {
+  background: var(--surface-raised);
+  border: 0;
+}
+.slick-keylane .racer-identity b {
+  font-weight: 500;
+}
+.slick-keylane .racer-identity > div > span {
+  font-size: 10px;
+}
+.slick-keylane .lane-speed b {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 14px;
+}
+.slick-keylane .pace-select {
+  border: 0;
+  font-size: 12px;
+}
+.slick-keylane .pace-options button {
+  min-height: 36px;
+  padding-inline: 15px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 450;
+}
+.slick-keylane .progress-sidebar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin-top: 72px;
+  padding: 0;
+}
+.slick-keylane .daily-sprint,
+.slick-keylane .session-stats,
+.slick-keylane .recent-races {
+  grid-area: auto;
+  border-radius: 18px;
+  padding: 24px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: none;
+}
+.slick-keylane .daily-sprint {
+  display: flex;
+  flex-direction: column;
+}
+.slick-keylane .daily-art {
+  height: 108px;
+  width: 162px;
+  align-self: center;
+  aspect-ratio: 3 / 2;
+  margin: -4px 0 12px;
+}
+.slick-keylane .daily-title h2,
+.slick-keylane .section-heading h2 {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.slick-keylane .daily-title > span {
+  color: var(--muted);
+  border: 0;
+  background: var(--surface-raised);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+.slick-keylane .daily-sprint > p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.slick-keylane .daily-button {
+  background: var(--surface-raised);
+  color: var(--ink) !important;
+  box-shadow: none;
+  margin-top: 20px;
+}
+.slick-keylane .daily-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+.slick-keylane .daily-record {
+  color: var(--accent);
+}
+.slick-keylane .personal-best strong {
+  font-weight: 500;
+  font-size: 42px;
+  letter-spacing: -0.05em;
+}
+.slick-keylane .personal-best h3 {
+  font-weight: 450;
+  font-size: 22px;
+}
+.slick-keylane .personal-best p,
+.slick-keylane .daily-goal p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.slick-keylane .best-breakdown b {
+  font-weight: 500;
+}
+.slick-keylane .daily-goal {
+  border: 0;
+}
+.slick-keylane .recent-empty {
+  padding: 32px 0;
+}
+.slick-keylane .recent-list > div {
+  border-color: var(--line);
+}
+.slick-keylane .typing-tip {
+  display: none;
+}
+.slick-keylane .results {
+  padding: 38px 0 0;
+  max-width: 820px;
+  margin: auto;
+}
+.slick-keylane.phase-finished .play-hud {
+  display: none;
+}
+.slick-keylane.phase-finished .typing-top {
+  display: none;
+}
+.slick-keylane .result-heading h2 {
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+.slick-keylane .result-heading p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.slick-keylane .result-numbers {
+  margin-top: 28px;
+}
+.slick-keylane .result-numbers strong {
+  font: 400 42px var(--mono);
+  letter-spacing: -0.05em;
+}
+.slick-keylane .result-numbers span {
+  font-size: 12px;
+}
+.slick-keylane .speed-chart {
+  height: 70px;
+}
+.slick-keylane .speed-chart > div {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.slick-keylane .page-heading h1 {
+  font-weight: 350;
+  font-size: 38px;
+  letter-spacing: -0.04em;
+}
+.slick-keylane .page-heading p {
+  font-size: 14px;
+  margin-top: 10px;
+}
+.slick-keylane .progress-summary > div,
+.slick-keylane .history-panel,
+.slick-keylane .friends-form {
+  box-shadow: none;
+  border: 0;
+  border-radius: 18px;
+}
+.slick-keylane .progress-summary strong {
+  font-size: 32px;
+  font-weight: 500;
+}
+.slick-keylane .friends-layout {
+  padding-top: 24px;
+}
+.slick-keylane .friends-info h2 {
+  font-size: 34px;
+  font-weight: 350;
+  letter-spacing: -0.04em;
+}
+.slick-keylane .friends-form h2 {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.slick-keylane .friend-game-art {
+  max-height: 180px;
+}
+.slick-keylane .room-toolbar {
+  background: var(--surface);
+  padding: 8px 16px;
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+.slick-keylane .custom-text {
+  margin-top: 24px;
+  background: var(--surface);
+  border-radius: 16px;
+}
+.slick-keylane .focused-banner {
+  margin-top: 20px;
+}
+.slick-keylane .dialog {
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 24px 80px #0006;
+}
+.slick-keylane .dialog::backdrop {
+  background: #02040ac4;
+  backdrop-filter: blur(8px);
+}
+.slick-keylane .dialog .section-heading h2 {
+  font-size: 22px;
+  font-weight: 500;
+}
+.slick-keylane .dialog input,
+.slick-keylane .dialog select {
+  border: 0;
+  background: var(--surface-raised);
+  border-radius: 12px;
+}
+.slick-keylane .toast {
+  background: var(--surface-hover);
+  color: var(--ink);
+  box-shadow: 0 12px 32px #0004;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.slick-keylane.zen .workspace {
+  max-width: none;
+}
+.slick-keylane.zen .progress-sidebar {
+  display: none;
+}
+.slick-keylane.zen .header nav,
+.slick-keylane.zen .github-links {
+  opacity: 0.3;
+  transition: opacity 160ms var(--ease);
+}
+.slick-keylane.zen .header nav:focus-within,
+.slick-keylane.zen .header nav:hover,
+.slick-keylane.zen .github-links:hover {
+  opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  .slick-keylane .header {
+    padding-inline: 4%;
+    gap: 20px;
+  }
+  .slick-keylane .header nav button {
+    padding-inline: 10px;
+  }
+  .slick-keylane .github-label {
+    display: none;
+  }
+  .slick-keylane .main {
+    width: 88%;
+  }
+}
+
+@media (max-width: 760px) {
+  .slick-keylane::before {
+    background-position:
+      center,
+      center bottom;
+  }
+  .slick-keylane .header {
+    padding: 20px 4.5%;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .slick-keylane .brand {
+    order: 0;
+    font-size: 22px;
+    gap: 6px;
+  }
+  .slick-keylane .brand-mark,
+  .slick-keylane .brand-mark svg {
+    width: 24px;
+    height: 28px;
+  }
+  .slick-keylane .header-tools {
+    order: 1;
+    margin-left: auto;
+    gap: 6px;
+  }
+  .slick-keylane .github-links a {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+  .slick-keylane .github-star span {
+    display: none;
+  }
+  .slick-keylane .header-tools .icon-button,
+  .slick-keylane .profile-button {
+    width: 44px;
+    height: 44px;
+  }
+  .slick-keylane .header nav {
+    order: 2;
+    width: 100%;
+    flex-basis: 100%;
+    justify-content: center;
+    gap: 8px;
+  }
+  .slick-keylane .header nav button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 6px;
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .slick-keylane .main {
+    width: 90%;
+    margin-top: 18px;
+  }
+  .slick-keylane .race-column {
+    min-height: calc(100svh - 218px);
+  }
+  .slick-keylane .race-toolbar {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .slick-keylane .segments button {
+    min-height: 44px;
+    padding: 9px 18px;
+    font-size: 12px;
+  }
+  .slick-keylane .toolbar-end {
+    gap: 8px;
+  }
+  .slick-keylane .toolbar-end .icon-button {
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+  }
+  .slick-keylane .times button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .slick-keylane .arena {
+    padding-top: 32px;
+  }
+  .slick-keylane .live-stats {
+    max-width: 480px;
+  }
+  .slick-keylane .live-stats b {
+    font-size: 30px;
+  }
+  .slick-keylane .live-stats > span > span {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+  .slick-keylane .live-stats > span + span::before {
+    height: 30px;
+    top: 8px;
+  }
+  .slick-keylane .play-hud {
+    margin-top: 38px;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .slick-keylane .passage-label {
+    font-size: 10px;
+  }
+  .slick-keylane .combo-chip {
+    font-size: 10px;
+  }
+  .slick-keylane .next-key {
+    display: none;
+  }
+  .slick-keylane .typing-surface {
+    height: 136.8px;
+    margin: 0;
+  }
+  .slick-keylane .passage {
+    font-size: 24px;
+    line-height: 1.9;
+  }
+  .slick-keylane .race-meter {
+    margin-top: 26px;
+    max-width: 260px;
+  }
+  .slick-keylane .typing-bottom {
+    font-size: 10px;
+    padding-top: 16px;
+    text-align: center;
+  }
+  .slick-keylane .race-actions {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .slick-keylane .action-tools {
+    position: static;
+  }
+  .slick-keylane .action-tools .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+  .slick-keylane .action-tools .icon-button:last-child {
+    display: none;
+  }
+  .slick-keylane .button {
+    min-height: 44px;
+    padding-inline: 16px;
+    font-size: 12px;
+  }
+  .slick-keylane .start-button {
+    min-width: 176px;
+  }
+  .slick-keylane .button kbd {
+    margin-left: 10px;
+    font-size: 9px;
+  }
+  .slick-keylane .track-drawer {
+    padding-top: 12px;
+  }
+  .slick-keylane .track-drawer > summary {
+    min-height: 48px;
+    padding-inline: 12px;
+  }
+  .slick-keylane .track-panel {
+    padding: 20px 16px;
+  }
+  .slick-keylane .track-status {
+    font-size: 9px;
+  }
+  .slick-keylane .lane {
+    grid-template-columns: 100px minmax(25px, 1fr) 42px;
+    gap: 10px;
+    min-height: 56px;
+  }
+  .slick-keylane .racer-identity > div > span {
+    font-size: 9px;
+  }
+  .slick-keylane .lane-speed b {
+    font-size: 12px;
+  }
+  .slick-keylane .lane-speed span {
+    font-size: 9px;
+  }
+  .slick-keylane .pace-select {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .slick-keylane .pace-options button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .slick-keylane .progress-sidebar {
+    grid-template-columns: 1fr;
+    margin-top: 48px;
+    gap: 16px;
+  }
+  .slick-keylane .daily-sprint,
+  .slick-keylane .session-stats,
+  .slick-keylane .recent-races {
+    padding: 24px;
+    display: block;
+  }
+  .slick-keylane .daily-art {
+    width: 180px;
+    height: 120px;
+    margin: -8px auto 12px;
+  }
+  .slick-keylane .results {
+    padding-top: 28px;
+  }
+  .slick-keylane .result-heading h2 {
+    font-size: 24px;
+  }
+  .slick-keylane .result-heading p {
+    font-size: 12px;
+  }
+  .slick-keylane .result-numbers {
+    gap: 12px;
+  }
+  .slick-keylane .result-numbers strong {
+    font-size: 30px;
+  }
+  .slick-keylane .result-numbers span {
+    font-size: 10px;
+  }
+  .slick-keylane .page-heading h1 {
+    font-size: 32px;
+  }
+  .slick-keylane .page-heading p {
+    font-size: 13px;
+  }
+  .slick-keylane .page-heading {
+    margin-bottom: 24px;
+  }
+  .slick-keylane .friends-layout {
+    padding-top: 0;
+  }
+  .slick-keylane :is(input, textarea, select) {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .slick-keylane .start-button {
+    min-width: 0;
+  }
+  .slick-keylane .start-button kbd {
+    display: none;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 761px) {
+  .slick-keylane .header {
+    padding-block: 20px;
+  }
+  .slick-keylane .main {
+    margin-top: 16px;
+  }
+  .slick-keylane .arena {
+    padding-top: 32px;
+  }
+  .slick-keylane .play-hud {
+    margin-top: 36px;
+  }
+  .slick-keylane .typing-surface {
+    height: 154px;
+  }
+  .slick-keylane .passage {
+    font-size: 28px;
+    line-height: 1.8;
+  }
+  .slick-keylane .race-meter {
+    margin-top: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slick-keylane *,
+  .slick-keylane *::before,
+  .slick-keylane *::after {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+}

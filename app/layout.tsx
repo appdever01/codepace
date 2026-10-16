@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./immersive.css";
 
 export const metadata: Metadata = {
   title: "Keylane — Find your typing rhythm",
@@ -18,6 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link
+          rel="preload"
+          as="font"
+          href="/fonts/geist.woff2"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link
           rel="preload"
           as="image"

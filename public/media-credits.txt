@@ -1,0 +1,15 @@
+KEYLANE MEDIA CREDITS
+
+Background photograph: The night sky with stars above a mountain range
+Photographer: Aimee Zaugg (@aimee_naomi)
+Source: https://unsplash.com/photos/the-night-sky-with-stars-above-a-mountain-range-IO1d7aXD0bs
+License: Unsplash License, https://unsplash.com/license
+Changes: Encoded as WebP. Dark overlays are applied in the interface.
+
+Music: 'Reverie' by Scott Buckley - released under CC-BY 4.0.
+www.scottbuckley.com.au
+Source: https://www.scottbuckley.com.au/library/reverie/
+Original MP3: https://www.scottbuckley.com.au/library/wp-content/uploads/2020/03/sb_reverie.mp3
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+Changes: Full track re-encoded at 96 kbps MP3 for in-game playback. Audio is looped and played at a user-adjustable volume. No composition edits.

@@ -1,0 +1,4 @@
+Geist and Geist Mono
+Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+Licensed under the SIL Open Font License, Version 1.1.
+See geist-OFL.txt. Font files retain their embedded copyright metadata.

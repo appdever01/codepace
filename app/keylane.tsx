@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import RaceTrophy from "@/components/race-trophy";
+import { useBackgroundMusic } from "@/components/use-background-music";
+import { MusicNoteIcon } from "@solar-icons/react/linear/music-note";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
 import { TargetIcon } from "@solar-icons/react/linear/target";
 import { Chart2Icon } from "@solar-icons/react/linear/chart-2";
@@ -31,6 +33,8 @@ import { FireIcon } from "@solar-icons/react/bold-duotone/fire";
 import { CupStarIcon } from "@solar-icons/react/bold-duotone/cup-star";
 import { RocketIcon } from "@solar-icons/react/bold-duotone/rocket";
 import { StopwatchIcon } from "@solar-icons/react/linear/stopwatch";
+import { MoonIcon } from "@solar-icons/react/linear/moon";
+import { SunIcon } from "@solar-icons/react/linear/sun";
 import { dailyPassage } from "@/lib/daily";
 import {
   applyInput,
@@ -86,7 +90,7 @@ const initialSettings: Settings = {
   name: "You",
   pace: 60,
   sound: false,
-  light: true,
+  light: false,
 };
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString(undefined, {
@@ -111,6 +115,17 @@ export default function Keylane({
   const [focused, setFocused] = useState(false);
   const [zen, setZen] = useState(false);
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  const {
+    audioRef: musicAudioRef,
+    enabled: musicEnabled,
+    volume: musicVolume,
+    playing: musicPlaying,
+    error: musicError,
+    unlock: unlockMusic,
+    toggle: toggleMusic,
+    setEnabled: setMusicEnabled,
+    setVolume: setMusicVolume,
+  } = useBackgroundMusic();
   const [history, setHistory] = useState<RaceResult[]>([]);
   const [result, setResult] = useState<RaceResult | null>(null);
   const [dialog, setDialog] = useState<"settings" | "help" | null>(null);
@@ -261,7 +276,7 @@ export default function Keylane({
             ? Math.max(30, Math.min(140, saved.pace))
             : 60,
           sound: saved.sound === true,
-          light: typeof saved.light === "boolean" ? saved.light : true,
+          light: typeof saved.light === "boolean" ? saved.light : false,
         });
         setName(
           typeof saved.name === "string" && saved.name !== "You"
@@ -732,6 +747,32 @@ export default function Keylane({
       aria-label="Typing race"
     >
       <div className="typing-top">
+        <div className="live-stats" aria-label="Live race statistics">
+          <span
+            className={
+              remaining <= 5 && phase === "running" ? "time-urgent" : ""
+            }
+          >
+            <b>
+              {String(Math.floor(remaining / 60)).padStart(2, "0")}:
+              {String(remaining % 60).padStart(2, "0")}
+            </b>
+            <span>Time</span>
+          </span>
+          <span>
+            <b>{live.wpm}</b>
+            <span>WPM</span>
+          </span>
+          <span>
+            <b>
+              {live.accuracy}
+              <small>%</small>
+            </b>
+            <span>Accuracy</span>
+          </span>
+        </div>
+      </div>
+      <div className="play-hud">
         <span className="passage-label">
           <KeyboardIcon />
           {room
@@ -748,31 +789,6 @@ export default function Keylane({
                     ? "Your text"
                     : "Original passage"}
         </span>
-        <div className="live-stats">
-          <span>
-            <b>{live.wpm}</b> wpm
-          </span>
-          <span>
-            <b>
-              {live.accuracy}
-              <small>%</small>
-            </b>{" "}
-            accuracy
-          </span>
-          <span
-            className={
-              remaining <= 5 && phase === "running" ? "time-urgent" : ""
-            }
-          >
-            <b>
-              {remaining}
-              <small>s</small>
-            </b>{" "}
-            left
-          </span>
-        </div>
-      </div>
-      <div className="play-hud">
         <span
           className={`combo-chip ${engine.streak >= 10 ? "combo-active" : ""}`}
         >
@@ -875,6 +891,22 @@ export default function Keylane({
                 Click to keep typing
               </button>
             )}
+          </div>
+          <div
+            className="race-meter"
+            role="progressbar"
+            aria-label="Passage completed"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(
+              (live.correct / Math.max(1, passage.length)) * 100,
+            )}
+          >
+            <span
+              style={{
+                transform: `scaleX(${live.correct / Math.max(1, passage.length)})`,
+              }}
+            />
           </div>
           <div className="typing-bottom">
             <span
@@ -1002,7 +1034,18 @@ export default function Keylane({
   );
 
   return (
-    <div className={`app ${zen ? "zen" : ""} phase-${phase}`}>
+    <div
+      className={`app slick-keylane view-${tab} ${zen ? "zen" : ""} phase-${phase}`}
+      onPointerDownCapture={unlockMusic}
+      onKeyDownCapture={unlockMusic}
+    >
+      <audio
+        ref={musicAudioRef}
+        src="/audio/reverie-scott-buckley.mp3"
+        loop
+        preload="none"
+        aria-hidden="true"
+      />
       <a className="skip-link" href="#main">
         Skip to race
       </a>
@@ -1061,6 +1104,20 @@ export default function Keylane({
               <span>Star</span>
             </a>
           </div>
+          <button
+            className="icon-button theme-button"
+            aria-label={
+              settings.light ? "Switch to dark theme" : "Switch to light theme"
+            }
+            onClick={() =>
+              setSettings((previous) => ({
+                ...previous,
+                light: !previous.light,
+              }))
+            }
+          >
+            {settings.light ? <MoonIcon /> : <SunIcon />}
+          </button>
           <button
             className="icon-button help-button"
             aria-label="Keyboard shortcuts"
@@ -1538,6 +1595,23 @@ export default function Keylane({
                       </div>
                       <div className="action-tools">
                         <button
+                          className="icon-button music-button"
+                          aria-label={
+                            musicEnabled
+                              ? "Turn background music off"
+                              : "Turn background music on"
+                          }
+                          aria-pressed={musicEnabled}
+                          title={
+                            musicPlaying
+                              ? "Reverie · Scott Buckley"
+                              : "Background music · Reverie"
+                          }
+                          onClick={toggleMusic}
+                        >
+                          <MusicNoteIcon />
+                        </button>
+                        <button
                           className="icon-button"
                           aria-label={
                             settings.sound
@@ -1578,184 +1652,204 @@ export default function Keylane({
                       </div>
                     </div>
                   </div>
-                  <section className="track-panel" aria-label="Race progress">
-                    <div className="track-heading">
-                      <h2>
+                  <details className="track-drawer" open={!!room}>
+                    <summary>
+                      <span>
+                        <CarIcon />
                         {room
-                          ? "Starting grid"
+                          ? "Room grid"
                           : tab === "practice"
                             ? "Your lane"
-                            : "Meet your competition"}
-                      </h2>
-                      <span className="track-status">
-                        <span
-                          className={`tiny-dot ${phase === "running" ? "active-dot" : ""}`}
-                        />
-                        {phase === "running"
-                          ? "Race in progress"
-                          : phase === "countdown"
-                            ? "Starting…"
-                            : phase === "finished"
-                              ? "Finish line"
-                              : room
-                                ? "Waiting for racers"
-                                : tab === "race"
-                                  ? "You + 3 pace bots"
-                                  : "Just you, no pressure"}
+                            : "Race grid"}
                       </span>
-                    </div>
-                    <div className="lanes">
-                      {racers.map((racer) => (
-                        <div
-                          className={`lane ${racer.color} ${racer.id === ownId ? "own-lane" : ""}`}
-                          key={racer.id}
-                        >
-                          <div className="racer-identity">
-                            <span className="racer-avatar">
-                              {racer.id === ownId ? (
-                                <BoltIcon />
-                              ) : racer.bot ? (
-                                <CarIcon />
-                              ) : (
-                                racer.name.charAt(0).toUpperCase()
-                              )}
-                            </span>
-                            <div>
-                              <b>
-                                {racer.id === ownId ? "You" : racer.name}
-                                {room?.hostId === racer.id && (
-                                  <CrownIcon className="host-crown" />
+                      <span>
+                        {racers.length}{" "}
+                        {racers.length === 1 ? "racer" : "racers"}
+                        <span className="grid-toggle">
+                          <span className="grid-show-label">View</span>
+                          <span className="grid-hide-label">Hide</span>
+                        </span>
+                      </span>
+                    </summary>
+                    <section className="track-panel" aria-label="Race progress">
+                      <div className="track-heading">
+                        <h2>
+                          {room
+                            ? "Starting grid"
+                            : tab === "practice"
+                              ? "Your lane"
+                              : "Meet your competition"}
+                        </h2>
+                        <span className="track-status">
+                          <span
+                            className={`tiny-dot ${phase === "running" ? "active-dot" : ""}`}
+                          />
+                          {phase === "running"
+                            ? "Race in progress"
+                            : phase === "countdown"
+                              ? "Starting…"
+                              : phase === "finished"
+                                ? "Finish line"
+                                : room
+                                  ? "Waiting for racers"
+                                  : tab === "race"
+                                    ? "You + 3 pace bots"
+                                    : "Just you, no pressure"}
+                        </span>
+                      </div>
+                      <div className="lanes">
+                        {racers.map((racer) => (
+                          <div
+                            className={`lane ${racer.color} ${racer.id === ownId ? "own-lane" : ""}`}
+                            key={racer.id}
+                          >
+                            <div className="racer-identity">
+                              <span className="racer-avatar">
+                                {racer.id === ownId ? (
+                                  <BoltIcon />
+                                ) : racer.bot ? (
+                                  <CarIcon />
+                                ) : (
+                                  racer.name.charAt(0).toUpperCase()
                                 )}
-                              </b>
-                              <span>
-                                {racer.bot
-                                  ? `${"pace" in racer ? racer.pace : ""} wpm · bot`
-                                  : racer.id === ownId
-                                    ? "This is your lane"
-                                    : (room?.serverNow || 0) -
-                                          (room?.players.find(
-                                            (p) => p.id === racer.id,
-                                          )?.seenAt || 0) >
-                                        10000
-                                      ? "Away"
-                                      : "Ready to race"}
                               </span>
+                              <div>
+                                <b>
+                                  {racer.id === ownId ? "You" : racer.name}
+                                  {room?.hostId === racer.id && (
+                                    <CrownIcon className="host-crown" />
+                                  )}
+                                </b>
+                                <span>
+                                  {racer.bot
+                                    ? `${"pace" in racer ? racer.pace : ""} wpm · bot`
+                                    : racer.id === ownId
+                                      ? "This is your lane"
+                                      : (room?.serverNow || 0) -
+                                            (room?.players.find(
+                                              (p) => p.id === racer.id,
+                                            )?.seenAt || 0) >
+                                          10000
+                                        ? "Away"
+                                        : "Ready to race"}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="lane-road">
-                            <div className="road-line" />
-                            <div
-                              className="road-fill"
-                              style={{
-                                transform: `scaleX(${racer.correct / Math.max(1, passage.length)})`,
-                              }}
-                            />
-                            <div
-                              className="race-car"
-                              aria-hidden="true"
-                              style={{
-                                transform: `translateX(calc(${Math.min(100, (racer.correct / Math.max(1, passage.length)) * 100)}% - 2px))`,
-                              }}
-                            >
-                              <Image
-                                unoptimized
-                                src={
-                                  racer.id === ownId
-                                    ? "/game/rally-blue.webp"
-                                    : "/game/rally-orange.webp"
-                                }
-                                alt=""
-                                width={68}
-                                height={34}
+                            <div className="lane-road">
+                              <div className="road-line" />
+                              <div
+                                className="road-fill"
+                                style={{
+                                  transform: `scaleX(${racer.correct / Math.max(1, passage.length)})`,
+                                }}
                               />
+                              <div
+                                className="race-car"
+                                aria-hidden="true"
+                                style={{
+                                  transform: `translateX(calc(${Math.min(100, (racer.correct / Math.max(1, passage.length)) * 100)}% - 2px))`,
+                                }}
+                              >
+                                <Image
+                                  unoptimized
+                                  src={
+                                    racer.id === ownId
+                                      ? "/game/rally-blue.webp"
+                                      : "/game/rally-orange.webp"
+                                  }
+                                  alt=""
+                                  width={68}
+                                  height={34}
+                                />
+                              </div>
+                              <FlagIcon className="finish-flag" />
                             </div>
-                            <FlagIcon className="finish-flag" />
+                            <div className="lane-speed">
+                              <b>{racer.wpm}</b>
+                              <span>wpm</span>
+                            </div>
                           </div>
-                          <div className="lane-speed">
-                            <b>{racer.wpm}</b>
-                            <span>wpm</span>
+                        ))}
+                      </div>
+                      {!room && tab === "race" && (
+                        <div className="pace-select">
+                          <span>Pick your competition</span>
+                          <div className="pace-options">
+                            {[
+                              [50, "Chill"],
+                              [80, "Quick"],
+                              [110, "Turbo"],
+                            ].map(([pace, label]) => (
+                              <button
+                                key={pace}
+                                disabled={isBusy}
+                                className={
+                                  (settings.pace < 65
+                                    ? 50
+                                    : settings.pace < 95
+                                      ? 80
+                                      : 110) === pace
+                                    ? "selected"
+                                    : ""
+                                }
+                                aria-pressed={
+                                  (settings.pace < 65
+                                    ? 50
+                                    : settings.pace < 95
+                                      ? 80
+                                      : 110) === pace
+                                }
+                                onClick={() =>
+                                  setSettings((previous) => ({
+                                    ...previous,
+                                    pace: Number(pace),
+                                  }))
+                                }
+                              >
+                                {label}
+                              </button>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    {!room && tab === "race" && (
-                      <div className="pace-select">
-                        <span>Pick your competition</span>
-                        <div className="pace-options">
-                          {[
-                            [50, "Chill"],
-                            [80, "Quick"],
-                            [110, "Turbo"],
-                          ].map(([pace, label]) => (
+                      )}
+                      {room && room.phase === "lobby" && (
+                        <div className="lobby-action">
+                          <p>
+                            {host
+                              ? room.players.length < 2
+                                ? "Share the invite link to bring a friend to the grid."
+                                : "Your grid is ready. Start when everyone is here."
+                              : "Waiting for the host to start the race."}
+                          </p>
+                          {host ? (
                             <button
-                              key={pace}
-                              disabled={isBusy}
-                              className={
-                                (settings.pace < 65
-                                  ? 50
-                                  : settings.pace < 95
-                                    ? 80
-                                    : 110) === pace
-                                  ? "selected"
-                                  : ""
+                              className="button primary small"
+                              disabled={
+                                pending ||
+                                room.players.filter(
+                                  (p) => room.serverNow - p.seenAt < 30000,
+                                ).length < 2
                               }
-                              aria-pressed={
-                                (settings.pace < 65
-                                  ? 50
-                                  : settings.pace < 95
-                                    ? 80
-                                    : 110) === pace
-                              }
-                              onClick={() =>
-                                setSettings((previous) => ({
-                                  ...previous,
-                                  pace: Number(pace),
-                                }))
-                              }
+                              onClick={() => void roomAction("start")}
                             >
-                              {label}
+                              Start race
                             </button>
-                          ))}
+                          ) : room.serverNow -
+                              (room.players.find((p) => p.id === room.hostId)
+                                ?.seenAt || 0) >
+                            30000 ? (
+                            <button
+                              className="button secondary small"
+                              disabled={pending}
+                              onClick={() => void roomAction("reclaim")}
+                            >
+                              Take over as host
+                            </button>
+                          ) : null}
                         </div>
-                      </div>
-                    )}
-                    {room && room.phase === "lobby" && (
-                      <div className="lobby-action">
-                        <p>
-                          {host
-                            ? room.players.length < 2
-                              ? "Share the invite link to bring a friend to the grid."
-                              : "Your grid is ready. Start when everyone is here."
-                            : "Waiting for the host to start the race."}
-                        </p>
-                        {host ? (
-                          <button
-                            className="button primary small"
-                            disabled={
-                              pending ||
-                              room.players.filter(
-                                (p) => room.serverNow - p.seenAt < 30000,
-                              ).length < 2
-                            }
-                            onClick={() => void roomAction("start")}
-                          >
-                            Start race
-                          </button>
-                        ) : room.serverNow -
-                            (room.players.find((p) => p.id === room.hostId)
-                              ?.seenAt || 0) >
-                          30000 ? (
-                          <button
-                            className="button secondary small"
-                            disabled={pending}
-                            onClick={() => void roomAction("reclaim")}
-                          >
-                            Take over as host
-                          </button>
-                        ) : null}
-                      </div>
-                    )}
-                  </section>
+                      )}
+                    </section>
+                  </details>
                   {phase === "finished" &&
                     result &&
                     result.errors > 0 &&
@@ -1790,9 +1884,7 @@ export default function Keylane({
                         15 sec
                       </span>
                     </div>
-                    <p>
-                      Fifteen seconds. One canyon circuit. Beat your best lap.
-                    </p>
+                    <p>A fresh 15-second challenge, every day.</p>
                     <button
                       className="button daily-button"
                       disabled={isBusy || !!room}
@@ -1950,10 +2042,10 @@ export default function Keylane({
           </p>
         )}
       </main>
-      {message && (
+      {(message || musicError) && (
         <div className="toast" role="status">
           <CheckCircleIcon />
-          {message}
+          {message || musicError}
         </div>
       )}
       <dialog
@@ -2027,6 +2119,44 @@ export default function Keylane({
               <label className="check-label">
                 <input
                   type="checkbox"
+                  checked={musicEnabled}
+                  onChange={(event) => setMusicEnabled(event.target.checked)}
+                />
+                Background music
+              </label>
+              <label htmlFor="music-volume">
+                Music volume <b>{Math.round(musicVolume * 100)}%</b>
+              </label>
+              <input
+                id="music-volume"
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(musicVolume * 100)}
+                onChange={(event) =>
+                  setMusicVolume(Number(event.target.value) / 100)
+                }
+              />
+              <p className="music-credit">
+                <a
+                  href="https://www.scottbuckley.com.au/library/reverie/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Reverie by Scott Buckley
+                </a>{" "}
+                ·{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  CC BY 4.0
+                </a>
+              </p>
+              <label className="check-label">
+                <input
+                  type="checkbox"
                   checked={settings.light}
                   onChange={(event) =>
                     setSettings((previous) => ({
@@ -2078,6 +2208,41 @@ export default function Keylane({
               <p className="muted">
                 Solo rivals are pace bots. Personal results stay on this device.
                 Friend rooms are casual races, with no global ranking.
+              </p>
+              <p className="credit">
+                Background photo by{" "}
+                <a
+                  href="https://unsplash.com/photos/the-night-sky-with-stars-above-a-mountain-range-IO1d7aXD0bs"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Aimee Zaugg / Unsplash
+                </a>
+                , used under the{" "}
+                <a
+                  href="https://unsplash.com/license"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Unsplash License
+                </a>
+                . Music:{" "}
+                <a
+                  href="https://www.scottbuckley.com.au/library/reverie/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Reverie by Scott Buckley
+                </a>
+                , released under{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  CC BY 4.0
+                </a>
+                . Encoded for the web.
               </p>
               <p className="credit">
                 Scoring adapted from Andrew Roach’s{" "}

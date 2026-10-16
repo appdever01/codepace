@@ -71,6 +71,9 @@ test("complete a corrected race, save it, inspect progress and reload it", async
     fireEvent.click(
       screen.getByRole("button", { name: "Open profile and settings" }),
     );
+    assert.equal(document.documentElement.dataset.theme, "dark");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Light theme" }));
+    assert.equal(document.documentElement.dataset.theme, "light");
     fireEvent.click(screen.getByRole("checkbox", { name: "Light theme" }));
     assert.equal(document.documentElement.dataset.theme, "dark");
     fireEvent.click(screen.getByRole("button", { name: "Back to the keys" }));
