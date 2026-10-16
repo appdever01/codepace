@@ -33,7 +33,9 @@ test("Code is the first navigation item, opens by default and is the home destin
         .getAttribute("aria-current"),
       "page",
     );
-    assert.ok(screen.getByRole("heading", { name: "Code practice", level: 1 }));
+    assert.ok(
+      screen.getByRole("heading", { name: "Code typing practice", level: 1 }),
+    );
     assert.ok(document.querySelector(".coding-panel"));
     assert.ok(screen.getByRole("button", { name: "Full code" }));
     assert.equal(screen.queryByRole("button", { name: "Passages" }), null);
@@ -51,7 +53,9 @@ test("Code is the first navigation item, opens by default and is the home destin
     assert.ok(screen.getByRole("heading", { name: "Your progress." }));
     assert.equal(document.querySelector(".code-main"), null);
     fireEvent.click(screen.getByRole("button", { name: /home$/ }));
-    assert.ok(screen.getByRole("heading", { name: "Code practice", level: 1 }));
+    assert.ok(
+      screen.getByRole("heading", { name: "Code typing practice", level: 1 }),
+    );
     assert.ok(screen.getByRole("button", { name: "Full code" }));
   } finally {
     cleanup();

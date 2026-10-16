@@ -1,0 +1,22 @@
+# CodePace
+
+> CodePace is a free browser app for code typing practice and typing speed tests. Its main address is https://codepace.vercel.app/.
+
+Practice Python, JavaScript, TypeScript, Java, C++, Go and Rust with built-in snippets, open-source LeetCode solutions or your own code. Code formatting and indentation are preserved. Code is typed for practice; it is not executed or graded, and this is not an official LeetCode product.
+
+Code exercises can run to completion or use a 60-second or 180-second timer. Speed and accuracy are tracked. Text modes include words, passages and custom text, with 15-second, 30-second and 60-second races against labelled pace bots.
+
+Friends can create a private room for up to six players, including the host. Rooms have a shared countdown, expire after two hours and are intended for casual play. No account is needed. Room links and API endpoints are temporary gameplay resources, not separate public content pages.
+
+Results and preferences stay in the player's browser. They do not sync between devices or domains. Players can review their history and export their results. There is no global leaderboard. Typing speed treats five correct characters as one word; corrected mistakes still count toward accuracy.
+
+The Code, Race, Practice, Friends and Progress views are tabs within the app at the same URL. The app requires JavaScript. Supported programming languages describe the practice material, not translated interface languages; the interface is in English.
+
+## App
+
+- [CodePace](https://codepace.vercel.app/): Start code typing practice, test typing speed, race with friends or review local progress.
+
+## Reference
+
+- [Sitemap](https://codepace.vercel.app/sitemap.xml): Canonical public page URLs.
+- [Crawler rules](https://codepace.vercel.app/robots.txt): Public crawl rules; the gameplay API is excluded.

@@ -41,11 +41,20 @@ With the local server running on port 5189, also run:
 
 ```sh
 npm run test:ui
+npm run test:seo
 npm run test:rooms
 npm run test:load
 ```
 
 These checks exercise player workflows, concurrent room changes and six-player progress. Run them one at a time against a development database. GitHub Actions runs the same checks with its own PostgreSQL service. See [contribution.md](contribution.md) for the project layout and pull request guidance.
+
+## Search discovery
+
+The canonical address is `https://codepace.vercel.app/`. Search titles, descriptions, social previews and structured site information share the settings in `lib/seo.ts`. The homepage has a server-rendered heading and JSON-LD. Vercel preview deployments use `noindex`.
+
+`/robots.txt` allows public pages and assets, excludes the gameplay API and points to `/sitemap.xml`. The sitemap includes the homepage; the app's tabs and temporary room invitations are not separate pages. `/llms.txt` describes the app for AI tools, and `/llm.txt` redirects there. Update the public facts in that file when features change.
+
+After deployment, submit `https://codepace.vercel.app/sitemap.xml` through the verified Google Search Console and Bing Webmaster Tools accounts. Sitemap submission and these files do not guarantee indexing or rankings. Run `npm run test:seo` against the running app; set `CODEPACE_TEST_URL` to check another deployment, and `CODEPACE_EXPECT_INDEXABLE=false` for a preview. This checks HTTP responses without opening a browser.
 
 ## Results and rooms
 

@@ -309,7 +309,9 @@ export default function CodePace({
     const load = async () => {
       await Promise.resolve();
       try {
-        setHistory(readHistory(readSavedValue(localStorage, "codepace:history")));
+        setHistory(
+          readHistory(readSavedValue(localStorage, "codepace:history")),
+        );
         const saved = JSON.parse(
           readSavedValue(localStorage, "codepace:settings:v2") || "{}",
         );
@@ -829,6 +831,26 @@ export default function CodePace({
     reset("words", "", letters);
   };
 
+  const actionTools = (
+    <div className="action-tools">
+      <button
+        className="icon-button"
+        aria-label={zen ? "Exit focus mode" : "Enter focus mode"}
+        aria-pressed={zen}
+        onClick={() => setZen(!zen)}
+      >
+        {zen ? <MinimizeIcon /> : <MaximizeIcon />}
+      </button>
+      <button
+        className="icon-button"
+        aria-label="Keyboard shortcuts and help"
+        onClick={() => setDialog("help")}
+      >
+        <KeyboardIcon />
+      </button>
+    </div>
+  );
+
   const typingPanel = (
     <section
       className={`typing-panel ${hasError ? "has-error" : ""} ${isCoding ? "coding-panel" : ""}`}
@@ -1064,6 +1086,7 @@ export default function CodePace({
                     ?.name || "Code"
                 : "English"}
             </span>
+            {actionTools}
           </div>
         </>
       ) : (
@@ -1345,7 +1368,9 @@ export default function CodePace({
             {tab !== "race" && !isFriends && (
               <div className="page-heading">
                 <div>
-                  <h1>{isCoding ? "Code practice" : "Practice typing."}</h1>
+                  <h1>
+                    {isCoding ? "Code typing practice" : "Practice typing."}
+                  </h1>
                   <p>
                     {isCoding
                       ? "Snippets, LeetCode solutions or your own code."
@@ -1685,73 +1710,57 @@ export default function CodePace({
                         {roomError}
                       </p>
                     )}
-                    <div className="race-actions">
-                      <div>
-                        {!room &&
-                          !isCoding &&
-                          (phase === "ready" || phase === "finished") && (
+                    {((!room && !isCoding) || phase === "finished") && (
+                      <div className="race-actions">
+                        <div>
+                          {!room &&
+                            !isCoding &&
+                            (phase === "ready" || phase === "finished") && (
+                              <button
+                                className="button primary start-button"
+                                disabled={isCoding && !codeExercise}
+                                onClick={begin}
+                              >
+                                <RocketIcon />
+                                {isCoding
+                                  ? phase === "finished"
+                                    ? "Practise again"
+                                    : "Start coding practice"
+                                  : phase === "finished"
+                                    ? "Race again"
+                                    : tab === "practice"
+                                      ? "Start practice"
+                                      : "Start race"}
+                                <kbd>enter</kbd>
+                              </button>
+                            )}
+                          {!room && !isCoding && isBusy && (
                             <button
-                              className="button primary start-button"
-                              disabled={isCoding && !codeExercise}
-                              onClick={begin}
+                              className="button secondary"
+                              onClick={() => reset()}
                             >
-                              <RocketIcon />
-                              {isCoding
-                                ? phase === "finished"
-                                  ? "Practise again"
-                                  : "Start coding practice"
-                                : phase === "finished"
-                                  ? "Race again"
-                                  : tab === "practice"
-                                    ? "Start practice"
-                                    : "Start race"}
-                              <kbd>enter</kbd>
+                              <RestartIcon />
+                              Restart<kbd>esc</kbd>
                             </button>
                           )}
-                        {!room && !isCoding && isBusy && (
-                          <button
-                            className="button secondary"
-                            onClick={() => reset()}
-                          >
-                            <RestartIcon />
-                            Restart<kbd>esc</kbd>
-                          </button>
-                        )}
-                        {room && phase === "finished" && host && (
-                          <button
-                            className="button primary"
-                            disabled={pending || room.phase !== "finished"}
-                            onClick={() => void roomAction("rematch")}
-                          >
-                            Next round
-                          </button>
-                        )}
-                        {room && phase === "finished" && !host && (
-                          <span className="muted">
-                            Waiting for the host to open the next round.
-                          </span>
-                        )}
+                          {room && phase === "finished" && host && (
+                            <button
+                              className="button primary"
+                              disabled={pending || room.phase !== "finished"}
+                              onClick={() => void roomAction("rematch")}
+                            >
+                              Next round
+                            </button>
+                          )}
+                          {room && phase === "finished" && !host && (
+                            <span className="muted">
+                              Waiting for the host to open the next round.
+                            </span>
+                          )}
+                        </div>
+                        {phase === "finished" && actionTools}
                       </div>
-                      <div className="action-tools">
-                        <button
-                          className="icon-button"
-                          aria-label={
-                            zen ? "Exit focus mode" : "Enter focus mode"
-                          }
-                          aria-pressed={zen}
-                          onClick={() => setZen(!zen)}
-                        >
-                          {zen ? <MinimizeIcon /> : <MaximizeIcon />}
-                        </button>
-                        <button
-                          className="icon-button"
-                          aria-label="Keyboard shortcuts and help"
-                          onClick={() => setDialog("help")}
-                        >
-                          <KeyboardIcon />
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   <details className="track-drawer" open>
                     <summary>

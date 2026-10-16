@@ -220,17 +220,25 @@
 }
 .slick-codepace .typing-bottom {
   justify-content: flex-start;
-  padding-top: 14px;
+  align-items: center;
+  padding: 8px 0 16px;
   line-height: 1.7;
+  text-align: left;
+}
+.slick-codepace #typing-instructions {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .slick-codepace .race-actions {
   justify-content: space-between;
-  padding: 22px 0 26px;
+  padding: 0 0 26px;
   gap: 12px;
   flex-wrap: wrap;
 }
 .slick-codepace .action-tools {
   position: static;
+  flex-shrink: 0;
   gap: 4px;
 }
 .slick-codepace .button {

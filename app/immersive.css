@@ -400,8 +400,8 @@
   gap: 4px;
 }
 .slick-codepace .action-tools .icon-button {
-  width: 38px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 .slick-codepace .music-credit {
   color: var(--muted);
@@ -835,9 +835,6 @@
   .slick-codepace .action-tools .icon-button {
     width: 44px;
     height: 44px;
-  }
-  .slick-codepace .action-tools .icon-button:last-child {
-    display: none;
   }
   .slick-codepace .button {
     min-height: 44px;

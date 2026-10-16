@@ -34,7 +34,7 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run db:migrate
       - run: npm run check
-      - name: Check player workflows and six-player rooms
+      - name: Check SEO, player workflows and six-player rooms
         run: |
           npm start > /tmp/codepace.log 2>&1 &
           server_pid=$!
@@ -43,6 +43,7 @@ jobs:
             if curl --fail --silent http://localhost:5189 > /dev/null; then break; fi
             sleep 1
           done
+          npm run test:seo
           npm run test:ui
           npm run test:rooms
           npm run test:load
