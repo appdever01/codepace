@@ -275,6 +275,19 @@
 .slick-codepace .lane {
   min-height: 56px;
 }
+.slick-codepace .room-lanes {
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--surface);
+}
+.slick-codepace .room-lanes .own-lane {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+}
 .slick-codepace .progress-sidebar {
   margin-top: 28px;
   gap: 16px;

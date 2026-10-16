@@ -189,6 +189,11 @@
 }
 .race-results .room-standings {
   margin-top: 28px;
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--surface);
 }
 @media (max-width: 760px) {
   .slick-codepace.phase-finished .race-column:not(.code-workspace) > .arena {

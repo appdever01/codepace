@@ -137,7 +137,9 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     });
     fireEvent.click(screen.getByRole("button", { name: "Create a room" }));
     await waitFor(() =>
-      assert.ok(screen.getByRole("status", { name: "1 of 6 players in room" })),
+      assert.ok(
+        screen.getByRole("status", { name: "1 of 50 players in room" }),
+      ),
     );
     const own = JSON.parse(sessionStorage.getItem("codepace:room")!);
     const controls = screen.getByRole("group", { name: "Room controls" });
@@ -167,7 +169,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     await waitFor(
       () =>
         assert.ok(
-          screen.getByRole("status", { name: "2 of 6 players in room" }),
+          screen.getByRole("status", { name: "2 of 50 players in room" }),
         ),
       {
         timeout: 2500,

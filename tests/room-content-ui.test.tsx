@@ -190,7 +190,7 @@ test("host chooses shared content, changes it before starting and restores code 
     assert.equal(document.querySelectorAll(".code-line").length, 2);
     assert.ok(
       within(screen.getByRole("group", { name: "Room controls" })).getByText(
-        "2/6",
+        "2/50",
       ),
     );
   } finally {

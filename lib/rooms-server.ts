@@ -6,6 +6,7 @@ import { makeRoomPassage, type RoomContent } from "./room-content";
 import { roomContentSchema } from "./room-content-schema";
 import { correctPrefix, wpm, accuracy } from "./scoring";
 import type { RoomSnapshot } from "./room-types";
+import { ROOM_CAPACITY } from "./room-limits";
 
 type StoredPlayer = {
   id: string;
@@ -358,7 +359,7 @@ export async function updateRoom(request: Request, code: string) {
     const room = await getRoom(code, db, true);
     const now = Date.now();
     if (input.action === "join") {
-      if (room.start_at !== null || room.players.length >= 6)
+      if (room.start_at !== null || room.players.length >= ROOM_CAPACITY)
         throw new ApiError(
           409,
           "This room is full or racing. Ask the host to open the next round.",
@@ -496,22 +497,43 @@ export async function updateRoom(request: Request, code: string) {
           input.strokes !== player.strokes ||
           input.errors !== player.errors
         ) {
-          await db.query(
-            "UPDATE players SET typed = $1, strokes = $2, errors = $3, correct = $4, seq = $5, finished_at = $6, seen_at = $7 WHERE id = $8",
-            [
-              input.typed,
-              input.strokes,
-              input.errors,
-              correct,
-              input.seq,
-              finishedAt,
-              now,
-              player.id,
-            ],
-          );
+          Object.assign(player, {
+            typed: input.typed,
+            strokes: input.strokes,
+            errors: input.errors,
+            correct,
+            seq: input.seq,
+            finished_at: finishedAt,
+          });
           changed = true;
         }
       }
+      if (changed || player.seen_at < now - 10000) {
+        player.seen_at = now;
+        const { rows } = await db.query<{ revision: number }>(
+          `WITH progress AS (
+            UPDATE players SET typed = $1, strokes = $2, errors = $3, correct = $4,
+              seq = $5, finished_at = $6, seen_at = $7 WHERE id = $8 AND room_code = $9
+            RETURNING id
+          )
+          UPDATE rooms SET revision = revision + 1
+          WHERE code = $9 AND EXISTS (SELECT 1 FROM progress) RETURNING revision`,
+          [
+            player.typed,
+            player.strokes,
+            player.errors,
+            player.correct,
+            player.seq,
+            player.finished_at,
+            player.seen_at,
+            player.id,
+            code,
+          ],
+        );
+        if (!rows[0]) throw new Error("Room progress could not be saved.");
+        room.revision = rows[0].revision;
+      }
+      return { room: snapshot(room) };
     }
     if (!changed && player.seen_at < now - 10000) {
       await db.query("UPDATE players SET seen_at = $1 WHERE id = $2", [

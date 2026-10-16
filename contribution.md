@@ -55,7 +55,7 @@ npm run check
 
 `npm test` covers scoring, typing state and passage generation. `npm run test:ui` checks player workflows, including a friend-room race through the running API. It expects the server on port 5189.
 
-`npm run test:rooms` checks room creation, shared starts, progress, capacity, access rules, concurrent rematches and host handover. `npm run test:load` exercises six players updating one room and reports response times. To use a different local server, set `CODEPACE_TEST_URL`:
+`npm run test:rooms` checks room creation, shared starts, progress, capacity, access rules, concurrent rematches and host handover. `npm run test:load` fills one room with 50 players, refuses overflow joins and runs independent progress updates for 30 seconds. It checks saved typing, results, rematches and host handover, reports response times and removes its test participants. Set `CODEPACE_LOAD_SECONDS=60` for a full minute. To use a different local server, set `CODEPACE_TEST_URL`:
 
 ```sh
 CODEPACE_TEST_URL=http://127.0.0.1:5190 npm run test:rooms

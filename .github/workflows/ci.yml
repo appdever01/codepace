@@ -34,7 +34,7 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run db:migrate
       - run: npm run check
-      - name: Check SEO, player workflows and six-player rooms
+      - name: Check SEO, player workflows and 50-player rooms
         run: |
           npm start > /tmp/codepace.log 2>&1 &
           server_pid=$!

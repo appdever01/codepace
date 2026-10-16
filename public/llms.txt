@@ -6,7 +6,7 @@ Practice Python, JavaScript, TypeScript, Java, C++, Go and Rust with built-in sn
 
 Code exercises can run to completion or use a 60-second or 180-second timer. Speed and accuracy are tracked. Text modes include words, passages and custom text, with 15-second, 30-second and 60-second races against labelled pace bots.
 
-Friends can create a private room for up to six players, including the host. Rooms have a shared countdown, expire after two hours and are intended for casual play. No account is needed. Room links and API endpoints are temporary gameplay resources, not separate public content pages.
+Friends can create a private room for up to 50 players, including the host. Rooms have a shared countdown, expire after two hours and are intended for casual play. No account is needed. Room links and API endpoints are temporary gameplay resources, not separate public content pages.
 
 Results and preferences stay in the player's browser. They do not sync between devices or domains. Players can review their history and export their results. There is no global leaderboard. Typing speed treats five correct characters as one word; corrected mistakes still count toward accuracy.
 

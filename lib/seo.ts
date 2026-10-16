@@ -1,3 +1,4 @@
+import { ROOM_CAPACITY } from "./room-limits.ts";
 import type { Metadata } from "next";
 
 export const siteUrl = "https://codepace.vercel.app";
@@ -100,7 +101,7 @@ export const siteStructuredData = {
         "Snippets, LeetCode solutions and custom code",
         "Typing speed and accuracy tracking",
         "Text practice and timed typing races",
-        "Private typing races with up to six players",
+        `Private typing races with up to ${ROOM_CAPACITY} players`,
         "Local result history and export",
       ],
     },

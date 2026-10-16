@@ -77,6 +77,7 @@ import {
 } from "@/lib/race";
 import { makePassage } from "@/lib/passages";
 import type { RoomSession, RoomSnapshot } from "@/lib/room-types";
+import { ROOM_CAPACITY } from "@/lib/room-limits";
 import { readSavedValue, removeSavedValue } from "@/lib/storage";
 
 type Tab = "code" | "race" | "practice" | "friends" | "progress";
@@ -793,6 +794,13 @@ export default function CodePace({
           : []),
       ];
   const ownId = session?.id || "you";
+  const largeRoom = !!room && racers.length > 10;
+  const gridRacers = largeRoom
+    ? [
+        ...racers.filter((racer) => racer.id === ownId),
+        ...racers.filter((racer) => racer.id !== ownId),
+      ]
+    : racers;
   const position = Math.max(
     1,
     [...racers]
@@ -1116,7 +1124,12 @@ export default function CodePace({
           )}
         >
           {room && (
-            <div className="room-standings">
+            <div
+              className="room-standings"
+              role={largeRoom ? "region" : undefined}
+              aria-label={largeRoom ? "Room standings" : undefined}
+              tabIndex={largeRoom ? 0 : undefined}
+            >
               <h3>
                 {room.phase === "finished"
                   ? "Final standings"
@@ -1408,13 +1421,15 @@ export default function CodePace({
                   role="status"
                   aria-label={
                     connection
-                      ? `${room.players.length} of 6 players in room`
+                      ? `${room.players.length} of ${ROOM_CAPACITY} players in room`
                       : "Reconnecting to room"
                   }
                 >
                   <UsersGroupRoundedIcon aria-hidden="true" />
                   <span aria-hidden="true">
-                    {connection ? `${room.players.length}/6` : "Reconnecting…"}
+                    {connection
+                      ? `${room.players.length}/${ROOM_CAPACITY}`
+                      : "Reconnecting…"}
                   </span>
                 </span>
                 <button
@@ -1440,7 +1455,10 @@ export default function CodePace({
                     />
                   </div>
                   <h2>Create or join a room.</h2>
-                  <p>Up to six racers. No accounts needed in the game.</p>
+                  <p>
+                    Up to {ROOM_CAPACITY} racers. No accounts needed in the
+                    game.
+                  </p>
                   <label htmlFor="racer-name">Your racer name</label>
                   <input
                     id="racer-name"
@@ -1807,8 +1825,13 @@ export default function CodePace({
                                     : "Just you, no pressure"}
                         </span>
                       </div>
-                      <div className="lanes">
-                        {racers.map((racer) => (
+                      <div
+                        className={`lanes ${largeRoom ? "room-lanes" : ""}`}
+                        role={largeRoom ? "region" : undefined}
+                        aria-label={largeRoom ? "All racers" : undefined}
+                        tabIndex={largeRoom ? 0 : undefined}
+                      >
+                        {gridRacers.map((racer) => (
                           <div
                             className={`lane ${racer.color} ${racer.id === ownId ? "own-lane" : ""}`}
                             key={racer.id}
@@ -2248,8 +2271,8 @@ export default function CodePace({
               <h3>Playing with friends</h3>
               <p>
                 Create a room, share its link and wait for at least one friend.
-                The host starts the shared countdown. Rooms hold six people and
-                expire after two hours.
+                The host starts the shared countdown. Rooms hold up to{" "}
+                {ROOM_CAPACITY} people and expire after two hours.
               </p>
               <p className="muted">
                 Solo rivals are pace bots. Personal results stay on this device.
