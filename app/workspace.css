@@ -1,12 +1,14 @@
 .slick-codepace .header {
   padding: 20px 4%;
   gap: 20px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 .slick-codepace .brand {
   font-size: 24px;
   letter-spacing: -0.035em;
 }
 .slick-codepace .header nav {
+  justify-self: center;
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--line);
@@ -39,20 +41,58 @@
 .slick-codepace .header-tools {
   gap: 6px;
 }
-.slick-codepace .github-links {
-  background: transparent;
-  border: 0;
-  border-radius: 999px;
+.github-star-cta {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 160ms var(--ease);
 }
-.slick-codepace .github-links a {
-  width: 38px;
-  min-width: 38px;
-  min-height: 38px;
-  padding: 0;
+.github-star-cta:hover {
+  background: var(--surface-hover);
 }
-.slick-codepace .github-label,
-.slick-codepace .github-star span {
-  display: none;
+.github-star-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.github-star-cta > svg {
+  width: 17px;
+  height: 17px;
+}
+.github-star-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.github-star-count svg {
+  width: 14px;
+  height: 14px;
+  color: var(--orange);
+}
+@media (max-width: 1250px) {
+  .github-star-label-detail {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  .slick-codepace .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .slick-codepace .header nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 .slick-codepace .header-tools > .icon-button,
 .slick-codepace .audio-trigger,
@@ -542,9 +582,6 @@
   .slick-codepace .brand {
     font-size: 23px;
   }
-  .slick-codepace .header-tools .github-links {
-    display: none;
-  }
   .slick-codepace .header-tools > .icon-button,
   .slick-codepace .audio-trigger,
   .slick-codepace .profile-button {
@@ -612,7 +649,18 @@
     width: min(320px, 92vw);
   }
 }
+@media (max-width: 480px) {
+  .slick-codepace .header-tools {
+    width: 100%;
+  }
+  .github-star-cta {
+    margin-right: auto;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .github-star-cta {
+    transition: none;
+  }
   .audio-popover {
     animation: none;
   }

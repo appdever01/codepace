@@ -268,41 +268,6 @@ kbd {
   box-shadow: 0 3px 8px #2535640a;
   font-weight: 700;
 }
-.github-links {
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 11px;
-  overflow: hidden;
-}
-.github-links a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 12px;
-  font-weight: 650;
-  transition: background 160ms ease;
-}
-.github-links a:hover {
-  background: var(--surface-raised);
-}
-.github-links a:focus-visible {
-  outline-offset: -4px;
-}
-.github-links svg {
-  width: 18px;
-  height: 18px;
-}
-.github-star {
-  border-left: 1px solid var(--line);
-}
-.github-star svg {
-  color: var(--yellow);
-}
 .header-tools {
   display: flex;
   align-items: center;
@@ -1630,12 +1595,6 @@ td {
     padding-inline: 4%;
     gap: 16px;
   }
-  .github-label {
-    display: none;
-  }
-  .github-links a {
-    padding-inline: 10px;
-  }
   .header nav button {
     padding-inline: 12px;
   }
@@ -1803,13 +1762,6 @@ td {
     width: 32px;
     height: 35px;
     border-radius: 10px;
-  }
-  .github-label {
-    display: none;
-  }
-  .github-links a {
-    padding-inline: 10px;
-    min-width: 40px;
   }
   .header-tools {
     order: 1;

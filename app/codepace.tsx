@@ -14,6 +14,7 @@ import Image from "next/image";
 import RaceResults from "@/components/race-results";
 import AudioControls from "@/components/audio-controls";
 import UserAvatar from "@/components/user-avatar";
+import GitHubStar from "@/components/github-star";
 import RoomSetup, { RoomConfiguration } from "@/components/room-setup";
 import RoomProblemInfo from "@/components/room-problem-info";
 import RoomInvite from "@/components/room-invite";
@@ -1216,6 +1217,7 @@ export default function CodePace({
           ))}
         </nav>
         <div className="header-tools">
+          <GitHubStar />
           <AudioControls
             musicEnabled={musicEnabled}
             musicPlaying={musicPlaying}

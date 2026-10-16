@@ -78,23 +78,6 @@
   justify-self: end;
   gap: 8px;
 }
-.slick-codepace .github-links {
-  border: 0;
-  background: #a0b9eb0b;
-  border-radius: 12px;
-}
-.slick-codepace .github-links a {
-  min-height: 40px;
-  font-size: 12px;
-  padding-inline: 12px;
-}
-.slick-codepace .github-star {
-  border-color: #a0b9eb14;
-}
-.slick-codepace .github-links svg {
-  width: 16px;
-  height: 16px;
-}
 .slick-codepace .profile-button {
   background: var(--surface-hover);
   color: var(--ink);
@@ -655,13 +638,14 @@
   display: none;
 }
 .slick-codepace.zen .header nav,
-.slick-codepace.zen .github-links {
+.slick-codepace.zen .github-star-cta {
   opacity: 0.3;
   transition: opacity 160ms var(--ease);
 }
 .slick-codepace.zen .header nav:focus-within,
 .slick-codepace.zen .header nav:hover,
-.slick-codepace.zen .github-links:hover {
+.slick-codepace.zen .github-star-cta:focus-visible,
+.slick-codepace.zen .github-star-cta:hover {
   opacity: 1;
 }
 
@@ -672,9 +656,6 @@
   }
   .slick-codepace .header nav button {
     padding-inline: 10px;
-  }
-  .slick-codepace .github-label {
-    display: none;
   }
   .slick-codepace .main {
     width: 88%;
@@ -718,15 +699,6 @@
     order: 1;
     margin-left: auto;
     gap: 6px;
-  }
-  .slick-codepace .github-links a {
-    width: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    padding-inline: 10px;
-  }
-  .slick-codepace .github-star span {
-    display: none;
   }
   .slick-codepace .header-tools .icon-button,
   .slick-codepace .profile-button {
