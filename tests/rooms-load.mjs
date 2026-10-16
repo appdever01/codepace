@@ -5,6 +5,7 @@ const origin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
 const duration = Number(process.env.CODEPACE_LOAD_SECONDS || 30);
 assert.ok([15, 30, 60].includes(duration), "Use a 15, 30 or 60 second race.");
 console.log(`Load testing 50 players for ${duration} seconds at ${origin}`);
+const scheduled = process.env.CODEPACE_LOAD_SCHEDULED === "true";
 const timings = [];
 const sessions = [];
 const departed = new Set();
@@ -108,13 +109,29 @@ try {
   rejectedJoins = attempts.filter((result) => result.status === 409).length;
   assert.equal(rejectedJoins, 3);
   assert.equal(sessions.length, 50);
-  const startSentAt = Date.now();
-  const started = await request(
+  let startSentAt = Date.now();
+  let started = await request(
     roomPath,
-    { action: "start", round: 1 },
+    scheduled
+      ? { action: "schedule", round: 1, scheduledAt: Date.now() + 15000 }
+      : { action: "start", round: 1 },
     host.token,
   );
-  const clockOffset = started.room.serverNow - (startSentAt + Date.now()) / 2;
+  if (scheduled) {
+    assert.equal(started.room.phase, "lobby");
+    const planned = started.room.scheduledAt;
+    const deadline = performance.now() + 20000;
+    while (started.room.startAt === null && performance.now() < deadline) {
+      await sleep(250);
+      startSentAt = Date.now();
+      started = await request(roomPath, undefined, sessions[1].token);
+    }
+    assert.equal(started.room.startAt, planned);
+    console.log(
+      "The scheduled countdown started automatically without a Start request.",
+    );
+  }
+  let clockOffset = started.room.serverNow - (startSentAt + Date.now()) / 2;
   assert.equal(started.room.phase, "countdown");
   const countdowns = await all(
     sessions.map((session) => request(roomPath, undefined, session.token)),
@@ -123,6 +140,17 @@ try {
   await sleep(
     Math.max(0, started.room.startAt - Date.now() - clockOffset + 100),
   );
+  const readyDeadline = performance.now() + 10000;
+  let ready;
+  do {
+    const sentAt = Date.now();
+    ready = await request(roomPath, undefined, host.token);
+    checkRoom(ready.room, started);
+    clockOffset = ready.room.serverNow - (sentAt + Date.now()) / 2;
+    if (ready.room.phase !== "countdown") break;
+    await sleep(50);
+  } while (performance.now() < readyDeadline);
+  assert.equal(ready.room.phase, "running");
   const raceStarted = performance.now();
   const raceDeadline =
     raceStarted +
@@ -209,6 +237,14 @@ try {
       started.room.startAt + duration * 1000 - Date.now() - clockOffset + 150,
     ),
   );
+  const finishDeadline = performance.now() + 5000;
+  let finished;
+  do {
+    finished = await request(roomPath, undefined, host.token);
+    if (finished.room.phase === "finished") break;
+    await sleep(50);
+  } while (performance.now() < finishDeadline);
+  assert.equal(finished.room.phase, "finished");
   const restored = await all(
     sessions.map((session) => request(roomPath, undefined, session.token)),
   );
@@ -234,6 +270,7 @@ try {
   );
   assert.equal(rematch.room.round, 2);
   assert.equal(rematch.room.phase, "lobby");
+  assert.equal(rematch.room.scheduledAt, null);
   assert.equal(rematch.room.players.length, 50);
   assert.deepEqual(rematch.room.content, content);
   assert.ok(
@@ -269,6 +306,7 @@ try {
     origin,
     players: sessions.length,
     durationSeconds: duration,
+    scheduledStart: scheduled,
     rejectedJoins,
     requests: timings.length,
     unexpectedErrors,

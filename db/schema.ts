@@ -22,6 +22,7 @@ export const rooms = pgTable(
     round: integer("round").notNull().default(1),
     revision: integer("revision").notNull().default(1),
     startAt: bigint("start_at", { mode: "number" }),
+    scheduledAt: bigint("scheduled_at", { mode: "number" }),
     createdAt: bigint("created_at", { mode: "number" }).notNull(),
     expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
   },

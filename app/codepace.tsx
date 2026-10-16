@@ -15,6 +15,7 @@ import RaceResults from "@/components/race-results";
 import AudioControls from "@/components/audio-controls";
 import UserAvatar from "@/components/user-avatar";
 import RoomSetup, { RoomConfiguration } from "@/components/room-setup";
+import RoomSchedule from "@/components/room-schedule";
 import {
   defaultRoomContent,
   roomContentLabel,
@@ -457,7 +458,7 @@ export default function CodePace({
       session,
       progress: () => ({
         round: roundRef.current,
-        seq: ++seqRef.current,
+        seq: seqRef.current,
         typed: engineRef.current.typed,
         strokes: engineRef.current.strokes,
         errors: engineRef.current.errors,
@@ -601,6 +602,7 @@ export default function CodePace({
     }
     const previous = engineRef.current;
     const next = applyInput(previous, value, passage);
+    seqRef.current += 1;
     engineRef.current = next;
     setEngine(next);
     if (settings.sound && next.strokes > previous.strokes) {
@@ -677,10 +679,21 @@ export default function CodePace({
     }
   }
   async function roomAction(
-    action: "start" | "rematch" | "leave" | "reclaim" | "configure",
-    selection?: { content: RoomContent; duration: number },
+    action:
+      | "start"
+      | "rematch"
+      | "leave"
+      | "reclaim"
+      | "configure"
+      | "schedule"
+      | "cancel_schedule",
+    selection?: {
+      content?: RoomContent;
+      duration?: number;
+      scheduledAt?: number;
+    },
   ) {
-    if (!session || pending) return;
+    if (!session || pending) return false;
     setPending(true);
     setRoomError("");
     const sentAt = Date.now();
@@ -710,10 +723,12 @@ export default function CodePace({
         setMode("quotes");
         setPassage(makePassage("quotes", Date.now(), "", [], duration));
       } else acceptRoom(data.room, sentAt);
+      return true;
     } catch (error) {
       setRoomError(
         error instanceof Error ? error.message : "Could not update the room.",
       );
+      return false;
     } finally {
       setPending(false);
     }
@@ -1549,14 +1564,15 @@ export default function CodePace({
                       <span>2</span>Copy the invite link to your friends.
                     </li>
                     <li>
-                      <span>3</span>The host starts when everyone is ready.
+                      <span>3</span>The host starts now or schedules a start
+                      time.
                     </li>
                   </ol>
                   <div className="friends-note">
                     <LinkIcon />
                     <span>
-                      Rooms last two hours. Progress updates about once a
-                      second.
+                      Rooms last two hours, or until two hours after a scheduled
+                      start.
                     </span>
                   </div>
                 </aside>
@@ -1566,24 +1582,40 @@ export default function CodePace({
                 <div
                   className={`race-column ${isSoloCoding ? "code-workspace" : ""} ${room ? "room-race" : ""}`}
                 >
-                  {room && host && room.phase === "lobby" && (
-                    <RoomConfiguration
-                      key={JSON.stringify([
-                        room.code,
-                        room.round,
-                        room.duration,
-                        room.content,
-                      ])}
-                      content={room.content || { mode: "quotes" }}
-                      duration={room.duration}
-                      disabled={pending}
-                      onDirtyChange={setRoomDraftPending}
-                      onApply={(content, seconds) =>
-                        void roomAction("configure", {
-                          content,
-                          duration: seconds,
-                        })
+                  {room &&
+                    host &&
+                    room.phase === "lobby" &&
+                    !room.scheduledAt && (
+                      <RoomConfiguration
+                        key={JSON.stringify([
+                          room.code,
+                          room.round,
+                          room.duration,
+                          room.content,
+                        ])}
+                        content={room.content || { mode: "quotes" }}
+                        duration={room.duration}
+                        disabled={pending}
+                        onDirtyChange={setRoomDraftPending}
+                        onApply={(content, seconds) =>
+                          void roomAction("configure", {
+                            content,
+                            duration: seconds,
+                          })
+                        }
+                      />
+                    )}
+                  {room && room.phase === "lobby" && (
+                    <RoomSchedule
+                      key={`${room.code}:${room.round}`}
+                      scheduledAt={room.scheduledAt ?? null}
+                      serverNow={room.serverNow}
+                      host={host}
+                      disabled={pending || roomDraftPending}
+                      onSchedule={(scheduledAt) =>
+                        roomAction("schedule", { scheduledAt })
                       }
+                      onCancel={() => void roomAction("cancel_schedule")}
                     />
                   )}
                   {!room && (
@@ -1948,11 +1980,15 @@ export default function CodePace({
                       {room && room.phase === "lobby" && (
                         <div className="lobby-action">
                           <p>
-                            {host
-                              ? room.players.length < 2
-                                ? "Share the invite link to bring a friend to the grid."
-                                : "Your grid is ready. Start when everyone is here."
-                              : "Waiting for the host to start the race."}
+                            {!!room.scheduledAt
+                              ? host
+                                ? "You can also start the race now."
+                                : "This race will start automatically."
+                              : host
+                                ? room.players.length < 2
+                                  ? "Share the invite link to bring a friend to the grid."
+                                  : "Your grid is ready. Start when everyone is here."
+                                : "Waiting for the host to start the race."}
                           </p>
                           {host ? (
                             <button
@@ -1966,7 +2002,7 @@ export default function CodePace({
                               }
                               onClick={() => void roomAction("start")}
                             >
-                              Start race
+                              {!!room.scheduledAt ? "Start now" : "Start race"}
                             </button>
                           ) : room.serverNow -
                               (room.players.find((p) => p.id === room.hostId)
@@ -2271,8 +2307,11 @@ export default function CodePace({
               <h3>Playing with friends</h3>
               <p>
                 Create a room, share its link and wait for at least one friend.
-                The host starts the shared countdown. Rooms hold up to{" "}
-                {ROOM_CAPACITY} people and expire after two hours.
+                The host can start immediately or schedule a start within the
+                next seven days. Scheduled races begin automatically with at
+                least two connected players, even if the host is away. Rooms
+                hold up to {ROOM_CAPACITY} people and expire after two hours, or
+                two hours after a scheduled start.
               </p>
               <p className="muted">
                 Solo rivals are pace bots. Personal results stay on this device.

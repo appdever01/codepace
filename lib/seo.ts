@@ -102,6 +102,7 @@ export const siteStructuredData = {
         "Typing speed and accuracy tracking",
         "Text practice and timed typing races",
         `Private typing races with up to ${ROOM_CAPACITY} players`,
+        "Scheduled multiplayer race starts",
         "Local result history and export",
       ],
     },

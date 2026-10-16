@@ -22,6 +22,7 @@ export type RoomSnapshot = {
   revision: number;
   duration: number;
   startAt: number | null;
+  scheduledAt?: number | null;
   serverNow: number;
   expiresAt: number;
   phase: "lobby" | "countdown" | "running" | "finished";

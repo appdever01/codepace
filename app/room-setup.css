@@ -63,3 +63,64 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.room-schedule {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.room-schedule-status strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.room-schedule-status p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.room-schedule-actions,
+.room-schedule-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.room-schedule-form {
+  align-items: flex-end;
+}
+.room-schedule .text-button {
+  min-height: 44px;
+  padding: 8px 4px;
+}
+.room-schedule-form label {
+  display: grid;
+  gap: 8px;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 13px;
+}
+.room-schedule-form input {
+  width: 280px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--ink);
+  font: 14px var(--sans);
+}
+.room-schedule-form .form-error {
+  width: 100%;
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .room-schedule-form label {
+    width: 100%;
+  }
+  .room-schedule-form input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+}

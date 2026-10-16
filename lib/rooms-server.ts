@@ -7,6 +7,11 @@ import { roomContentSchema } from "./room-content-schema";
 import { correctPrefix, wpm, accuracy } from "./scoring";
 import type { RoomSnapshot } from "./room-types";
 import { ROOM_CAPACITY } from "./room-limits";
+import {
+  ROOM_COUNTDOWN_MS,
+  scheduleProblem,
+  scheduledStartTime,
+} from "./room-schedule";
 
 type StoredPlayer = {
   id: string;
@@ -32,6 +37,7 @@ type StoredRoom = {
   round: number;
   revision: number;
   start_at: number | null;
+  scheduled_at: number | null;
   created_at: number;
   expires_at: number;
   players: StoredPlayer[];
@@ -56,6 +62,15 @@ const actionSchema = z.discriminatedUnion("action", [
     duration: durationSchema,
   }),
   z.object({ action: z.literal("start"), round: z.number().int().positive() }),
+  z.object({
+    action: z.literal("schedule"),
+    round: z.number().int().positive(),
+    scheduledAt: z.number().int().positive(),
+  }),
+  z.object({
+    action: z.literal("cancel_schedule"),
+    round: z.number().int().positive(),
+  }),
   z.object({
     action: z.literal("rematch"),
     round: z.number().int().positive(),
@@ -182,6 +197,26 @@ async function member(request: Request, room: StoredRoom) {
     throw new ApiError(401, "Your room session has ended. Join again.");
   return player;
 }
+async function startScheduledRoom(
+  room: StoredRoom,
+  db: Queryable,
+  now: number,
+) {
+  if (room.start_at !== null) return;
+  const startAt = scheduledStartTime(
+    room.scheduled_at,
+    room.players.filter((player) => player.seen_at > now - 30000).length,
+    now,
+  );
+  if (startAt === null) return;
+  const { rows } = await db.query<{ revision: number }>(
+    "UPDATE rooms SET start_at = $1, expires_at = GREATEST(expires_at, $1 + 7200000::bigint), revision = revision + 1 WHERE code = $2 RETURNING revision",
+    [startAt, room.code],
+  );
+  room.start_at = startAt;
+  room.expires_at = Math.max(room.expires_at, startAt + 7200000);
+  room.revision = rows[0].revision;
+}
 function snapshot(room: StoredRoom): RoomSnapshot {
   const now = Date.now();
   const started = room.start_at !== null && now >= room.start_at;
@@ -198,6 +233,7 @@ function snapshot(room: StoredRoom): RoomSnapshot {
     content: room.content,
     duration: room.duration,
     startAt: room.start_at,
+    scheduledAt: room.scheduled_at,
     expiresAt: room.expires_at,
     serverNow: now,
     phase:
@@ -339,8 +375,22 @@ export async function createRoom(request: Request) {
   throw new ApiError(503, "Could not create a room. Try again.");
 }
 export async function readRoom(request: Request, code: string) {
-  const room = await getRoom(code);
-  const player = await member(request, room);
+  let room = await getRoom(code);
+  let player = await member(request, room);
+  if (
+    room.start_at === null &&
+    room.scheduled_at !== null &&
+    room.scheduled_at <= Date.now() + ROOM_COUNTDOWN_MS
+  ) {
+    const refreshed = await transaction(async (db) => {
+      const current = await getRoom(code, db, true);
+      const self = await member(request, current);
+      await startScheduledRoom(current, db, Date.now());
+      return { room: current, player: self };
+    });
+    room = refreshed.room;
+    player = refreshed.player;
+  }
   return reply({
     room: snapshot(room),
     self: {
@@ -358,6 +408,7 @@ export async function updateRoom(request: Request, code: string) {
   const result = await transaction(async (db) => {
     const room = await getRoom(code, db, true);
     const now = Date.now();
+    await startScheduledRoom(room, db, now);
     if (input.action === "join") {
       if (room.start_at !== null || room.players.length >= ROOM_CAPACITY)
         throw new ApiError(
@@ -374,9 +425,11 @@ export async function updateRoom(request: Request, code: string) {
         "UPDATE rooms SET revision = revision + 1 WHERE code = $1",
         [code],
       );
+      const joinedRoom = await getRoom(code, db);
+      await startScheduledRoom(joinedRoom, db, Date.now());
       return {
         session: { code, id, token },
-        room: snapshot(await getRoom(code, db)),
+        room: snapshot(joinedRoom),
       };
     }
     const player = await member(request, room);
@@ -388,6 +441,11 @@ export async function updateRoom(request: Request, code: string) {
         throw new ApiError(403, "Only the host can choose the room content.");
       if (room.start_at !== null)
         throw new ApiError(409, "Change the selection before the race starts.");
+      if (room.scheduled_at !== null)
+        throw new ApiError(
+          409,
+          "Cancel the scheduled start before changing the selection.",
+        );
       await db.query(
         "UPDATE rooms SET content = $1, duration = $2, passage = $3 WHERE code = $4",
         [
@@ -410,10 +468,30 @@ export async function updateRoom(request: Request, code: string) {
           409,
           "Wait for two connected racers, or refresh the room.",
         );
-      await db.query("UPDATE rooms SET start_at = $1 WHERE code = $2", [
-        now + 4000,
-        code,
-      ]);
+      await db.query(
+        "UPDATE rooms SET start_at = $1, expires_at = CASE WHEN scheduled_at IS NOT NULL THEN $1 + 7200000::bigint ELSE expires_at END, scheduled_at = NULL WHERE code = $2",
+        [now + ROOM_COUNTDOWN_MS, code],
+      );
+      changed = true;
+    }
+    if (input.action === "schedule" || input.action === "cancel_schedule") {
+      if (player.id !== room.host_id)
+        throw new ApiError(403, "Only the host can schedule the race.");
+      if (room.start_at !== null)
+        throw new ApiError(409, "The countdown has already started.");
+      if (input.action === "schedule") {
+        const problem = scheduleProblem(input.scheduledAt, now);
+        if (problem) throw new ApiError(400, problem);
+        await db.query(
+          "UPDATE rooms SET scheduled_at = $1, expires_at = $1 + 7200000::bigint WHERE code = $2",
+          [input.scheduledAt, code],
+        );
+      } else {
+        await db.query(
+          "UPDATE rooms SET scheduled_at = NULL, expires_at = $1 WHERE code = $2",
+          [now + 7200000, code],
+        );
+      }
       changed = true;
     }
     if (input.action === "rematch") {
@@ -422,7 +500,7 @@ export async function updateRoom(request: Request, code: string) {
       if (snapshot(room).phase !== "finished")
         throw new ApiError(409, "Finish this race first.");
       await db.query(
-        "UPDATE rooms SET start_at = NULL, round = round + 1, passage = $1 WHERE code = $2",
+        "UPDATE rooms SET start_at = NULL, scheduled_at = NULL, round = round + 1, passage = $1 WHERE code = $2",
         [makeRoomPassage(room.content, now, room.duration), code],
       );
       await db.query(
