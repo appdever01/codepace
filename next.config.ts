@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  agentRules: false,
+  poweredByHeader: false,
+  experimental: { cpus: 2 },
 };
 
 export default nextConfig;

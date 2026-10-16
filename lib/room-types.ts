@@ -16,6 +16,7 @@ export type RoomSnapshot = {
   hostId: string;
   round: number;
   passage: string;
+  revision: number;
   duration: number;
   startAt: number | null;
   serverNow: number;

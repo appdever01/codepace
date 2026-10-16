@@ -3,59 +3,53 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.13.0 <27"
   },
   "scripts": {
-    "install:ci": "node scripts/install-ci.mjs",
-    "dev": "node scripts/run-framework.mjs dev",
-    "build": "node scripts/run-framework.mjs build",
-    "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "dev": "next dev --port 5189",
+    "build": "next build",
+    "start": "next start --port 5189",
+    "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --test-concurrency=2 tests/*.test.ts",
     "test:rooms": "node tests/rooms-smoke.mjs",
-    "predev": "node scripts/configure-keylane.mjs",
-    "prebuild": "node scripts/configure-keylane.mjs",
-    "pretypecheck": "node scripts/configure-keylane.mjs",
-    "test:ui": "node --import ./tests/dom-setup.mjs --import tsx --test --test-concurrency=1 tests/*ui.test.tsx"
+    "test:load": "node tests/rooms-load.mjs",
+    "test:ui": "node --import ./tests/dom-setup.mjs --import tsx --test --test-concurrency=1 tests/*ui.test.tsx",
+    "check": "npm test && npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
+    "@dicebear/core": "^10.7.0",
+    "@dicebear/styles": "^10.6.0",
     "@solar-icons/react": "^2.3.2",
+    "@vercel/functions": "^3.10.1",
     "drizzle-orm": "0.45.2",
-    "next": "16.3.4",
+    "next": "^16.4.2",
+    "pg": "^8.23.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-icons": "^5.7.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
-    "@cloudflare/workers-types": "4.20260515.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "22.19.19",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.2",
-    "@vitejs/plugin-rsc": "0.5.26",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.3.4",
+    "eslint-config-next": "^16.4.2",
     "happy-dom": "^21.0.1",
-    "json-rpc-2.0": "1.7.1",
     "prettier": "^3.9.10",
-    "raw-body": "3.0.2",
-    "react-server-dom-webpack": "19.2.6",
     "tsx": "^4.23.15",
-    "typescript": "5.9.3",
-    "vinext": "1.0.0-beta.5",
-    "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "typescript": "5.9.3"
   },
   "type": "module",
   "overrides": {
-    "miniflare": {
-      "sharp": "0.35.4"
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
     }
   }
 }

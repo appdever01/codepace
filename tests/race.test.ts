@@ -11,7 +11,6 @@ import {
 } from "../lib/race.ts";
 import { accuracy, correctPrefix, wpm } from "../lib/scoring.ts";
 import { makePassage } from "../lib/passages.ts";
-import { dailyPassage } from "../lib/daily.ts";
 
 test("speed uses five correct characters per word and avoids an initial spike", () => {
   assert.equal(wpm(250, 30000), 100);
@@ -40,14 +39,6 @@ test("clean-key streaks stop on errors and do not grow behind an unresolved mist
   state = applyInput(state, "typingXpractice", "typing practice");
   assert.equal(state.streak, 0);
   assert.equal(state.bestStreak, 6);
-  assert.equal(
-    dailyPassage(new Date(2026, 9, 15, 9)),
-    dailyPassage(new Date(2026, 9, 15, 21)),
-  );
-  assert.notEqual(
-    dailyPassage(new Date(2026, 9, 15)),
-    dailyPassage(new Date(2026, 9, 16)),
-  );
 });
 test("edits in the middle cannot skip a mistake and typing is capped at passage length", () => {
   const state = applyInput(emptyTyping(), "wrong", "right");

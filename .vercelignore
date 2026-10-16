@@ -1,0 +1,17 @@
+.verification
+.openai
+.sites-runtime
+.wrangler
+.impeccable
+.neon
+.next
+dist
+PRODUCT.md
+DESIGN.md
+AGENTS.md
+AGENT.md
+CLAUDE.md
+CODEX.md
+setup.sh
+.env*
+tests

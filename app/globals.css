@@ -1,7 +1,8 @@
 @font-face {
-  font-family: Geist;
-  src: url("/fonts/geist.woff2") format("woff2");
+  font-family: Aspekta;
+  src: url("/fonts/AspektaVF.woff2") format("woff2");
   font-weight: 100 900;
+  font-style: normal;
   font-display: swap;
 }
 @font-face {
@@ -19,9 +20,10 @@
   --ink: #f4f7fb;
   --muted: #a3aec1;
   --subtle: #b4bdcb;
-  --line: #222a38;
-  --accent: #8ab4f8;
-  --accent-soft: #17253c;
+  --line: #ffffff0f;
+  --accent: #f4f7fb;
+  --accent-soft: #ffffff0f;
+  --field: #bed4ff0f;
   --orange: #f2b663;
   --orange-soft: #302619;
   --violet: #a3aee9;
@@ -30,10 +32,10 @@
   --pink: #c4a4c2;
   --yellow: #f2c784;
   --danger: #f88892;
-  --button-ink: #fff;
+  --button-ink: var(--bg);
   --mono: "Geist Mono", ui-monospace, monospace;
-  --sans: "Geist", system-ui, sans-serif;
-  --display: "Geist", system-ui, sans-serif;
+  --sans: "Aspekta", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --display: var(--sans);
   --shadow: none;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -46,14 +48,15 @@
   --ink: #0e1626;
   --muted: #475166;
   --subtle: #647087;
-  --line: #dce2ec;
-  --accent: #1a62e0;
-  --accent-soft: #e9f0fe;
+  --line: #0e162610;
+  --accent: #0e1626;
+  --accent-soft: #0e16260d;
+  --field: #0e162608;
   --orange: #a86c24;
   --orange-soft: #fff2df;
   --violet: #626eac;
   --coral: #a76962;
-  --blue: #4379bd;
+  --blue: #3269aa;
   --pink: #93678f;
   --yellow: #99711d;
   --danger: #c4343a;
@@ -72,6 +75,7 @@ body {
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 button,
 input,
@@ -575,14 +579,15 @@ kbd {
 }
 .passage {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
   font: 22px/1.95 var(--mono);
   color: var(--subtle);
   white-space: pre-wrap;
   word-break: normal;
   user-select: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
   transition: filter 0.15s;
 }
 .word {
@@ -625,6 +630,7 @@ kbd {
   outline: none !important;
   border: 0;
   padding: 0;
+  pointer-events: none;
 }
 .typing-input:disabled {
   pointer-events: none;
@@ -955,78 +961,6 @@ kbd {
   gap: 21px;
   padding-top: 1px;
 }
-.daily-sprint {
-  padding: 17px 21px 21px;
-  border-radius: 19px;
-  background: #fff0e3;
-  color: #553f34;
-  overflow: hidden;
-  position: relative;
-}
-.daily-art {
-  aspect-ratio: 3 / 2;
-  position: relative;
-  margin: -5px -16px 10px;
-}
-.daily-art > img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.daily-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.daily-title h2 {
-  font-size: 22px;
-  color: #603e2a;
-}
-.daily-title > span {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  font-size: 10px;
-  color: #7c5944;
-  border: 1px solid #ecccaf;
-  border-radius: 6px;
-  padding: 3px 5px;
-}
-.daily-title svg {
-  width: 13px;
-  height: 13px;
-}
-.daily-sprint > p {
-  font-size: 12px;
-  line-height: 1.7;
-  color: #795a47;
-  margin-top: 9px;
-}
-.daily-button {
-  margin-top: 18px;
-  width: 100%;
-  background: #fffaf5;
-  color: #6b452c !important;
-  font-size: 12px;
-  min-height: 44px;
-  justify-content: center;
-  box-shadow: 0 3px 0 #ebcfb9;
-}
-.daily-button:hover:not(:disabled) {
-  background: #fff;
-}
-.daily-button > svg {
-  width: 17px;
-  height: 17px;
-}
-.daily-record {
-  display: block;
-  font-size: 11px;
-  margin-top: 12px;
-  color: #805032;
-}
 .session-stats {
   padding: 21px;
   background: var(--surface);
@@ -1102,41 +1036,6 @@ kbd {
 .mini-stats small {
   font: 10px var(--sans);
   color: var(--muted);
-}
-.daily-goal {
-  margin-top: 21px;
-  padding-top: 17px;
-  border-top: 1px solid var(--line);
-}
-.daily-goal > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--muted);
-  gap: 10px;
-}
-.daily-goal b {
-  color: var(--ink);
-  font-weight: 600;
-}
-.goal-segments {
-  display: flex;
-  gap: 5px;
-  margin-top: 12px;
-}
-.goal-segments span {
-  flex: 1;
-  height: 6px;
-  background: var(--surface-hover);
-  border-radius: 5px;
-}
-.goal-segments span.filled {
-  background: var(--accent);
-}
-.daily-goal p {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 10px;
 }
 .recent-races {
   padding: 0 3px;
@@ -1218,102 +1117,6 @@ kbd {
 }
 .typing-tip {
   display: none;
-}
-.result-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-}
-.result-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-}
-.result-icon > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.result-icon > svg {
-  width: 44px;
-  height: 44px;
-  color: var(--yellow);
-}
-.results {
-  padding: 0 28px 8px;
-}
-.result-heading h2 {
-  font-size: 23px;
-}
-.result-heading p {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 5px;
-}
-.result-position {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--yellow);
-  margin-top: 15px;
-}
-.result-position > svg {
-  width: 20px;
-  height: 20px;
-}
-.result-numbers {
-  display: flex;
-  gap: 22px;
-  justify-content: space-between;
-  margin-top: 21px;
-}
-.result-numbers > div {
-  display: flex;
-  flex-direction: column;
-}
-.result-numbers strong {
-  font: 600 36px/1.2 var(--display);
-  letter-spacing: -0.02em;
-}
-.result-numbers > div:first-child strong {
-  color: var(--accent);
-}
-.result-numbers small {
-  font-size: 21px;
-}
-.result-numbers span {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-.speed-chart {
-  height: 60px;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  margin-top: 25px;
-  border-bottom: 1px solid var(--line);
-}
-.speed-chart > div {
-  flex: 1;
-  max-width: 35px;
-  min-height: 2px;
-  background: var(--accent);
-  opacity: 0.4;
-  border-radius: 4px 4px 0 0;
-}
-.chart-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 7px;
-  font-size: 9px;
-  letter-spacing: 0.02em;
-  color: var(--muted);
 }
 .mistake-drill {
   margin-top: 20px;
@@ -1626,19 +1429,6 @@ input[type="checkbox"] {
   font-size: 13px;
   display: block;
   margin: 18px 0 8px;
-}
-.field-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin: 19px 0;
-  font-size: 13px;
-}
-.field-row select {
-  max-width: 145px;
-  font-size: 12px;
-  padding: 10px;
 }
 .form-divider {
   position: relative;
@@ -1955,18 +1745,6 @@ td {
   .lane-speed span {
     font-size: 9px;
   }
-  .daily-sprint {
-    padding-inline: 18px;
-  }
-  .daily-title h2 {
-    font-size: 21px;
-  }
-  .daily-sprint > p {
-    font-size: 11px;
-  }
-  .daily-goal p {
-    font-size: 9px;
-  }
   .session-stats {
     padding: 19px;
   }
@@ -1991,10 +1769,6 @@ td {
   }
   .session-stats {
     grid-row: span 2;
-  }
-  .daily-sprint {
-    grid-column: 2;
-    grid-row: 1;
   }
   .recent-races {
     grid-column: 2;
@@ -2335,30 +2109,6 @@ td {
     grid-row: auto;
     grid-column: auto;
   }
-  .daily-sprint {
-    grid-column: auto;
-    grid-row: auto;
-    display: block;
-    padding: 15px 23px 23px;
-  }
-  .daily-art {
-    max-width: 340px;
-    margin: -3px auto 4px;
-  }
-  .daily-title h2 {
-    font-size: 24px;
-  }
-  .daily-sprint > p {
-    font-size: 12px;
-  }
-  .daily-button {
-    min-height: 44px;
-    font-size: 12px;
-    margin-top: 15px;
-  }
-  .daily-record {
-    font-size: 11px;
-  }
   .recent-races {
     grid-column: auto;
     grid-row: auto;
@@ -2366,50 +2116,8 @@ td {
   .session-stats {
     padding: 23px;
   }
-  .daily-goal p {
-    font-size: 11px;
-  }
   .recent-empty {
     padding: 18px;
-  }
-  .results {
-    padding: 0 20px 5px;
-  }
-  .result-heading {
-    gap: 10px;
-  }
-  .result-icon {
-    height: 56px;
-    width: 56px;
-  }
-  .result-heading h2 {
-    font-size: 21px;
-  }
-  .result-heading p {
-    font-size: 10px;
-  }
-  .result-numbers {
-    gap: 12px;
-    margin-top: 18px;
-  }
-  .result-numbers strong {
-    font-size: 32px;
-  }
-  .result-numbers span {
-    font-size: 9px;
-  }
-  .result-numbers small {
-    font-size: 19px;
-  }
-  .result-position {
-    font-size: 11px;
-  }
-  .speed-chart {
-    height: 50px;
-    margin-top: 22px;
-  }
-  .chart-labels {
-    font-size: 8px;
   }
   .friends-layout {
     display: flex;

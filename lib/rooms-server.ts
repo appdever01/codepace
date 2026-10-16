@@ -1,19 +1,11 @@
-import { env } from "cloudflare:workers";
+import { timingSafeEqual } from "node:crypto";
+import type { PoolClient } from "pg";
 import { z } from "zod";
+import { getPool } from "../db/index";
 import { makePassage } from "./passages";
 import { correctPrefix, wpm, accuracy } from "./scoring";
 import type { RoomSnapshot } from "./room-types";
 
-type StoredRoom = {
-  code: string;
-  host_id: string;
-  passage: string;
-  duration: number;
-  round: number;
-  start_at: number | null;
-  created_at: number;
-  expires_at: number;
-};
 type StoredPlayer = {
   id: string;
   room_code: string;
@@ -29,6 +21,19 @@ type StoredPlayer = {
   finished_at: number | null;
   seq: number;
 };
+type StoredRoom = {
+  code: string;
+  host_id: string;
+  passage: string;
+  duration: number;
+  round: number;
+  revision: number;
+  start_at: number | null;
+  created_at: number;
+  expires_at: number;
+  players: StoredPlayer[];
+};
+type Queryable = Pick<PoolClient, "query">;
 const nameSchema = z
   .string()
   .trim()
@@ -65,14 +70,6 @@ class ApiError extends Error {
   ) {
     super(message);
   }
-}
-function database() {
-  if (!env.DB)
-    throw new ApiError(
-      503,
-      "Friend rooms are temporarily unavailable. Solo races still work.",
-    );
-  return env.DB;
 }
 function reply(data: unknown, status = 200) {
   return Response.json(data, {
@@ -126,60 +123,68 @@ async function body(request: Request) {
     throw new ApiError(400, "The request data could not be read.");
   }
 }
+
 async function rateLimit(request: Request, bucket: string, maximum: number) {
-  const ip = request.headers.get("cf-connecting-ip") || "local";
+  const ip =
+    request.headers
+      .get(process.env.VERCEL ? "x-vercel-forwarded-for" : "x-forwarded-for")
+      ?.split(",")[0]
+      .trim() || "local";
   const now = Date.now();
   const key = await hash(`${bucket}:${ip}:${Math.floor(now / 3600000)}`);
-  const row = await database()
-    .prepare(
-      "INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1 RETURNING count",
-    )
-    .bind(key, now + 3600000)
-    .first<{ count: number }>();
-  if (!row || row.count > maximum)
+  const { rows } = await getPool().query<{ count: number }>(
+    "INSERT INTO rate_limits (key, count, expires_at) VALUES ($1, 1, $2) ON CONFLICT(key) DO UPDATE SET count = rate_limits.count + 1 RETURNING count",
+    [key, now + 3600000],
+  );
+  if (rows[0].count > maximum)
     throw new ApiError(429, "Too many attempts. Try again in an hour.");
 }
-async function getRoom(code: string) {
+function checkCode(code: string) {
   if (!/^[A-Z2-9]{6}$/.test(code))
     throw new ApiError(404, "Room not found. Check the six-character code.");
-  const room = await database()
-    .prepare("SELECT * FROM rooms WHERE code = ? AND expires_at > ?")
-    .bind(code, Date.now())
-    .first<StoredRoom>();
-  if (!room)
+}
+async function getRoom(code: string, db: Queryable = getPool(), lock = false) {
+  checkCode(code);
+  if (lock)
+    await db.query("SELECT code FROM rooms WHERE code = $1 FOR UPDATE", [code]);
+  const { rows } = await db.query<StoredRoom>(
+    `SELECT r.*, COALESCE(json_agg(p ORDER BY p.joined_at, p.id) FILTER (WHERE p.id IS NOT NULL), '[]') AS players
+     FROM rooms r LEFT JOIN players p ON p.room_code = r.code
+     WHERE r.code = $1 AND r.expires_at > $2 GROUP BY r.code`,
+    [code, Date.now()],
+  );
+  if (!rows[0])
     throw new ApiError(
       404,
       "This room has expired or does not exist. Create a new one.",
     );
-  return room;
+  return rows[0];
 }
 async function member(request: Request, room: StoredRoom) {
   const token = request.headers.get("authorization")?.replace(/^Bearer /, "");
   if (!token || token.length > 200)
     throw new ApiError(401, "Join this room to continue.");
-  const player = await database()
-    .prepare("SELECT * FROM players WHERE room_code = ? AND token_hash = ?")
-    .bind(room.code, await hash(token))
-    .first<StoredPlayer>();
+  const digest = Buffer.from(await hash(token));
+  const player = room.players.find((candidate) => {
+    const stored = Buffer.from(candidate.token_hash);
+    return stored.length === digest.length && timingSafeEqual(stored, digest);
+  });
   if (!player)
     throw new ApiError(401, "Your room session has ended. Join again.");
   return player;
 }
-async function snapshot(room: StoredRoom): Promise<RoomSnapshot> {
+function snapshot(room: StoredRoom): RoomSnapshot {
   const now = Date.now();
-  const { results } = await database()
-    .prepare("SELECT * FROM players WHERE room_code = ? ORDER BY joined_at, id")
-    .bind(room.code)
-    .all<StoredPlayer>();
   const started = room.start_at !== null && now >= room.start_at;
-  const allDone =
-    results.length > 0 && results.every((p) => p.finished_at !== null);
   const finished =
-    started && (now >= room.start_at! + room.duration * 1000 || allDone);
+    started &&
+    (now >= room.start_at! + room.duration * 1000 ||
+      room.players.every((p) => p.finished_at !== null));
   return {
     code: room.code,
     hostId: room.host_id,
     round: room.round,
+    revision: room.revision,
     passage: room.passage,
     duration: room.duration,
     startAt: room.start_at,
@@ -193,7 +198,7 @@ async function snapshot(room: StoredRoom): Promise<RoomSnapshot> {
           : finished
             ? "finished"
             : "running",
-    players: results.map((p) => ({
+    players: room.players.map((p) => ({
       id: p.id,
       name: p.name,
       joinedAt: p.joined_at,
@@ -219,8 +224,27 @@ async function snapshot(room: StoredRoom): Promise<RoomSnapshot> {
     })),
   };
 }
+async function transaction<T>(operation: (db: PoolClient) => Promise<T>) {
+  const db = await getPool().connect();
+  try {
+    await db.query("BEGIN");
+    const result = await operation(db);
+    await db.query("COMMIT");
+    return result;
+  } catch (error) {
+    await db.query("ROLLBACK");
+    throw error;
+  } finally {
+    db.release();
+  }
+}
 export async function handleApi(operation: () => Promise<Response>) {
   try {
+    if (!process.env.DATABASE_URL)
+      throw new ApiError(
+        503,
+        "Friend rooms are temporarily unavailable. Solo races still work.",
+      );
     return await operation();
   } catch (error) {
     if (error instanceof ApiError)
@@ -248,46 +272,56 @@ export async function createRoom(request: Request) {
     .object({ name: nameSchema, duration: durationSchema })
     .parse(await body(request));
   await rateLimit(request, "create", 30);
-  const db = database();
   const now = Date.now();
+  await getPool().query(
+    "DELETE FROM rooms WHERE code IN (SELECT code FROM rooms WHERE expires_at < $1 LIMIT 100)",
+    [now],
+  );
+  await getPool().query(
+    "DELETE FROM rate_limits WHERE key IN (SELECT key FROM rate_limits WHERE expires_at < $1 LIMIT 100)",
+    [now],
+  );
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const code = Array.from(
-    crypto.getRandomValues(new Uint8Array(6)),
-    (n) => alphabet[n % alphabet.length],
-  ).join("");
   const id = crypto.randomUUID();
   const token = secret();
-  await db.batch([
-    db.prepare("DELETE FROM rooms WHERE expires_at < ?").bind(now),
-    db.prepare("DELETE FROM rate_limits WHERE expires_at < ?").bind(now),
-    db
-      .prepare(
-        "INSERT INTO rooms (code, host_id, passage, duration, round, created_at, expires_at) VALUES (?, ?, ?, ?, 1, ?, ?)",
-      )
-      .bind(
-        code,
-        id,
-        makePassage("quotes", now, "", [], input.duration),
-        input.duration,
-        now,
-        now + 7200000,
-      ),
-    db
-      .prepare(
-        "INSERT INTO players (id, room_code, token_hash, name, joined_at, seen_at, round) VALUES (?, ?, ?, ?, ?, ?, 1)",
-      )
-      .bind(id, code, await hash(token), input.name, now, now),
-  ]);
-  return reply(
-    { session: { code, id, token }, room: await snapshot(await getRoom(code)) },
-    201,
-  );
+  const tokenHash = await hash(token);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const code = Array.from(
+      crypto.getRandomValues(new Uint8Array(6)),
+      (n) => alphabet[n % alphabet.length],
+    ).join("");
+    try {
+      const room = await transaction(async (db) => {
+        await db.query(
+          "INSERT INTO rooms (code, host_id, passage, duration, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6)",
+          [
+            code,
+            id,
+            makePassage("quotes", now, "", [], input.duration),
+            input.duration,
+            now,
+            now + 7200000,
+          ],
+        );
+        await db.query(
+          "INSERT INTO players (id, room_code, token_hash, name, joined_at, seen_at) VALUES ($1, $2, $3, $4, $5, $5)",
+          [id, code, tokenHash, input.name, now],
+        );
+        return snapshot(await getRoom(code, db));
+      });
+      return reply({ session: { code, id, token }, room }, 201);
+    } catch (error) {
+      if ((error as { code?: string }).code !== "23505" || attempt === 3)
+        throw error;
+    }
+  }
+  throw new ApiError(503, "Could not create a room. Try again.");
 }
 export async function readRoom(request: Request, code: string) {
   const room = await getRoom(code);
   const player = await member(request, room);
   return reply({
-    room: await snapshot(room),
+    room: snapshot(room),
     self: {
       typed: player.typed,
       strokes: player.strokes,
@@ -298,116 +332,112 @@ export async function readRoom(request: Request, code: string) {
 }
 export async function updateRoom(request: Request, code: string) {
   const input = actionSchema.parse(await body(request));
-  let room = await getRoom(code);
-  const db = database();
-  const now = Date.now();
-  if (input.action === "join") {
-    await rateLimit(request, "join", 100);
-    const id = crypto.randomUUID();
-    const token = secret();
-    const inserted = await db
-      .prepare(
-        "INSERT INTO players (id, room_code, token_hash, name, joined_at, seen_at, round) SELECT ?, code, ?, ?, ?, ?, round FROM rooms WHERE code = ? AND start_at IS NULL AND (SELECT COUNT(*) FROM players WHERE room_code = ?) < 6",
-      )
-      .bind(id, await hash(token), input.name, now, now, code, code)
-      .run();
-    if (!inserted.meta.changes)
-      throw new ApiError(
-        409,
-        "This room is full or racing. Ask the host to open the next round.",
+  checkCode(code);
+  if (input.action === "join") await rateLimit(request, "join", 100);
+  const result = await transaction(async (db) => {
+    const room = await getRoom(code, db, true);
+    const now = Date.now();
+    if (input.action === "join") {
+      if (room.start_at !== null || room.players.length >= 6)
+        throw new ApiError(
+          409,
+          "This room is full or racing. Ask the host to open the next round.",
+        );
+      const id = crypto.randomUUID();
+      const token = secret();
+      await db.query(
+        "INSERT INTO players (id, room_code, token_hash, name, joined_at, seen_at, round) VALUES ($1, $2, $3, $4, $5, $5, $6)",
+        [id, code, await hash(token), input.name, now, room.round],
       );
-    return reply(
-      {
+      await db.query(
+        "UPDATE rooms SET revision = revision + 1 WHERE code = $1",
+        [code],
+      );
+      return {
         session: { code, id, token },
-        room: await snapshot(await getRoom(code)),
-      },
-      201,
-    );
-  }
-  const player = await member(request, room);
-  if (input.action === "start") {
-    if (player.id !== room.host_id)
-      throw new ApiError(403, "Only the host can start the race.");
-    const started = await db
-      .prepare(
-        "UPDATE rooms SET start_at = ? WHERE code = ? AND host_id = ? AND round = ? AND start_at IS NULL AND (SELECT COUNT(*) FROM players WHERE room_code = ? AND seen_at > ?) >= 2",
-      )
-      .bind(now + 4000, code, player.id, input.round, code, now - 30000)
-      .run();
-    if (!started.meta.changes)
-      throw new ApiError(
-        409,
-        "Wait for two connected racers, or refresh the room.",
-      );
-  }
-  if (input.action === "rematch") {
-    if (player.id !== room.host_id)
-      throw new ApiError(403, "Only the host can open the next round.");
-    const current = await snapshot(room);
-    if (current.phase !== "finished")
-      throw new ApiError(409, "Finish this race first.");
-    const next = input.round + 1;
-    const updates = await db.batch([
-      db
-        .prepare(
-          "UPDATE rooms SET start_at = NULL, round = round + 1, passage = ? WHERE code = ? AND host_id = ? AND round = ?",
-        )
-        .bind(
-          makePassage("quotes", now, "", [], room.duration),
-          code,
-          player.id,
-          input.round,
-        ),
-      db
-        .prepare(
-          "UPDATE players SET typed = '', strokes = 0, errors = 0, correct = 0, seq = 0, finished_at = NULL, round = ? WHERE room_code = ? AND EXISTS (SELECT 1 FROM rooms WHERE code = ? AND round = ? AND start_at IS NULL)",
-        )
-        .bind(next, code, code, next),
-    ]);
-    if (!updates[0].meta.changes)
-      throw new ApiError(
-        409,
-        "The next round is already open. Refresh the room.",
-      );
-  }
-  if (input.action === "reclaim") {
-    await db
-      .prepare(
-        "UPDATE rooms SET host_id = ? WHERE code = ? AND host_id = ? AND EXISTS (SELECT 1 FROM players WHERE id = ? AND seen_at < ?)",
-      )
-      .bind(player.id, code, room.host_id, room.host_id, now - 30000)
-      .run();
-  }
-  if (input.action === "leave") {
-    await db.batch([
-      db
-        .prepare(
-          "UPDATE rooms SET host_id = COALESCE((SELECT id FROM players WHERE room_code = ? AND id != ? ORDER BY joined_at, id LIMIT 1), host_id) WHERE code = ? AND host_id = ?",
-        )
-        .bind(code, player.id, code, player.id),
-      db
-        .prepare("DELETE FROM players WHERE id = ? AND room_code = ?")
-        .bind(player.id, code),
-      db
-        .prepare(
-          "DELETE FROM rooms WHERE code = ? AND NOT EXISTS (SELECT 1 FROM players WHERE room_code = ?)",
-        )
-        .bind(code, code),
-    ]);
-    return reply({ left: true });
-  }
-  if (input.action === "sync") {
-    if (input.round !== room.round)
+        room: snapshot(await getRoom(code, db)),
+      };
+    }
+    const player = await member(request, room);
+    let changed = false;
+    if ("round" in input && input.round !== room.round)
       throw new ApiError(409, "The room has moved to a new round.");
-    const elapsed = room.start_at === null ? 0 : now - room.start_at;
-    if (
-      elapsed >= 0 &&
-      room.start_at !== null &&
-      elapsed <= room.duration * 1000 + 2000 &&
-      player.finished_at === null
-    ) {
-      const correct = correctPrefix(input.typed, room.passage);
-      if (input.seq > player.seq) {
+    if (input.action === "start") {
+      if (player.id !== room.host_id)
+        throw new ApiError(403, "Only the host can start the race.");
+      if (
+        room.start_at !== null ||
+        room.players.filter((p) => p.seen_at > now - 30000).length < 2
+      )
+        throw new ApiError(
+          409,
+          "Wait for two connected racers, or refresh the room.",
+        );
+      await db.query("UPDATE rooms SET start_at = $1 WHERE code = $2", [
+        now + 4000,
+        code,
+      ]);
+      changed = true;
+    }
+    if (input.action === "rematch") {
+      if (player.id !== room.host_id)
+        throw new ApiError(403, "Only the host can open the next round.");
+      if (snapshot(room).phase !== "finished")
+        throw new ApiError(409, "Finish this race first.");
+      await db.query(
+        "UPDATE rooms SET start_at = NULL, round = round + 1, passage = $1 WHERE code = $2",
+        [makePassage("quotes", now, "", [], room.duration), code],
+      );
+      await db.query(
+        "UPDATE players SET typed = '', strokes = 0, errors = 0, correct = 0, seq = 0, finished_at = NULL, round = $1 WHERE room_code = $2",
+        [room.round + 1, code],
+      );
+      changed = true;
+    }
+    if (input.action === "reclaim") {
+      if (
+        !room.players.some(
+          (p) => p.id === room.host_id && p.seen_at >= now - 30000,
+        )
+      ) {
+        await db.query("UPDATE rooms SET host_id = $1 WHERE code = $2", [
+          player.id,
+          code,
+        ]);
+        changed = true;
+      }
+    }
+    if (input.action === "leave") {
+      await db.query("DELETE FROM players WHERE id = $1 AND room_code = $2", [
+        player.id,
+        code,
+      ]);
+      const remaining = room.players
+        .filter((p) => p.id !== player.id)
+        .sort(
+          (a, b) =>
+            Number(b.seen_at >= now - 30000) -
+              Number(a.seen_at >= now - 30000) ||
+            a.joined_at - b.joined_at ||
+            a.id.localeCompare(b.id),
+        );
+      if (!remaining.length)
+        await db.query("DELETE FROM rooms WHERE code = $1", [code]);
+      else
+        await db.query(
+          "UPDATE rooms SET host_id = $1, revision = revision + 1 WHERE code = $2",
+          [player.id === room.host_id ? remaining[0].id : room.host_id, code],
+        );
+      return { left: true };
+    }
+    if (input.action === "sync") {
+      const elapsed = room.start_at === null ? -1 : now - room.start_at;
+      if (
+        elapsed >= 0 &&
+        elapsed <= room.duration * 1000 + 2000 &&
+        player.finished_at === null &&
+        input.seq > player.seq
+      ) {
         if (
           input.errors > input.strokes ||
           input.strokes < input.typed.length ||
@@ -415,6 +445,7 @@ export async function updateRoom(request: Request, code: string) {
           input.errors < player.errors
         )
           throw new ApiError(400, "Invalid typing progress.");
+        const correct = correctPrefix(input.typed, room.passage);
         if (correct > Math.max(30, (elapsed / 60000) * 400 * 5))
           throw new ApiError(
             400,
@@ -422,33 +453,43 @@ export async function updateRoom(request: Request, code: string) {
           );
         const finishedAt =
           correct === room.passage.length
-            ? Math.min(now, room.start_at + room.duration * 1000)
+            ? Math.min(now, room.start_at! + room.duration * 1000)
             : null;
-        await db
-          .prepare(
-            "UPDATE players SET typed = ?, strokes = ?, errors = ?, correct = ?, seq = ?, finished_at = ?, seen_at = ? WHERE id = ? AND room_code = ? AND round = ? AND seq < ? AND finished_at IS NULL",
-          )
-          .bind(
-            input.typed,
-            input.strokes,
-            input.errors,
-            correct,
-            input.seq,
-            finishedAt,
-            now,
-            player.id,
-            code,
-            room.round,
-            input.seq,
-          )
-          .run();
+        if (
+          input.typed !== player.typed ||
+          input.strokes !== player.strokes ||
+          input.errors !== player.errors
+        ) {
+          await db.query(
+            "UPDATE players SET typed = $1, strokes = $2, errors = $3, correct = $4, seq = $5, finished_at = $6, seen_at = $7 WHERE id = $8",
+            [
+              input.typed,
+              input.strokes,
+              input.errors,
+              correct,
+              input.seq,
+              finishedAt,
+              now,
+              player.id,
+            ],
+          );
+          changed = true;
+        }
       }
     }
-    await db
-      .prepare("UPDATE players SET seen_at = ? WHERE id = ? AND room_code = ?")
-      .bind(now, player.id, code)
-      .run();
-  }
-  room = await getRoom(code);
-  return reply({ room: await snapshot(room) });
+    if (!changed && player.seen_at < now - 10000) {
+      await db.query("UPDATE players SET seen_at = $1 WHERE id = $2", [
+        now,
+        player.id,
+      ]);
+      changed = true;
+    }
+    if (changed)
+      await db.query(
+        "UPDATE rooms SET revision = revision + 1 WHERE code = $1",
+        [code],
+      );
+    return { room: snapshot(await getRoom(code, db)) };
+  });
+  return reply(result, input.action === "join" ? 201 : 200);
 }

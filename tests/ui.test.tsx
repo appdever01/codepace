@@ -11,6 +11,7 @@ import {
 } from "@testing-library/react";
 import Keylane from "../app/keylane";
 
+const testOrigin = process.env.KEYLANE_TEST_URL || "http://127.0.0.1:5189";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const clock = Date.now;
 let offset = 0;
@@ -28,6 +29,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
       render(<Keylane />);
       await pause(10);
     });
+    fireEvent.click(screen.getByRole("button", { name: "Race" }));
     assert.ok(screen.getByRole("heading", { name: "Typing race", level: 1 }));
     assert.equal(
       document.querySelector<HTMLDetailsElement>(".track-drawer")?.open,
@@ -69,6 +71,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
       render(<Keylane />);
       await pause(10);
     });
+    fireEvent.click(screen.getByRole("button", { name: "Race" }));
     assert.ok(
       document.querySelector(".personal-best")?.textContent?.includes("24"),
     );
@@ -107,9 +110,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
   const nativeFetch = globalThis.fetch;
   globalThis.fetch = (input, init) =>
     nativeFetch(
-      typeof input === "string"
-        ? new URL(input, "http://127.0.0.1:5189")
-        : input,
+      typeof input === "string" ? new URL(input, testOrigin) : input,
       init,
     );
   let peer: { token: string; code: string } | undefined;
@@ -126,14 +127,11 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     fireEvent.click(screen.getByRole("button", { name: "Create a room" }));
     await waitFor(() => assert.ok(screen.getByText(/1\/6 in room/)));
     const own = JSON.parse(sessionStorage.getItem("keylane:room")!);
-    const joined = await nativeFetch(
-      `http://127.0.0.1:5189/api/rooms/${own.code}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "join", name: "UI Friend" }),
-      },
-    );
+    const joined = await nativeFetch(`${testOrigin}/api/rooms/${own.code}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "join", name: "UI Friend" }),
+    });
     peer = (
       (await joined.json()) as { session: { token: string; code: string } }
     ).session;
@@ -191,7 +189,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     cleanup();
     globalThis.fetch = nativeFetch;
     if (peer)
-      await nativeFetch(`http://127.0.0.1:5189/api/rooms/${peer.code}`, {
+      await nativeFetch(`${testOrigin}/api/rooms/${peer.code}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

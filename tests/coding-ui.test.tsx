@@ -40,6 +40,14 @@ async function openCode() {
   );
   await waitFor(() => assert.ok(target().includes("def average")));
 }
+function chooseOption(label: string, option: string) {
+  fireEvent.click(screen.getByRole("combobox", { name: label }));
+  fireEvent.click(
+    screen.getByRole("option", {
+      name: (name) => name === option || name.startsWith(`${option} `),
+    }),
+  );
+}
 function mockLibrary() {
   globalThis.fetch = async (input, init) => {
     const url = String(input);
@@ -57,9 +65,7 @@ test("choose language, type formatted code with correction, finish without a tim
   sessionStorage.clear();
   try {
     await openCode();
-    fireEvent.change(screen.getByLabelText("Language"), {
-      target: { value: "typescript" },
-    });
+    chooseOption("Language", "TypeScript");
     await waitFor(() =>
       assert.ok(target().startsWith("function average(values: number[])")),
     );
@@ -90,6 +96,11 @@ test("choose language, type formatted code with correction, finish without a tim
     assert.equal(escapeTab.defaultPrevented, false);
     await tick(65000);
     assert.equal(input.disabled, false);
+    assert.equal(
+      (screen.getByRole("combobox", { name: "Language" }) as HTMLButtonElement)
+        .disabled,
+      true,
+    );
     fireEvent.change(input, { target: { value: text } });
     await waitFor(() =>
       assert.ok(screen.getByText("Code typed. Nicely done.")),
@@ -130,15 +141,13 @@ test("filter real LeetCode solutions, save completion and distinguish timed part
     await openCode();
     fireEvent.click(screen.getByRole("button", { name: "LeetCode" }));
     await waitFor(() => assert.ok(target().includes("def twoSum")));
-    const librarySummary = document.querySelector(".code-library summary")!;
-    const enter = new KeyboardEvent("keydown", {
-      key: "Enter",
-      bubbles: true,
-      cancelable: true,
-    });
-    fireEvent(librarySummary, enter);
-    assert.equal(enter.defaultPrevented, false);
+    fireEvent.click(screen.getByText("Filters"));
+    const difficulty = screen.getByRole("combobox", { name: "Difficulty" });
+    fireEvent.keyDown(difficulty, { key: "Enter" });
+    assert.equal(difficulty.getAttribute("aria-expanded"), "true");
     assert.equal(document.querySelector(".countdown"), null);
+    fireEvent.keyDown(difficulty, { key: "Escape" });
+    assert.equal(difficulty.getAttribute("aria-expanded"), "false");
     assert.ok(
       screen
         .getByRole("link", { name: "Read problem" })
@@ -148,9 +157,7 @@ test("filter real LeetCode solutions, save completion and distinguish timed part
     fireEvent.change(screen.getByLabelText("Search problems"), {
       target: { value: "binary search" },
     });
-    fireEvent.change(screen.getByLabelText("Difficulty"), {
-      target: { value: "Easy" },
-    });
+    chooseOption("Difficulty", "Easy");
     const problem = screen.getByRole("button", { name: /704 Binary Search/ });
     fireEvent.click(problem);
     await waitFor(() => assert.ok(target().includes("def search")));
@@ -208,9 +215,7 @@ test("loading failures disable start and retry; custom code keeps its whitespace
   };
   try {
     await openCode();
-    fireEvent.change(screen.getByLabelText("Language"), {
-      target: { value: "java" },
-    });
+    chooseOption("Language", "Java");
     fireEvent.click(screen.getByRole("button", { name: "LeetCode" }));
     await waitFor(() =>
       assert.ok(
@@ -240,9 +245,82 @@ test("loading failures disable start and retry; custom code keeps its whitespace
       target: { value: "def run():\n\tprint(1)\n" },
     });
     await waitFor(() => assert.equal(target(), "def run():\n    print(1)"));
-    fireEvent.click(screen.getByRole("button", { name: "Passages" }));
+    fireEvent.click(screen.getByRole("button", { name: "Practice" }));
     assert.equal(document.querySelector(".coding-panel"), null);
     assert.ok(screen.getByRole("button", { name: "30 s" }));
+  } finally {
+    globalThis.fetch = nativeFetch;
+    cleanup();
+  }
+});
+
+test("header audio controls preserve an active code attempt and Escape only closes the audio panel", async () => {
+  Date.now = () => clock() + offset;
+  localStorage.clear();
+  sessionStorage.clear();
+  try {
+    await openCode();
+    const code = target();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Start coding practice" }),
+    );
+    await tick(3100);
+    const input = screen.getByRole("textbox", {
+      name: /^Type this passage:/,
+    }) as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: code.slice(0, 8) } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open audio settings" }),
+    );
+    const volume = screen.getByRole("slider", { name: "Music volume" });
+    fireEvent.change(volume, { target: { value: "40" } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Turn background music off" }),
+    );
+    fireEvent.keyDown(volume, { key: "Escape" });
+    assert.equal(
+      screen.queryByRole("dialog", { name: "Audio settings" }),
+      null,
+    );
+    assert.equal(input.disabled, false);
+    assert.equal(input.value, code.slice(0, 8));
+    assert.equal(target(), code);
+    assert.equal(
+      JSON.parse(localStorage.getItem("keylane:music:v1")!).volume,
+      0.4,
+    );
+    assert.equal(
+      JSON.parse(localStorage.getItem("keylane:music:v1")!).enabled,
+      false,
+    );
+  } finally {
+    Date.now = clock;
+    cleanup();
+  }
+});
+
+test("changing languages clears an unsupported topic and keeps the visible filter honest", async () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  mockLibrary();
+  try {
+    await openCode();
+    chooseOption("Language", "JavaScript");
+    fireEvent.click(screen.getByRole("button", { name: "LeetCode" }));
+    await waitFor(() => assert.ok(target().includes("twoSum")));
+    fireEvent.click(screen.getByText("Filters"));
+    chooseOption("Topic", "JavaScript");
+    assert.ok(
+      screen.getByRole("button", { name: /Create Hello World Function/ }),
+    );
+    chooseOption("Language", "Python");
+    await waitFor(() => assert.ok(target().includes("def twoSum")));
+    const topic = screen.getByRole("combobox", { name: "Topic" });
+    assert.equal(Reflect.get(topic, "value"), "");
+    assert.ok(topic.textContent?.includes("All topics"));
+    assert.equal(screen.queryByText(/No matching problems/), null);
+    assert.ok(screen.getByRole("button", { name: /^1 Two Sum/ }));
+    assert.equal(screen.queryByText("1 active"), null);
   } finally {
     globalThis.fetch = nativeFetch;
     cleanup();

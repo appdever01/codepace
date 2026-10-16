@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./immersive.css";
+import "./workspace.css";
 import "./coding.css";
+import "./results.css";
 
 export const metadata: Metadata = {
-  title: "Keylane — Find your typing rhythm",
+  title: "Keylane | Code typing practice",
   description:
-    "Typing races, focused practice and a little progress every day. Race pace bots or create a room with friends.",
+    "Practice typing code with snippets, LeetCode solutions and your own code in seven languages. Track speed and accuracy, practice text or race with friends.",
   icons: {
     icon: "/favicon.svg",
   },
@@ -23,15 +25,9 @@ export default function RootLayout({
         <link
           rel="preload"
           as="font"
-          href="/fonts/geist.woff2"
+          href="/fonts/AspektaVF.woff2"
           type="font/woff2"
           crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/game/trophy.webp"
-          type="image/webp"
         />
       </head>
       <body className="antialiased">{children}</body>

@@ -67,6 +67,12 @@ const started = await request(
   host.session,
 );
 assert.equal(started.room.phase, "countdown");
+await request(
+  `/api/rooms/${code}`,
+  { action: "start", round: 1 },
+  host.session,
+  409,
+);
 const peer = await request(`/api/rooms/${code}`, undefined, friend.session);
 assert.equal(peer.room.startAt, started.room.startAt);
 await request(
@@ -139,6 +145,34 @@ assert.equal(
   stale.room.players.find((p) => p.id === host.session.id).correct,
   12,
 );
+const concurrentProgress = await Promise.all(
+  [5, 6].map((seq) =>
+    request(
+      `/api/rooms/${code}`,
+      {
+        action: "sync",
+        round: 1,
+        seq,
+        typed: host.room.passage.slice(0, seq + 12),
+        strokes: seq + 13,
+        errors: 1,
+      },
+      host.session,
+    ),
+  ),
+);
+assert.ok(
+  concurrentProgress.every((r) => r.room.revision >= progress.room.revision),
+);
+const afterProgress = await request(
+  `/api/rooms/${code}`,
+  undefined,
+  friend.session,
+);
+assert.equal(
+  afterProgress.room.players.find((p) => p.id === host.session.id).correct,
+  18,
+);
 await request(
   `/api/rooms/${code}`,
   { action: "rematch", round: 1 },
@@ -162,12 +196,23 @@ checks += 2;
 await sleep(Math.max(0, started.room.startAt + 15050 - Date.now()));
 const done = await request(`/api/rooms/${code}`, undefined, friend.session);
 assert.equal(done.room.phase, "finished");
-assert.equal(done.room.players.find((p) => p.id === host.session.id).wpm, 10);
-const rematch = await request(
-  `/api/rooms/${code}`,
-  { action: "rematch", round: 1 },
-  host.session,
+assert.equal(done.room.players.find((p) => p.id === host.session.id).wpm, 14);
+const rematches = await Promise.all(
+  [0, 1].map(async () => {
+    const response = await fetch(`${origin}/api/rooms/${code}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${host.session.token}`,
+      },
+      body: JSON.stringify({ action: "rematch", round: 1 }),
+    });
+    return { status: response.status, body: await response.json() };
+  }),
 );
+assert.deepEqual(rematches.map((r) => r.status).sort(), [200, 409]);
+checks += 2;
+const rematch = rematches.find((r) => r.status === 200).body;
 assert.equal(rematch.room.round, 2);
 assert.equal(rematch.room.phase, "lobby");
 assert.ok(
@@ -179,6 +224,14 @@ await request(
   host.session,
   409,
 );
+await request(
+  `/api/rooms/${code}`,
+  { action: "rematch", round: 1 },
+  host.session,
+  409,
+);
+const intact = await request(`/api/rooms/${code}`, undefined, friend.session);
+assert.equal(intact.room.round, 2);
 await request(`/api/rooms/${code}`, { action: "leave" }, host.session);
 const transferred = await request(
   `/api/rooms/${code}`,

@@ -111,6 +111,7 @@ test("music waits for interaction, continues across screens, and remembers mute 
   assert.equal(restored.volume, 0.3);
   await act(async () => fireEvent.pointerDown(screen.getByRole("main")));
   assert.equal(plays, 1);
+  fireEvent.click(screen.getByRole("button", { name: "Open audio settings" }));
   await act(async () =>
     fireEvent.click(
       screen.getByRole("button", { name: "Turn background music on" }),
@@ -141,6 +142,7 @@ test("browser playback blocking retries on interaction and file failures wait fo
   assert.ok(screen.getByText(/Music could not load/));
   await act(async () => fireEvent.pointerDown(screen.getByRole("main")));
   assert.equal(plays, 2);
+  fireEvent.click(screen.getByRole("button", { name: "Open audio settings" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Turn background music off" }),
   );
@@ -170,6 +172,7 @@ test("muting while playback is pending prevents a late start", async () => {
       };
     });
   fireEvent.pointerDown(screen.getByRole("main"));
+  fireEvent.click(screen.getByRole("button", { name: "Open audio settings" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Turn background music off" }),
   );

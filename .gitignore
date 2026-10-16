@@ -30,6 +30,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -37,17 +38,16 @@ yarn-error.log*
 # typescript
 next-env.d.ts
 
-# Maintained Vite plugin and worker sources.
-!/build/
-/build/*
-!/build/connector-preview-plugin.mjs
-!/build/connector-preview-worker.mjs
-!/build/sites-vite-plugin.LICENSE
-!/build/sites-vite-plugin.ts
-!/build/sites-worker.ts
+/build/
 
 /dist/
 /.wrangler/
+.dev.vars
+.dev.vars.*
+# Local pnpm output. Installs use npm and package-lock.json.
+/pnpm-lock.yaml
+/pnpm-workspace.yaml
+.pnpm-store/
 # Checkout-local execution profile and tool state; never publish them.
 /.sites-runtime/
 /.agents/
@@ -64,3 +64,18 @@ next-env.d.ts
 /setup.sh
 /.verification/
 *.tsbuildinfo
+/.neon
+/.claude/
+/.cursor/
+**/AGENTS.md
+**/AGENT.md
+**/CLAUDE.md
+**/CODEX.md
+**/setup.sh
+**/.openai/
+[Aa][Gg][Ee][Nn][Tt][Ss]*.[Mm][Dd]
+[Aa][Gg][Ee][Nn][Tt]*.[Mm][Dd]
+[Cc][Ll][Aa][Uu][Dd][Ee]*.[Mm][Dd]
+[Cc][Oo][Dd][Ee][Xx]*.[Mm][Dd]
+.cursorrules
+.github/copilot-instructions.md

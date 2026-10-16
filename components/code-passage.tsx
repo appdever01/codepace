@@ -1,35 +1,34 @@
-export default function CodePassage({
+import { memo, useMemo } from "react";
+import { PassageGlyphs } from "./typing-passage";
+
+export default memo(function CodePassage({
   code,
   typed,
 }: {
   code: string;
   typed: string;
 }) {
-  let offset = 0;
-  const lines = code.split("\n");
-  return lines.map((line, index) => {
-    const start = offset;
-    offset += line.length + 1;
-    let glyph = 0;
-    const content = line + (index < lines.length - 1 ? "\n" : "");
-    return (
-      <span className="code-line" key={index}>
-        <span className="code-line-number">{index + 1}</span>
-        <span className="code-line-content">
-          {Array.from(content).map((char) => {
-            const i = start + glyph;
-            glyph += char.length;
-            return (
-              <span
-                key={i}
-                className={`${i < typed.length ? (typed.slice(i, i + char.length) === char ? "correct-char" : "wrong-char") : ""} ${i === typed.length ? "caret" : ""} ${char === "\n" ? "code-newline" : ""}`}
-              >
-                {char === "\n" ? "↵" : char}
-              </span>
-            );
-          })}
-        </span>
+  const lines = useMemo(() => {
+    let start = 0;
+    const parts = code.split("\n");
+    return parts.map((line, i) => {
+      const text = line + (i < parts.length - 1 ? "\n" : "");
+      const offset = start;
+      start += text.length;
+      return { text, start: offset, end: start };
+    });
+  }, [code]);
+  return lines.map((line, i) => (
+    <span className="code-line" key={i}>
+      <span className="code-line-number">{i + 1}</span>
+      <span className="code-line-content">
+        <PassageGlyphs
+          text={line.text}
+          typed={typed.slice(line.start, line.end)}
+          caret={typed.length >= line.start && typed.length < line.end}
+          code
+        />
       </span>
-    );
-  });
-}
+    </span>
+  ));
+});

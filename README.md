@@ -1,52 +1,72 @@
 # Keylane
 
-A typing game with timed races, adjustable pace bots, focused practice and invitation rooms for up to six friends.
+Keylane helps you practice typing code. Start with a snippet, a LeetCode solution or your own code, and track your speed and accuracy. Text practice, quick races and rooms with friends are also available.
+
+## Play
+
+- Practice Python, JavaScript, TypeScript, Java, C++, Go and Rust with formatting and indentation preserved.
+- Type open-source solutions from a library of 410 coding problems.
+- Finish a complete code exercise or practice for 60 or 180 seconds. Code is not executed or graded.
+- Race for 15, 30 or 60 seconds against three pace bots, or practice words, passages and custom text.
+- Invite up to five friends for a shared race, then play another round.
+- Review your progress, export results, and adjust the theme and sound.
 
 ## Run locally
 
-Use Node.js 22.13 or later.
+Use Node.js 24, npm and PostgreSQL 17 or later.
 
 ```sh
+git clone https://github.com/appdever01/keylane.git
+cd keylane
 npm ci
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_many_warpath.sql
-npm start -- --port 5189
+cp .env.example .env.local
+createdb keylane
+npm run db:migrate
+npm run dev
 ```
 
-Open `http://127.0.0.1:5189`. Run the migration only once for each new local database. After the first build and migration, `npm run dev -- --port 5189` provides live updates. Keep only one preview running at a time.
+Open <http://localhost:5189>. If your database needs a username or password, update `DATABASE_URL` in `.env.local` before running the migration. Solo play works without a database; friend rooms need one.
 
-The build creates ignored local hosting configuration automatically. No credentials are needed for local races or local friend-room testing. To self-host, bind a Cloudflare D1 database as `DB`, apply the migration, and deploy the generated Worker and client assets. Sites hosting metadata and personal assistant files remain local and ignored.
+For a production preview, stop the development server, then run `npm run build` and `npm start`.
 
-## Check
+## Check changes
 
 ```sh
-npm test
-npm run test:ui
-npm run typecheck
-npm run lint
-npm run build
+npm run check
 ```
 
-With the built server running on port 5189, `npm run test:rooms` checks real two-player requests, shared starts, progress, access rules, concurrent capacity, results, rematches and host handover. Set `KEYLANE_TEST_URL` to use a different local server. The script creates temporary test rooms; do not point it at a real shared room.
+With the local server running on port 5189, also run:
 
-## Behavior
+```sh
+npm run test:ui
+npm run test:rooms
+npm run test:load
+```
 
-- Race for up to 15, 30 or 60 seconds; completing the passage finishes your run early. Solo races include three clearly labelled pace bots; practice has no opponents.
-- Try the daily 15-second word sprint, build clean-key streaks, and choose Chill, Quick or Turbo opponents.
-- Practice words, original passages, JavaScript or your own text. Missed-letter drills draw from your actual mistakes.
-- Correct mistakes with backspace. Accuracy remembers errors after correction. Paste and drop are blocked in the race field.
-- Speed uses five correct characters per word. Results and preferences stay in this browser; they do not sync between devices. Export your last 100 results from Progress.
-- Friend rooms use D1 and update roughly every 800ms. They have a server-timed countdown, six-player capacity, host handover, reconnect support and a two-hour expiry. The host opens each new round. These are casual races; client-reported keystrokes cannot provide competition-grade cheat prevention.
-- Private Sites hosting restricts who can open an invite. Change the Site audience deliberately before inviting people outside its allowed viewers.
+These checks exercise player workflows, concurrent room changes and six-player progress. Run them one at a time against a development database. GitHub Actions runs the same checks with its own PostgreSQL service. See [contribution.md](contribution.md) for the project layout and pull request guidance.
 
-## Source and licenses
+## Results and rooms
 
-The scoring helpers in `lib/scoring.ts` are adapted from [Andrew Roach’s typerace](https://github.com/aroach98/typerace), MIT licensed. Its full notice is preserved in `LICENSE-typerace`. The interface, typing lifecycle and D1 room implementation are new. No proprietary TypeRacer code, quotes or assets are copied.
+Speed counts five correct characters as one word. Backspace lets you correct mistakes, but those mistakes still count toward accuracy. Finishing a passage ends the run early.
 
-The GitHub and Star links point to that original reference project. Keylane has no public GitHub repository yet. The canyon circuit, blue and orange karts, and trophy in `public/game/` are original AI-generated game artwork. The background is a licensed photograph by [Aimee Zaugg on Unsplash](https://unsplash.com/photos/the-night-sky-with-stars-above-a-mountain-range-IO1d7aXD0bs), encoded as WebP and darkened with CSS. It uses the [Unsplash License](https://unsplash.com/license).
+Results and preferences stay in your browser. They do not sync between devices or domains. Export any results you want to keep before changing browsers or clearing storage.
 
-The interface uses self-hosted Geist and Geist Mono under the included SIL Open Font License. The original font copyright notices remain in the files and `public/fonts/geist-OFL.txt`. Solar icons are supplied through `@solar-icons/react`. The Solar Icon Set is by 480 Design and is used under CC BY 4.0; its license is included in `public/Solar-Icons-LICENSE.txt`. The Sites/Vinext build integration retains its original license in `build/`.
+Friend rooms use shared PostgreSQL storage and expire after two hours. The host starts each round, and another player takes over if the host leaves. Room sessions survive reloads and temporary connection failures. Rooms are intended for casual play and rely on progress reported by each player's browser.
 
-The GitHub brand icon is from [Font Awesome 6](https://fontawesome.com/) through `react-icons`, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Solar supplies the remaining interface icons.
+## Deploy to Vercel
 
-Background music is [Reverie by Scott Buckley](https://www.scottbuckley.com.au/library/reverie/), released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The full track is encoded as a 96 kbps MP3 for in-game playback. It loops quietly after the first pointer or keyboard interaction, continues between game screens, and has separate mute/volume controls from typing sounds. Music preferences stay on the device. See `public/media-credits.txt` for sources and notices.
+Import the repository into Vercel with the Next.js preset. Create a Neon PostgreSQL database in AWS US East (N. Virginia), then add its pooled connection string as the sensitive `DATABASE_URL` environment variable in Vercel. The app's functions run in the matching `iad1` region.
+
+Apply the migrations once before deploying. Use a direct database connection for migrations:
+
+```sh
+DATABASE_URL='<direct database connection string>' node scripts/migrate.mjs
+```
+
+Keep preview and development environments on a separate database or Neon branch. Never commit connection strings. Deployments do not run database migrations automatically.
+
+Vercel builds with `npm run build`. Pushes to `main` deploy production; pull requests get preview deployments when the Vercel GitHub integration has access.
+
+## License
+
+The code is available under the [MIT License](LICENSE). Bundled dependencies and assets retain their own licenses and notices.

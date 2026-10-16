@@ -1,10 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
-import RaceTrophy from "@/components/race-trophy";
-import CodePractice from "@/components/code-practice";
+import RaceResults from "@/components/race-results";
+import AudioControls from "@/components/audio-controls";
+import UserAvatar from "@/components/user-avatar";
+import CustomSelect from "@/components/custom-select";
 import CodePassage from "@/components/code-passage";
+import TypingPassage from "@/components/typing-passage";
+import {
+  api,
+  isNewerRoom,
+  RequestError,
+  restoreRoom,
+  synchronizeRoom,
+} from "@/lib/room-client";
 import {
   codeLanguages,
   codeKeyLabel,
@@ -12,23 +31,19 @@ import {
   type CodeExercise,
 } from "@/lib/coding";
 import { useBackgroundMusic } from "@/components/use-background-music";
-import { MusicNoteIcon } from "@solar-icons/react/linear/music-note";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
 import { TargetIcon } from "@solar-icons/react/linear/target";
 import { Chart2Icon } from "@solar-icons/react/linear/chart-2";
 import { UsersGroupRoundedIcon } from "@solar-icons/react/linear/users-group-rounded";
-import { StarIcon } from "@solar-icons/react/linear/star";
-import { FaGithub } from "react-icons/fa6";
 import { RestartIcon } from "@solar-icons/react/linear/restart";
 import { SettingsIcon } from "@solar-icons/react/linear/settings";
 import { KeyboardIcon } from "@solar-icons/react/linear/keyboard";
+import { CodeSquareIcon } from "@solar-icons/react/linear/code-square";
 import { BoltIcon } from "@solar-icons/react/bold-duotone/bolt";
 import { CloseCircleIcon } from "@solar-icons/react/linear/close-circle";
 import { CheckCircleIcon } from "@solar-icons/react/linear/check-circle";
 import { CopyIcon } from "@solar-icons/react/linear/copy";
 import { CrownIcon } from "@solar-icons/react/bold-duotone/crown";
-import { VolumeLoudIcon } from "@solar-icons/react/linear/volume-loud";
-import { VolumeCrossIcon } from "@solar-icons/react/linear/volume-cross";
 import { MaximizeIcon } from "@solar-icons/react/linear/maximize";
 import { MinimizeIcon } from "@solar-icons/react/linear/minimize";
 import { CarIcon } from "@solar-icons/react/bold-duotone/car";
@@ -40,10 +55,8 @@ import { RefreshIcon } from "@solar-icons/react/linear/refresh";
 import { FireIcon } from "@solar-icons/react/bold-duotone/fire";
 import { CupStarIcon } from "@solar-icons/react/bold-duotone/cup-star";
 import { RocketIcon } from "@solar-icons/react/bold-duotone/rocket";
-import { StopwatchIcon } from "@solar-icons/react/linear/stopwatch";
 import { MoonIcon } from "@solar-icons/react/linear/moon";
 import { SunIcon } from "@solar-icons/react/linear/sun";
-import { dailyPassage } from "@/lib/daily";
 import {
   applyInput,
   botProgress,
@@ -59,47 +72,24 @@ import {
 import { makePassage } from "@/lib/passages";
 import type { RoomSession, RoomSnapshot } from "@/lib/room-types";
 
-type Tab = "race" | "practice" | "friends" | "progress";
+type Tab = "code" | "race" | "practice" | "friends" | "progress";
 type Phase = "ready" | "countdown" | "running" | "finished";
-type Settings = { name: string; pace: number; sound: boolean; light: boolean };
-class RequestError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-  }
-}
-async function api(path: string, data?: unknown, token?: string) {
-  const response = await fetch(path, {
-    method: data ? "POST" : "GET",
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    signal: AbortSignal.timeout(10000),
-  });
-  const result = (await response.json()) as {
-    error?: string;
-    room: RoomSnapshot;
-    session: RoomSession;
-    self?: { typed: string; strokes: number; errors: number; seq: number };
-  };
-  if (!response.ok)
-    throw new RequestError(
-      result.error || "Could not connect. Try again.",
-      response.status,
-    );
-  return result;
-}
+type Settings = {
+  name: string;
+  avatarSeed: string;
+  pace: number;
+  sound: boolean;
+  light: boolean;
+};
 const palette = ["cobalt", "violet", "coral", "blue", "pink", "yellow"];
 const initialSettings: Settings = {
   name: "You",
+  avatarSeed: "keylane",
   pace: 60,
   sound: false,
   light: false,
 };
+const MemoCodePractice = memo(lazy(() => import("@/components/code-practice")));
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString(undefined, {
     month: "short",
@@ -109,15 +99,17 @@ const formatDate = (date: string) =>
 export default function Keylane({
   initialRoom = "",
 }: { initialRoom?: string } = {}) {
-  const [tab, setTab] = useState<Tab>(initialRoom ? "friends" : "race");
+  const [tab, setTab] = useState<Tab>(initialRoom ? "friends" : "code");
   const [phase, setPhase] = useState<Phase>("ready");
   const phaseRef = useRef<Phase>("ready");
-  const [mode, setMode] = useState<TextMode>("quotes");
+  const [mode, setMode] = useState<TextMode>(initialRoom ? "quotes" : "code");
   const [duration, setDuration] = useState(30);
   const [codeDuration, setCodeDuration] = useState(0);
   const [codeExercise, setCodeExercise] = useState<CodeExercise | null>(null);
   const codeExerciseRef = useRef<CodeExercise | null>(null);
-  const [passage, setPassage] = useState(() => makePassage("quotes", 74));
+  const [passage, setPassage] = useState(() =>
+    initialRoom ? makePassage("quotes", 74) : "",
+  );
   const passageRef = useRef(passage);
   const [engine, setEngine] = useState(emptyTyping);
   const engineRef = useRef<TypingState>(emptyTyping());
@@ -141,7 +133,6 @@ export default function Keylane({
   const [result, setResult] = useState<RaceResult | null>(null);
   const [dialog, setDialog] = useState<"settings" | "help" | null>(null);
   const [custom, setCustom] = useState("");
-  const [daily, setDaily] = useState(false);
   const [weakKeys, setWeakKeys] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [roomError, setRoomError] = useState("");
@@ -164,17 +155,19 @@ export default function Keylane({
   const seqRef = useRef(0);
   const roundRef = useRef(0);
   const offsetRef = useRef(0);
-  const snapshotTimeRef = useRef(0);
+  const snapshotRef = useRef<RoomSnapshot | null>(null);
+  const clockRttRef = useRef(Infinity);
+  const roomSyncRef = useRef<ReturnType<typeof synchronizeRoom> | null>(null);
   const sessionRef = useRef(session);
   const effectiveDuration =
-    mode === "code" && !session ? codeDuration : duration;
-  const configRef = useRef({ duration: effectiveDuration, mode, tab, daily });
+    tab === "code" && !session ? codeDuration : duration;
+  const configRef = useRef({ duration: effectiveDuration, mode, tab });
   const audioRef = useRef<AudioContext | null>(null);
   useEffect(() => {
-    configRef.current = { duration: effectiveDuration, mode, tab, daily };
+    configRef.current = { duration: effectiveDuration, mode, tab };
     sessionRef.current = session;
     passageRef.current = passage;
-  }, [effectiveDuration, mode, tab, daily, session, passage]);
+  }, [effectiveDuration, mode, tab, session, passage]);
 
   const changePhase = useCallback((value: Phase) => {
     phaseRef.current = value;
@@ -220,13 +213,11 @@ export default function Keylane({
         date: new Date().toISOString(),
         mode: joined
           ? "Friends"
-          : config.daily
-            ? "Daily sprint"
-            : config.tab === "race"
-              ? "Race"
-              : config.mode === "code" && codeExerciseRef.current
-                ? `${codeExerciseRef.current.kind === "leetcode" ? "LeetCode" : "Code"} · ${codeExerciseRef.current.title} · ${codeLanguages.find((l) => l.id === codeExerciseRef.current?.language)?.name}`
-                : config.mode,
+          : config.tab === "race"
+            ? "Race"
+            : config.mode === "code" && codeExerciseRef.current
+              ? `${codeExerciseRef.current.kind === "leetcode" ? "LeetCode" : "Code"} · ${codeExerciseRef.current.title} · ${codeLanguages.find((l) => l.id === codeExerciseRef.current?.language)?.name}`
+              : config.mode,
         ...(config.mode === "code" && !joined && codeExerciseRef.current
           ? {
               coding: {
@@ -249,6 +240,7 @@ export default function Keylane({
       setElapsed(time);
       setResult(completed);
       changePhase("finished");
+      roomSyncRef.current?.push();
       if (engineRef.current.strokes)
         setHistory((previous) =>
           previous.some((row) => row.id === completed.id)
@@ -260,14 +252,13 @@ export default function Keylane({
   );
   const acceptRoom = useCallback(
     (snapshot: RoomSnapshot, sentAt: number) => {
-      if (
-        snapshot.round < roundRef.current ||
-        (snapshot.round === roundRef.current &&
-          snapshot.serverNow < snapshotTimeRef.current)
-      )
-        return;
-      snapshotTimeRef.current = snapshot.serverNow;
-      offsetRef.current = snapshot.serverNow - (sentAt + Date.now()) / 2;
+      if (!isNewerRoom(snapshot, snapshotRef.current)) return;
+      snapshotRef.current = snapshot;
+      const rtt = Date.now() - sentAt;
+      if (rtt < clockRttRef.current || snapshot.round !== roundRef.current) {
+        clockRttRef.current = rtt;
+        offsetRef.current = snapshot.serverNow - (sentAt + Date.now()) / 2;
+      }
       if (roundRef.current !== snapshot.round) {
         clearEngine();
         roundRef.current = snapshot.round;
@@ -299,6 +290,7 @@ export default function Keylane({
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
     const load = async () => {
       await Promise.resolve();
       try {
@@ -309,6 +301,10 @@ export default function Keylane({
         setSettings({
           name:
             typeof saved.name === "string" ? saved.name.slice(0, 24) : "You",
+          avatarSeed:
+            typeof saved.avatarSeed === "string" && saved.avatarSeed.trim()
+              ? saved.avatarSeed.slice(0, 128)
+              : crypto.randomUUID(),
           pace: Number.isFinite(saved.pace)
             ? Math.max(30, Math.min(140, saved.pace))
             : 60,
@@ -335,12 +331,14 @@ export default function Keylane({
           typeof remembered.token === "string" &&
           (!requested || requested === remembered.code)
         ) {
+          setPending(true);
           try {
-            const sentAt = Date.now();
-            const data = await api(
-              `/api/rooms/${remembered.code}`,
-              undefined,
-              remembered.token,
+            const { data, sentAt } = await restoreRoom(
+              remembered,
+              controller.signal,
+              () => {
+                if (mounted) setRoomError("Reconnecting to your room…");
+              },
             );
             if (!mounted) return;
             roundRef.current = data.room.round;
@@ -357,8 +355,18 @@ export default function Keylane({
             acceptRoom(data.room, sentAt);
             setSession(remembered);
             setTab("friends");
-          } catch {
-            sessionStorage.removeItem("keylane:room");
+            setRoomError("");
+          } catch (error) {
+            if (!mounted) return;
+            if (
+              error instanceof RequestError &&
+              [400, 401, 404].includes(error.status)
+            ) {
+              sessionStorage.removeItem("keylane:room");
+              setRoomError(error.message);
+            }
+          } finally {
+            if (mounted) setPending(false);
           }
         }
       } catch {
@@ -369,6 +377,7 @@ export default function Keylane({
     void load();
     return () => {
       mounted = false;
+      controller.abort();
     };
   }, [acceptRoom]);
   useEffect(() => {
@@ -426,62 +435,36 @@ export default function Keylane({
   }, [engine.typed.length]);
   useEffect(() => {
     if (!session) return;
-    let stopped = false;
-    let busy = false;
-    const sync = async () => {
-      if (stopped || busy) return;
-      busy = true;
-      const sentAt = Date.now();
-      const current = engineRef.current;
-      try {
-        const data = await api(
-          `/api/rooms/${session.code}`,
-          {
-            action: "sync",
-            round: roundRef.current,
-            seq: ++seqRef.current,
-            typed: current.typed,
-            strokes: current.strokes,
-            errors: current.errors,
-          },
-          session.token,
-        );
-        if (!stopped) acceptRoom(data.room, sentAt);
-      } catch (error) {
-        if (!stopped) {
-          setConnection(false);
-          if (
-            error instanceof RequestError &&
-            [401, 404].includes(error.status)
-          ) {
-            setRoomError(error.message);
-            setSession(null);
-            setRoom(null);
-            changePhase("ready");
-            clearEngine();
-          } else if (error instanceof RequestError && error.status === 409) {
-            try {
-              const data = await api(
-                `/api/rooms/${session.code}`,
-                undefined,
-                session.token,
-              );
-              if (!stopped) acceptRoom(data.room, sentAt);
-            } catch {
-              setConnection(false);
-            }
-          } else if (error instanceof RequestError && error.status === 400)
-            notify(error.message);
-        }
-      } finally {
-        busy = false;
-      }
-    };
-    void sync();
-    const timer = setInterval(() => void sync(), 800);
+    const synchronizer = synchronizeRoom({
+      session,
+      progress: () => ({
+        round: roundRef.current,
+        seq: ++seqRef.current,
+        typed: engineRef.current.typed,
+        strokes: engineRef.current.strokes,
+        errors: engineRef.current.errors,
+      }),
+      phase: () => phaseRef.current,
+      onRoom: acceptRoom,
+      onError: (error) => {
+        setConnection(false);
+        if (
+          error instanceof RequestError &&
+          [401, 404].includes(error.status)
+        ) {
+          setRoomError(error.message);
+          setSession(null);
+          setRoom(null);
+          changePhase("ready");
+          clearEngine();
+        } else if (error instanceof RequestError && error.status === 400)
+          notify(error.message);
+      },
+    });
+    roomSyncRef.current = synchronizer;
     return () => {
-      stopped = true;
-      clearInterval(timer);
+      synchronizer.stop();
+      roomSyncRef.current = null;
     };
   }, [session, acceptRoom, changePhase, clearEngine, notify]);
   useEffect(() => {
@@ -520,7 +503,6 @@ export default function Keylane({
       if (sessionRef.current) return;
       clearEngine();
       changePhase("ready");
-      setDaily(false);
       const nextPassage =
         nextMode === "code"
           ? codeExerciseRef.current?.code || ""
@@ -541,11 +523,7 @@ export default function Keylane({
       notify("Add at least 30 characters of custom text first.");
       return;
     }
-    if (
-      phaseRef.current === "finished" &&
-      !daily &&
-      configRef.current.mode !== "code"
-    )
+    if (phaseRef.current === "finished" && configRef.current.mode !== "code")
       setPassage(
         makePassage(
           configRef.current.mode,
@@ -570,7 +548,6 @@ export default function Keylane({
     settings.sound,
     custom,
     weakKeys,
-    daily,
   ]);
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
@@ -637,12 +614,12 @@ export default function Keylane({
       return;
     }
     setTab(next);
-    setDaily(false);
     setWeakKeys([]);
-    if (next !== "progress" && next !== "friends") {
-      const nextMode = next === "practice" ? "words" : "quotes";
+    if (next !== "progress") {
+      const nextMode =
+        next === "code" ? "code" : next === "practice" ? "words" : "quotes";
       setMode(nextMode);
-      reset(nextMode, "", []);
+      reset(nextMode, "", [], next === "code" ? codeDuration : duration);
     }
   }
   async function enterRoom(create: boolean) {
@@ -659,7 +636,14 @@ export default function Keylane({
       );
       setSettings((previous) => ({ ...previous, name: name.trim() }));
       roundRef.current = 0;
-      snapshotTimeRef.current = 0;
+      snapshotRef.current = null;
+      clockRttRef.current = Infinity;
+      sessionRef.current = data.session;
+      try {
+        sessionStorage.setItem("keylane:room", JSON.stringify(data.session));
+      } catch {
+        setStorageWorks(false);
+      }
       acceptRoom(data.room, sentAt);
       setSession(data.session);
       setTab("friends");
@@ -686,8 +670,17 @@ export default function Keylane({
         session.token,
       );
       if (action === "leave") {
+        roomSyncRef.current?.stop();
+        sessionRef.current = null;
+        try {
+          sessionStorage.removeItem("keylane:room");
+        } catch {
+          setStorageWorks(false);
+        }
         setSession(null);
         setRoom(null);
+        snapshotRef.current = null;
+        clockRttRef.current = Infinity;
         roundRef.current = 0;
         clearEngine();
         changePhase("ready");
@@ -734,7 +727,7 @@ export default function Keylane({
   const remaining = effectiveDuration
     ? Math.max(0, Math.ceil(effectiveDuration - elapsed / 1000))
     : Math.floor(elapsed / 1000);
-  const isCoding = mode === "code" && !room;
+  const isCoding = tab === "code" && !room;
   const localBots = [settings.pace - 20, settings.pace, settings.pace + 20].map(
     (pace, index) => ({
       id: `bot-${index}`,
@@ -782,16 +775,27 @@ export default function Keylane({
       .findIndex((racer) => racer.id === ownId) + 1,
   );
   const hasError = engine.typed.length > live.correct;
-  const weak = Object.entries(
-    history.reduce<Record<string, number>>((all, row) => {
-      Object.entries(row.missed).forEach(([key, value]) => {
-        all[key] = (all[key] || 0) + value;
-      });
-      return all;
-    }, {}),
-  )
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  const weak = useMemo(
+    () =>
+      Object.entries(
+        history.reduce<Record<string, number>>((all, row) => {
+          Object.entries(row.missed).forEach(([key, value]) => {
+            all[key] = (all[key] || 0) + value;
+          });
+          return all;
+        }, {}),
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5),
+    [history],
+  );
+  const completedProblems = useMemo(
+    () =>
+      history
+        .filter((row) => row.coding?.completed && row.coding.problemId)
+        .map((row) => `${row.coding!.language}:${row.coding!.problemId}`),
+    [history],
+  );
   const drill = (keys: string[]) => {
     const letters = keys.filter(
       (key) => key.length === 1 && /[a-z]/i.test(key),
@@ -807,6 +811,47 @@ export default function Keylane({
       className={`typing-panel ${hasError ? "has-error" : ""} ${isCoding ? "coding-panel" : ""}`}
       aria-label="Typing race"
     >
+      {isCoding && (
+        <div className="code-editor-bar">
+          <span className="code-file-tab">
+            <CodeSquareIcon aria-hidden="true" />
+            practice.
+            {codeLanguages.find(
+              (language) => language.id === codeExercise?.language,
+            )?.extension || "txt"}
+          </span>
+          <div className="code-editor-actions">
+            <span>
+              {passage
+                ? `${passage.split("\n").length} lines`
+                : "Choose an exercise"}
+            </span>
+            {phase === "ready" || phase === "finished" ? (
+              <button
+                className="button primary code-start-button"
+                aria-label={
+                  phase === "finished"
+                    ? "Practise again"
+                    : "Start coding practice"
+                }
+                disabled={!codeExercise}
+                onClick={begin}
+              >
+                <RocketIcon />
+                {phase === "finished" ? "Try again" : "Start typing"}
+              </button>
+            ) : (
+              <button
+                className="button secondary code-start-button"
+                onClick={() => reset()}
+              >
+                <RestartIcon />
+                Restart
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="typing-top">
         <div className="live-stats" aria-label="Live race statistics">
           <span
@@ -840,19 +885,17 @@ export default function Keylane({
           <KeyboardIcon />
           {room
             ? "Shared passage"
-            : daily
-              ? "Daily sprint"
-              : mode === "code"
-                ? codeExercise
-                  ? `${codeLanguages.find((l) => l.id === codeExercise.language)?.name} · ${codeExercise.title}`
-                  : "Choose an exercise"
-                : mode === "words"
-                  ? weakKeys.length
-                    ? "Focused words"
-                    : "Common words"
-                  : mode === "custom"
-                    ? "Your text"
-                    : "Original passage"}
+            : mode === "code"
+              ? codeExercise
+                ? `${codeLanguages.find((l) => l.id === codeExercise.language)?.name} · ${codeExercise.title}`
+                : "Choose an exercise"
+              : mode === "words"
+                ? weakKeys.length
+                  ? "Focused words"
+                  : "Common words"
+                : mode === "custom"
+                  ? "Your text"
+                  : "Original passage"}
         </span>
         <span
           className={`combo-chip ${engine.streak >= 10 ? "combo-active" : ""}`}
@@ -885,32 +928,7 @@ export default function Keylane({
               {isCoding ? (
                 <CodePassage code={passage} typed={engine.typed} />
               ) : (
-                (() => {
-                  let start = 0;
-                  const words = passage.split(" ");
-                  return words.map((word, index) => {
-                    const base = start;
-                    const chunk = word + (index < words.length - 1 ? " " : "");
-                    start += chunk.length;
-                    let glyphOffset = 0;
-                    return (
-                      <span className="word" key={index}>
-                        {Array.from(chunk).map((char) => {
-                          const i = base + glyphOffset;
-                          glyphOffset += char.length;
-                          return (
-                            <span
-                              key={i}
-                              className={`${i < engine.typed.length ? (engine.typed.slice(i, i + char.length) === char ? "correct-char" : "wrong-char") : ""} ${i === engine.typed.length ? "caret" : ""}`}
-                            >
-                              {char}
-                            </span>
-                          );
-                        })}
-                      </span>
-                    );
-                  });
-                })()
+                <TypingPassage passage={passage} typed={engine.typed} />
               )}
             </div>
             <label className="sr-only" htmlFor="typing-input">
@@ -1026,86 +1044,30 @@ export default function Keylane({
           </div>
         </>
       ) : (
-        <div className="results" aria-live="polite">
-          <div className="result-heading">
-            <span className="result-icon" aria-hidden="true">
-              <RaceTrophy />
-            </span>
-            <div>
-              <h2>
-                {isCoding
-                  ? engine.typed === passage
-                    ? "Code typed. Nicely done."
-                    : "Practice time complete."
-                  : live.correct === 0
-                    ? "Every start counts."
-                    : position === 1 && tab !== "practice"
-                      ? "That’s a winning rhythm."
-                      : "A good lap in the books."}
-              </h2>
-              <p>
-                {isCoding
-                  ? `${live.correct} of ${passage.length} characters typed correctly.${codeExercise?.kind === "leetcode" ? " Try solving the problem on your own next." : ""}`
-                  : engine.strokes === 0
-                    ? "Start typing next time to save a result."
-                    : result &&
-                        result.wpm >
-                          Math.max(
-                            0,
-                            ...history
-                              .filter((row) => row.id !== result.id)
-                              .map((row) => row.wpm),
-                          )
-                      ? "A new personal best. Nicely done."
-                      : "Your next race is a fresh chance to improve."}
-              </p>
-            </div>
-          </div>
-          <div className="result-position">
-            <CupStarIcon />
-            {tab === "practice"
-              ? "Practice complete"
-              : `Position ${position} of ${racers.length}`}
-          </div>
-          <div className="result-numbers">
-            <div>
-              <strong>{result?.wpm || 0}</strong>
-              <span>words per minute</span>
-            </div>
-            <div>
-              <strong>
-                {result?.accuracy ?? 100}
-                <small>%</small>
-              </strong>
-              <span>accuracy</span>
-            </div>
-            <div>
-              <strong>
-                {result?.consistency ?? 0}
-                <small>%</small>
-              </strong>
-              <span>consistency</span>
-            </div>
-          </div>
-          <div
-            className="speed-chart"
-            role="img"
-            aria-label={`Speed over the race: ${result?.samples.join(", ") || "no samples"} words per minute`}
-          >
-            {(result?.samples.length ? result.samples : [0]).map((value, i) => (
-              <div
-                key={i}
-                style={{
-                  height: `${Math.max(3, (value / Math.max(1, ...(result?.samples || []))) * 100)}%`,
-                }}
-                title={`${i + 1}s: ${value} wpm`}
-              />
-            ))}
-          </div>
-          <div className="chart-labels">
-            <span>YOUR PACE OVER TIME</span>
-            <span>{Math.round(result?.duration || duration)} seconds</span>
-          </div>
+        <RaceResults
+          result={result}
+          attempted={engine.strokes > 0}
+          practice={tab === "practice" || isCoding}
+          code={
+            isCoding
+              ? {
+                  completed: engine.typed === passage,
+                  length: passage.length,
+                  fromLibrary: codeExercise?.kind === "leetcode",
+                }
+              : undefined
+          }
+          placement={
+            tab === "race" || isFriends
+              ? { position, total: racers.length }
+              : undefined
+          }
+          previousBest={history.reduce(
+            (highest, row) =>
+              row.id === result?.id ? highest : Math.max(highest, row.wpm),
+            0,
+          )}
+        >
           {room && (
             <div className="room-standings">
               <h3>
@@ -1132,7 +1094,7 @@ export default function Keylane({
                 ))}
             </div>
           )}
-        </div>
+        </RaceResults>
       )}
     </section>
   );
@@ -1151,12 +1113,12 @@ export default function Keylane({
         aria-hidden="true"
       />
       <a className="skip-link" href="#main">
-        Skip to race
+        Skip to practice
       </a>
       <header className="header">
         <button
           className="brand"
-          onClick={() => navigate("race")}
+          onClick={() => navigate("code")}
           aria-label="Keylane home"
         >
           <span className="brand-mark" aria-hidden="true">
@@ -1167,6 +1129,7 @@ export default function Keylane({
         <nav aria-label="Main navigation">
           {(
             [
+              ["code", "Code", CodeSquareIcon],
               ["race", "Race", FlagIcon],
               ["practice", "Practice", TargetIcon],
               ["friends", "Friends", UsersGroupRoundedIcon],
@@ -1185,29 +1148,20 @@ export default function Keylane({
           ))}
         </nav>
         <div className="header-tools">
-          <div className="github-links">
-            <a
-              href="https://github.com/aroach98/typerace"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="View the open-source reference on GitHub"
-              title="Open-source reference: aroach98/typerace"
-            >
-              <FaGithub aria-hidden="true" />
-              <span className="github-label">GitHub</span>
-            </a>
-            <a
-              className="github-star"
-              href="https://github.com/aroach98/typerace"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Star the original typerace project on GitHub"
-              title="Support the original open-source racer"
-            >
-              <StarIcon aria-hidden="true" />
-              <span>Star</span>
-            </a>
-          </div>
+          <AudioControls
+            musicEnabled={musicEnabled}
+            musicPlaying={musicPlaying}
+            musicVolume={musicVolume}
+            typingSound={settings.sound}
+            onToggleMusic={toggleMusic}
+            onVolumeChange={setMusicVolume}
+            onToggleTyping={() =>
+              setSettings((previous) => ({
+                ...previous,
+                sound: !previous.sound,
+              }))
+            }
+          />
           <button
             className="icon-button theme-button"
             aria-label={
@@ -1234,11 +1188,15 @@ export default function Keylane({
             onClick={() => setDialog("settings")}
             aria-label="Open profile and settings"
           >
-            {settings.name.slice(0, 1).toUpperCase() || "Y"}
+            <UserAvatar seed={settings.avatarSeed} />
           </button>
         </div>
       </header>
-      <main id="main" className="main" tabIndex={-1}>
+      <main
+        id="main"
+        className={`main ${isCoding ? "code-main" : ""}`}
+        tabIndex={-1}
+      >
         {tab === "progress" ? (
           <>
             <div className="page-heading">
@@ -1355,23 +1313,24 @@ export default function Keylane({
           </>
         ) : (
           <>
-            {tab === "race" ? (
-              <h1 className="sr-only">Typing race</h1>
-            ) : (
+            {(tab === "race" || isFriends) && (
+              <h1 className="sr-only">
+                {isFriends ? "Race with friends" : "Typing race"}
+              </h1>
+            )}
+            {tab !== "race" && (!isFriends || room) && (
               <div className="page-heading">
-                <div>
-                  <h1>
-                    {isFriends ? "Race with friends." : "Practice typing."}
-                  </h1>
-                  <p>
-                    {isFriends
-                      ? room
-                        ? "Same passage. Same start. See who finds their rhythm."
-                        : "Create a private room and send your friends the link."
-                      : "Find your rhythm with words, passages or your own text."}
-                  </p>
-                </div>
                 {!isFriends && (
+                  <div>
+                    <h1>{isCoding ? "Code practice" : "Practice typing."}</h1>
+                    <p>
+                      {isCoding
+                        ? "Snippets, LeetCode solutions or your own code."
+                        : "Find your rhythm with words, passages or your own text."}
+                    </p>
+                  </div>
+                )}
+                {!isFriends && !isCoding && (
                   <button
                     className="button secondary invite-top"
                     onClick={() => navigate("friends")}
@@ -1415,20 +1374,17 @@ export default function Keylane({
                     placeholder="What should we call you?"
                     autoComplete="nickname"
                   />
-                  <div className="field-row">
-                    <label htmlFor="room-duration">Race length</label>
-                    <select
-                      id="room-duration"
-                      value={duration}
-                      onChange={(event) =>
-                        setDuration(Number(event.target.value))
-                      }
-                    >
-                      <option value={15}>15 seconds</option>
-                      <option value={30}>30 seconds</option>
-                      <option value={60}>60 seconds</option>
-                    </select>
-                  </div>
+                  <CustomSelect
+                    className="friends-duration"
+                    label="Race length"
+                    value={String(duration)}
+                    disabled={pending}
+                    options={[15, 30, 60].map((seconds) => ({
+                      value: String(seconds),
+                      label: `${seconds} seconds`,
+                    }))}
+                    onChange={(seconds) => setDuration(Number(seconds))}
+                  />
                   <button
                     className="button primary full-width"
                     disabled={pending || !name.trim()}
@@ -1513,7 +1469,9 @@ export default function Keylane({
               </div>
             ) : (
               <div className="workspace">
-                <div className="race-column">
+                <div
+                  className={`race-column ${isCoding ? "code-workspace" : ""}`}
+                >
                   {room ? (
                     <div className="room-toolbar">
                       <span className="room-code">
@@ -1543,37 +1501,37 @@ export default function Keylane({
                     </div>
                   ) : (
                     <div className="race-toolbar">
-                      <div className="segments" aria-label="Passage mode">
-                        {(
-                          [
-                            "quotes",
-                            "words",
-                            "code",
-                            ...(tab === "practice" ? ["custom"] : []),
-                          ] as TextMode[]
-                        ).map((value) => (
-                          <button
-                            key={value}
-                            disabled={isBusy}
-                            aria-pressed={mode === value}
-                            className={mode === value ? "selected" : ""}
-                            onClick={() => {
-                              if (value === "code") setTab("practice");
-                              setMode(value);
-                              setWeakKeys([]);
-                              reset(value, custom, []);
-                            }}
-                          >
-                            {value === "quotes"
-                              ? "Passages"
-                              : value === "code"
-                                ? "Code"
-                                : value === "words"
-                                  ? "Words"
-                                  : "Custom"}
-                          </button>
-                        ))}
-                      </div>
+                      {!isCoding && (
+                        <div className="segments" aria-label="Passage mode">
+                          {(
+                            [
+                              "quotes",
+                              "words",
+                              ...(tab === "practice" ? ["custom"] : []),
+                            ] as TextMode[]
+                          ).map((value) => (
+                            <button
+                              key={value}
+                              disabled={isBusy}
+                              aria-pressed={mode === value}
+                              className={mode === value ? "selected" : ""}
+                              onClick={() => {
+                                setMode(value);
+                                setWeakKeys([]);
+                                reset(value, custom, []);
+                              }}
+                            >
+                              {value === "quotes"
+                                ? "Passages"
+                                : value === "code"
+                                  ? "Code"
+                                  : value === "words"
+                                    ? "Words"
+                                    : "Custom"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <div className="toolbar-end">
                         <div
                           className="times"
@@ -1609,7 +1567,9 @@ export default function Keylane({
                         <span className="toolbar-divider" />
                         <button
                           className="icon-button"
-                          aria-label="Race settings"
+                          aria-label={
+                            isCoding ? "Practice settings" : "Race settings"
+                          }
                           onClick={() => setDialog("settings")}
                         >
                           <SettingsIcon />
@@ -1628,20 +1588,16 @@ export default function Keylane({
                     </div>
                   )}
                   {isCoding && (
-                    <CodePractice
-                      disabled={isBusy}
-                      completed={history
-                        .filter(
-                          (row) =>
-                            row.coding?.completed && row.coding.problemId,
-                        )
-                        .map(
-                          (row) =>
-                            `${row.coding!.language}:${row.coding!.problemId}`,
-                        )}
-                      onChange={selectCodeExercise}
-                      onStorageError={codingStorageError}
-                    />
+                    <Suspense
+                      fallback={<div role="status">Loading code practice…</div>}
+                    >
+                      <MemoCodePractice
+                        disabled={isBusy}
+                        completed={completedProblems}
+                        onChange={selectCodeExercise}
+                        onStorageError={codingStorageError}
+                      />
+                    </Suspense>
                   )}
                   {mode === "custom" && !room && (
                     <div className="custom-text">
@@ -1688,6 +1644,7 @@ export default function Keylane({
                     <div className="race-actions">
                       <div>
                         {!room &&
+                          !isCoding &&
                           (phase === "ready" || phase === "finished") && (
                             <button
                               className="button primary start-button"
@@ -1703,13 +1660,11 @@ export default function Keylane({
                                   ? "Race again"
                                   : tab === "practice"
                                     ? "Start practice"
-                                    : daily
-                                      ? "Start daily sprint"
-                                      : "Start race"}
+                                    : "Start race"}
                               <kbd>enter</kbd>
                             </button>
                           )}
-                        {!room && isBusy && (
+                        {!room && !isCoding && isBusy && (
                           <button
                             className="button secondary"
                             onClick={() => reset()}
@@ -1734,44 +1689,6 @@ export default function Keylane({
                         )}
                       </div>
                       <div className="action-tools">
-                        <button
-                          className="icon-button music-button"
-                          aria-label={
-                            musicEnabled
-                              ? "Turn background music off"
-                              : "Turn background music on"
-                          }
-                          aria-pressed={musicEnabled}
-                          title={
-                            musicPlaying
-                              ? "Reverie · Scott Buckley"
-                              : "Background music · Reverie"
-                          }
-                          onClick={toggleMusic}
-                        >
-                          <MusicNoteIcon />
-                        </button>
-                        <button
-                          className="icon-button"
-                          aria-label={
-                            settings.sound
-                              ? "Turn typing sound off"
-                              : "Turn typing sound on"
-                          }
-                          aria-pressed={settings.sound}
-                          onClick={() =>
-                            setSettings((previous) => ({
-                              ...previous,
-                              sound: !previous.sound,
-                            }))
-                          }
-                        >
-                          {settings.sound ? (
-                            <VolumeLoudIcon />
-                          ) : (
-                            <VolumeCrossIcon />
-                          )}
-                        </button>
                         <button
                           className="icon-button"
                           aria-label={
@@ -1798,7 +1715,7 @@ export default function Keylane({
                         <CarIcon />
                         {room
                           ? "Room grid"
-                          : tab === "practice"
+                          : tab === "practice" || isCoding
                             ? "Your lane"
                             : "Race grid"}
                       </span>
@@ -1816,7 +1733,7 @@ export default function Keylane({
                         <h2>
                           {room
                             ? "Starting grid"
-                            : tab === "practice"
+                            : tab === "practice" || isCoding
                               ? "Your lane"
                               : "Meet your competition"}
                         </h2>
@@ -2006,52 +1923,6 @@ export default function Keylane({
                     )}
                 </div>
                 <aside className="progress-sidebar">
-                  <section className="daily-sprint">
-                    <div className="daily-art" aria-hidden="true">
-                      <Image
-                        unoptimized
-                        src="/game/canyon-circuit.webp"
-                        alt=""
-                        width={720}
-                        height={480}
-                        fetchPriority="high"
-                      />
-                    </div>
-                    <div className="daily-title">
-                      <h2>Daily sprint</h2>
-                      <span>
-                        <StopwatchIcon />
-                        15 sec
-                      </span>
-                    </div>
-                    <p>A fresh 15-second challenge, every day.</p>
-                    <button
-                      className="button daily-button"
-                      disabled={isBusy || !!room}
-                      onClick={() => {
-                        clearEngine();
-                        changePhase("ready");
-                        setTab("race");
-                        setMode("words");
-                        setDuration(15);
-                        setDaily(true);
-                        setPassage(dailyPassage(new Date()));
-                      }}
-                    >
-                      Try today’s sprint
-                    </button>
-                    {today.some((row) => row.mode === "Daily sprint") && (
-                      <span className="daily-record">
-                        Today’s best:{" "}
-                        {Math.max(
-                          ...today
-                            .filter((row) => row.mode === "Daily sprint")
-                            .map((row) => row.wpm),
-                        )}{" "}
-                        wpm
-                      </span>
-                    )}
-                  </section>
                   <section className="session-stats">
                     <div className="section-heading">
                       <h2>Your personal best</h2>
@@ -2085,25 +1956,6 @@ export default function Keylane({
                         <span>Races today</span>
                         <b>{today.length}</b>
                       </div>
-                    </div>
-                    <div className="daily-goal">
-                      <div>
-                        <span>Daily goal</span>
-                        <b>{Math.min(today.length, 5)} / 5 races</b>
-                      </div>
-                      <div className="goal-segments">
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <span
-                            key={i}
-                            className={today.length > i ? "filled" : ""}
-                          />
-                        ))}
-                      </div>
-                      <p>
-                        {today.length >= 5
-                          ? "Five laps down. You showed up."
-                          : "A few minutes is a good place to start."}
-                      </p>
                     </div>
                   </section>
                   <section className="recent-races">
@@ -2402,6 +2254,25 @@ export default function Keylane({
                   Solar / 480 Design
                 </a>
                 , used under CC BY 4.0.
+              </p>
+              <p className="credit">
+                Avatars generated with{" "}
+                <a
+                  href="https://www.dicebear.com/styles/dylan/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  DiceBear’s Dylan style by Natalia Spivak
+                </a>
+                , used under{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  CC BY 4.0
+                </a>
+                .
               </p>
             </div>
           )}

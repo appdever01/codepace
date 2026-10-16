@@ -1,0 +1,19 @@
+name: Report a bug
+description: Something in the game is not working.
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, what happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+  - type: textarea
+    id: details
+    attributes:
+      label: More details
+      description: Add screenshots or relevant errors. Remove room tokens and personal information.
