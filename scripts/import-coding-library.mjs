@@ -48,6 +48,7 @@ try {
       )
         .replace(/\r\n?/g, "\n")
         .replace(/\t/g, "    ")
+        .replace(/ +$/gm, "")
         .trimEnd();
       if (!text.trim() || text.length > 20000) continue;
       solutions[problem.code] = text;
@@ -86,7 +87,7 @@ try {
         revision,
         license: "MIT",
         changes:
-          "CRLF normalized; tabs expanded to four spaces; trailing whitespace at end of file removed. Files over 20,000 characters omitted.",
+          "CRLF normalized; tabs expanded to four spaces; trailing spaces removed from every line; trailing whitespace at end of file removed. Files over 20,000 characters omitted.",
         problems: catalog.length,
         solutions: counts,
       },

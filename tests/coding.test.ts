@@ -34,6 +34,11 @@ test("every indexed solution is bundled in the advertised language with full for
         assert.ok(bundle[problem.id].length <= 20000);
         assert.ok(!bundle[problem.id].includes("\r"));
         assert.ok(!bundle[problem.id].includes("\t"));
+        assert.equal(
+          /[ \t]+$/m.test(bundle[problem.id]),
+          false,
+          `${language.id}/${problem.id} contains invisible trailing whitespace`,
+        );
       }
     }
   }
@@ -45,6 +50,16 @@ test("every indexed solution is bundled in the advertised language with full for
       "utf8",
     ).includes("Copyright (c) 2022 neetcode-gh"),
   );
+});
+
+test("code normalization removes invisible line endings without changing meaningful indentation", () => {
+  const source =
+    'fn example() {  \r\n\tlet text = "a  b "; \t\r\n\t \r\n\treturn text;\t\r\n}\r\n\t';
+  const expected =
+    'fn example() {\n    let text = "a  b ";\n\n    return text;\n}';
+  assert.equal(normalizeCode(source), expected);
+  assert.equal(normalizeCode(expected), expected);
+  assert.equal(normalizeCode(" \t\r\n\t "), "");
 });
 
 test("coding preferences recover from invalid storage and preserve valid choices", () => {

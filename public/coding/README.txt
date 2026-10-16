@@ -13,8 +13,9 @@ LeetCode. Some source files include multiple approaches and comments.
 CodePace does not claim to cover all LeetCode problems.
 
 Code keeps its line breaks. Tabs become four spaces, CRLF becomes LF, and
-trailing file whitespace is removed. Files longer than 20,000 characters are
-omitted. source.json records the exact snapshot and language counts.
+trailing spaces on every line and trailing file whitespace are removed.
+Indentation on non-empty lines is preserved. Files longer than 20,000 characters
+are omitted. source.json records the exact snapshot and language counts.
 
 Maintainers can regenerate the library with:
 node scripts/import-coding-library.mjs

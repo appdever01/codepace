@@ -94,9 +94,9 @@ test("custom code keeps line breaks and normalizes indentation, while text norma
     mode: "code",
     language: "python",
     snippet: -1,
-    text: "def hello():\r\n\treturn 123\r\n",
+    text: "def hello():  \r\n\t \r\n\treturn 123 \t\r\n",
   });
-  assert.equal(makeRoomPassage(code, 1, 15), "def hello():\n    return 123");
+  assert.equal(makeRoomPassage(code, 1, 15), "def hello():\n\n    return 123");
   const text = roomContentSchema.parse({
     mode: "custom",
     text: "  This is my own passage.\n Everyone\tgets the same text.  ",

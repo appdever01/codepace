@@ -59,6 +59,56 @@ function mockLibrary() {
     return nativeFetch(input, init);
   };
 }
+test("Rust Two Sum accepts Enter on blank lines without typing invisible indentation", async () => {
+  Date.now = () => clock() + offset;
+  localStorage.clear();
+  sessionStorage.clear();
+  mockLibrary();
+  try {
+    await openCode();
+    chooseOption("Language", "Rust");
+    fireEvent.click(screen.getByRole("button", { name: "LeetCode" }));
+    await waitFor(() =>
+      assert.ok(target().startsWith("use std::collections::HashMap;")),
+    );
+    const lines = target().split("\n");
+    fireEvent.click(
+      screen.getByRole("button", { name: /Start coding practice/ }),
+    );
+    await tick(3100);
+    const input = screen.getByRole("textbox", {
+      name: /^Type this passage:/,
+    }) as HTMLTextAreaElement;
+    for (const line of [6, 9, 16]) {
+      const prefix = lines.slice(0, line - 1).join("\n");
+      fireEvent.change(input, { target: { value: prefix } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      fireEvent.keyDown(input, { key: "Enter" });
+      assert.equal(document.querySelectorAll(".wrong-char").length, 0);
+      assert.equal(input.value, `${prefix}\n\n`);
+      assert.equal(
+        document.querySelectorAll(".code-line-content")[line - 1].textContent,
+        "↵",
+      );
+    }
+    fireEvent.keyDown(input, { key: "Tab" });
+    fireEvent.keyDown(input, { key: "Tab" });
+    assert.equal(input.value.endsWith("\n        "), true);
+    assert.equal(document.querySelectorAll(".wrong-char").length, 0);
+    fireEvent.change(input, { target: { value: target() } });
+    await waitFor(() =>
+      assert.ok(screen.getByText("Code typed. Nicely done.")),
+    );
+    const history = JSON.parse(localStorage.getItem("codepace:history")!);
+    assert.equal(history[0].errors, 0);
+    assert.equal(history[0].coding.completed, true);
+  } finally {
+    Date.now = clock;
+    globalThis.fetch = nativeFetch;
+    cleanup();
+  }
+});
+
 test("choose language, type formatted code with correction, finish without a timer and reload preferences", async () => {
   Date.now = () => clock() + offset;
   localStorage.clear();

@@ -54,7 +54,11 @@ export function readCodePreferences(value: string | null): CodePreferences {
   }
 }
 export const normalizeCode = (value: string) =>
-  value.replace(/\r\n?/g, "\n").replace(/\t/g, "    ").trimEnd();
+  value
+    .replace(/\r\n?/g, "\n")
+    .replace(/\t/g, "    ")
+    .replace(/ +$/gm, "")
+    .trimEnd();
 export const codeKeyLabel = (key?: string) =>
   key === " "
     ? "space"

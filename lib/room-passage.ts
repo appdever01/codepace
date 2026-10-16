@@ -34,7 +34,7 @@ export function makeRoomPassage(
         throw new Error(
           "This solution is unavailable. Choose another problem.",
         );
-      return code;
+      return normalizeCode(code);
     }
     return content.snippet === -1
       ? normalizeCode(content.text || "")

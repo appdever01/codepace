@@ -80,8 +80,20 @@ test("existing profiles get a persistent generated avatar without losing saved s
 test("the header does not promote the scoring reference as CodePace's repository and Help retains its credit", () => {
   try {
     render(<CodePace />);
-    assert.equal(document.querySelector(".header a[href*='github.com']"), null);
-    assert.equal(screen.queryByRole("link", { name: /Star .*GitHub/ }), null);
+    assert.equal(
+      Boolean(
+        document.querySelector(
+          ".header a[href='https://github.com/aroach98/typerace']",
+        ),
+      ),
+      false,
+    );
+    assert.equal(
+      screen
+        .getByRole("link", { name: /Star CodePace on GitHub/ })
+        .getAttribute("href"),
+      "https://github.com/appdever01/codepace",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Keyboard shortcuts" }));
     assert.equal(
       screen.getByRole("link", { name: "typerace" }).getAttribute("href"),

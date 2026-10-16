@@ -138,7 +138,7 @@ export default function CodePractice({
           );
         if (current)
           onChange({
-            code,
+            code: normalizeCode(code),
             title: `#${selected.number} ${selected.title}`,
             language: preferences.language,
             kind: "leetcode",
