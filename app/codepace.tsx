@@ -1319,19 +1319,17 @@ export default function CodePace({
                 {isFriends ? "Race with friends" : "Typing race"}
               </h1>
             )}
-            {tab !== "race" && (!isFriends || room) && (
+            {tab !== "race" && !isFriends && (
               <div className="page-heading">
-                {!isFriends && (
-                  <div>
-                    <h1>{isCoding ? "Code practice" : "Practice typing."}</h1>
-                    <p>
-                      {isCoding
-                        ? "Snippets, LeetCode solutions or your own code."
-                        : "Find your rhythm with words, passages or your own text."}
-                    </p>
-                  </div>
-                )}
-                {!isFriends && !isCoding && (
+                <div>
+                  <h1>{isCoding ? "Code practice" : "Practice typing."}</h1>
+                  <p>
+                    {isCoding
+                      ? "Snippets, LeetCode solutions or your own code."
+                      : "Find your rhythm with words, passages or your own text."}
+                  </p>
+                </div>
+                {!isCoding && (
                   <button
                     className="button secondary invite-top"
                     onClick={() => navigate("friends")}
@@ -1340,16 +1338,45 @@ export default function CodePace({
                     Race with friends
                   </button>
                 )}
-                {room && (
-                  <button
-                    className="button secondary"
-                    disabled={pending}
-                    onClick={() => void roomAction("leave")}
-                  >
-                    <LogoutIcon />
-                    Leave room
-                  </button>
-                )}
+              </div>
+            )}
+            {room && (
+              <div
+                className="room-controls"
+                role="group"
+                aria-label="Room controls"
+              >
+                <button
+                  className="room-invite"
+                  onClick={() => void copyInvite()}
+                  aria-label={`Copy invite link for room ${room.code}`}
+                  title="Copy invite link"
+                >
+                  <span className="room-code-value">{room.code}</span>
+                  <CopyIcon aria-hidden="true" />
+                </button>
+                <span
+                  className={`room-occupancy ${connection ? "" : "offline"}`}
+                  role="status"
+                  aria-label={
+                    connection
+                      ? `${room.players.length} of 6 players in room`
+                      : "Reconnecting to room"
+                  }
+                >
+                  <UsersGroupRoundedIcon aria-hidden="true" />
+                  <span aria-hidden="true">
+                    {connection ? `${room.players.length}/6` : "Reconnecting…"}
+                  </span>
+                </span>
+                <button
+                  className="button secondary room-leave"
+                  disabled={pending}
+                  onClick={() => void roomAction("leave")}
+                >
+                  <LogoutIcon aria-hidden="true" />
+                  Leave room
+                </button>
               </div>
             )}
             {isFriends && !room ? (
@@ -1473,34 +1500,7 @@ export default function CodePace({
                 <div
                   className={`race-column ${isCoding ? "code-workspace" : ""}`}
                 >
-                  {room ? (
-                    <div className="room-toolbar">
-                      <span className="room-code">
-                        Room <b>{room.code}</b>
-                        <button
-                          className="icon-button"
-                          onClick={() => void copyInvite()}
-                          aria-label="Copy invite link"
-                        >
-                          <CopyIcon />
-                        </button>
-                      </span>
-                      <span
-                        className={`connection ${connection ? "" : "offline"}`}
-                      >
-                        <span className="tiny-dot" />
-                        {connection
-                          ? `${room.players.length}/6 in room`
-                          : "Reconnecting…"}
-                      </span>
-                      <button
-                        className="text-button"
-                        onClick={() => void copyInvite()}
-                      >
-                        Invite friends
-                      </button>
-                    </div>
-                  ) : (
+                  {!room && (
                     <div className="race-toolbar">
                       {!isCoding && (
                         <div className="segments" aria-label="Passage mode">

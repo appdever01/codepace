@@ -614,12 +614,6 @@
 .slick-codepace .friend-game-art {
   max-height: 180px;
 }
-.slick-codepace .room-toolbar {
-  background: var(--surface);
-  padding: 8px 16px;
-  border-radius: 12px;
-  margin-bottom: 0;
-}
 .slick-codepace .custom-text {
   margin-top: 24px;
   background: var(--surface);

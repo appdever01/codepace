@@ -8,6 +8,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import CodePace from "../app/codepace";
 
@@ -108,6 +109,16 @@ test("complete a corrected race, save it, inspect progress and reload it", async
 
 test("friend-room screen creates, races, restores after reload and leaves through the real API", async () => {
   const nativeFetch = globalThis.fetch;
+  const clipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+  let invite = "";
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: {
+      writeText: async (text: string) => {
+        invite = text;
+      },
+    },
+  });
   globalThis.fetch = (input, init) =>
     nativeFetch(
       typeof input === "string" ? new URL(input, testOrigin) : input,
@@ -125,8 +136,26 @@ test("friend-room screen creates, races, restores after reload and leaves throug
       target: { value: "UI Host" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Create a room" }));
-    await waitFor(() => assert.ok(screen.getByText(/1\/6 in room/)));
+    await waitFor(() =>
+      assert.ok(screen.getByRole("status", { name: "1 of 6 players in room" })),
+    );
     const own = JSON.parse(sessionStorage.getItem("codepace:room")!);
+    const controls = screen.getByRole("group", { name: "Room controls" });
+    assert.ok(within(controls).getByText(own.code));
+    assert.ok(within(controls).getByRole("button", { name: "Leave room" }));
+    assert.equal(document.querySelector(".room-toolbar"), null);
+    assert.equal(
+      screen.queryByRole("button", { name: "Invite friends" }),
+      null,
+    );
+    fireEvent.click(
+      within(controls).getByRole("button", {
+        name: `Copy invite link for room ${own.code}`,
+      }),
+    );
+    await waitFor(() =>
+      assert.equal(new URL(invite).searchParams.get("room"), own.code),
+    );
     const joined = await nativeFetch(`${testOrigin}/api/rooms/${own.code}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -135,9 +164,15 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     peer = (
       (await joined.json()) as { session: { token: string; code: string } }
     ).session;
-    await waitFor(() => assert.ok(screen.getByText(/2\/6 in room/)), {
-      timeout: 2500,
-    });
+    await waitFor(
+      () =>
+        assert.ok(
+          screen.getByRole("status", { name: "2 of 6 players in room" }),
+        ),
+      {
+        timeout: 2500,
+      },
+    );
     fireEvent.click(screen.getByRole("button", { name: "Start race" }));
     await waitFor(
       () =>
@@ -162,7 +197,10 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     await act(async () => {
       await pause(1000);
     });
-    sessionStorage.setItem("keylane:room", sessionStorage.getItem("codepace:room")!);
+    sessionStorage.setItem(
+      "keylane:room",
+      sessionStorage.getItem("codepace:room")!,
+    );
     sessionStorage.removeItem("codepace:room");
     cleanup();
     await act(async () => {
@@ -191,6 +229,8 @@ test("friend-room screen creates, races, restores after reload and leaves throug
   } finally {
     cleanup();
     globalThis.fetch = nativeFetch;
+    if (clipboard) Object.defineProperty(navigator, "clipboard", clipboard);
+    else Reflect.deleteProperty(navigator, "clipboard");
     if (peer)
       await nativeFetch(`${testOrigin}/api/rooms/${peer.code}`, {
         method: "POST",

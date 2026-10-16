@@ -90,6 +90,66 @@
   margin-top: 7px;
   font-size: 14px;
 }
+.room-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.room-invite {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 10px;
+  color: var(--ink);
+}
+.room-invite:hover {
+  background: var(--surface-hover);
+}
+.room-code-value {
+  font-size: 13px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+}
+.room-invite svg,
+.room-occupancy svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.room-invite svg {
+  color: var(--muted);
+}
+.room-occupancy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.room-occupancy.offline {
+  color: var(--danger);
+}
+.slick-codepace .room-leave {
+  min-height: 44px;
+  padding: 8px 12px;
+  gap: 7px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--field);
+  box-shadow: none;
+}
+.room-leave svg {
+  width: 16px;
+  height: 16px;
+}
 .slick-codepace .race-column {
   min-height: 0;
 }

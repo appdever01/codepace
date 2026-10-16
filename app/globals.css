@@ -1342,42 +1342,6 @@ input[type="checkbox"] {
 .focused-banner .icon-button {
   margin-left: auto;
 }
-.room-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 44px;
-  margin-bottom: 18px;
-}
-.room-code {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--muted);
-}
-.room-code b {
-  font: 500 16px var(--display);
-  letter-spacing: 0.08em;
-  color: var(--accent);
-}
-.connection {
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-}
-.connection .tiny-dot {
-  background: var(--accent);
-}
-.connection.offline {
-  color: var(--danger);
-}
-.connection.offline .tiny-dot {
-  background: var(--danger);
-}
 .form-error {
   font-size: 12px !important;
   color: var(--danger) !important;
@@ -2150,28 +2114,6 @@ td {
   .friends-info > p {
     max-width: 100%;
     font-size: 13px;
-  }
-  .room-toolbar {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .room-code {
-    gap: 6px;
-    font-size: 11px;
-  }
-  .room-code b {
-    font-size: 13px;
-  }
-  .room-code .icon-button {
-    width: 28px;
-    height: 28px;
-    padding: 5px;
-  }
-  .connection {
-    font-size: 9px;
-  }
-  .room-toolbar > .text-button {
-    font-size: 10px;
   }
   .lobby-action {
     flex-direction: column;
