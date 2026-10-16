@@ -152,7 +152,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     );
     fireEvent.click(
       within(controls).getByRole("button", {
-        name: `Copy invite link for room ${own.code}`,
+        name: "Copy link",
       }),
     );
     await waitFor(() =>

@@ -75,12 +75,38 @@
   font-size: 13px;
 }
 .room-problem-info {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 20px;
+  margin-top: 8px;
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 13px;
+}
+.room-problem-info > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  width: fit-content;
+  color: var(--muted);
+  list-style: none;
+  cursor: pointer;
+}
+.room-problem-info > summary::-webkit-details-marker {
+  display: none;
+}
+.room-problem-info > summary svg {
+  width: 14px;
+  height: 14px;
+}
+.room-problem-info[open] > summary svg {
+  transform: rotate(180deg);
+}
+.room-problem-body {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 16px;
+}
+.room-problem-info:not([open]) > .room-problem-body {
+  display: none;
 }
 .room-problem-info strong {
   font-weight: 500;
@@ -129,16 +155,22 @@
   }
 }
 .room-schedule {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  flex: 1 1 220px;
+  min-width: 0;
 }
-.room-schedule-status strong {
-  font-size: 14px;
+.room-schedule-status time {
+  font-size: 13px;
   font-weight: 500;
 }
-.room-schedule-status p {
-  margin: 6px 0 0;
+.room-schedule-status {
+  display: grid;
+  gap: 4px;
+}
+.room-schedule-status > span {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.6;
@@ -152,6 +184,19 @@
 }
 .room-schedule-form {
   align-items: flex-end;
+  flex-basis: 100%;
+  min-width: 0;
+}
+.room-schedule[data-editing="true"] {
+  flex-basis: 100%;
+  order: 1;
+}
+.room-schedule-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
 }
 .room-schedule .text-button {
   min-height: 44px;

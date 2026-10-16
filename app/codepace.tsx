@@ -16,6 +16,7 @@ import AudioControls from "@/components/audio-controls";
 import UserAvatar from "@/components/user-avatar";
 import RoomSetup, { RoomConfiguration } from "@/components/room-setup";
 import RoomProblemInfo from "@/components/room-problem-info";
+import RoomInvite from "@/components/room-invite";
 import RoomSchedule from "@/components/room-schedule";
 import {
   defaultRoomContent,
@@ -50,7 +51,6 @@ import { CodeSquareIcon } from "@solar-icons/react/linear/code-square";
 import { BoltIcon } from "@solar-icons/react/bold-duotone/bolt";
 import { CloseCircleIcon } from "@solar-icons/react/linear/close-circle";
 import { CheckCircleIcon } from "@solar-icons/react/linear/check-circle";
-import { CopyIcon } from "@solar-icons/react/linear/copy";
 import { CrownIcon } from "@solar-icons/react/bold-duotone/crown";
 import { MaximizeIcon } from "@solar-icons/react/linear/maximize";
 import { MinimizeIcon } from "@solar-icons/react/linear/minimize";
@@ -149,6 +149,7 @@ export default function CodePace({
   const [roomContent, setRoomContent] =
     useState<RoomContent>(defaultRoomContent);
   const [roomDraftPending, setRoomDraftPending] = useState(false);
+  const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const [joinCode, setJoinCode] = useState(initialRoom.toUpperCase());
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
@@ -193,6 +194,8 @@ export default function CodePace({
     setEngine(next);
     setElapsed(0);
     setResult(null);
+    setRoomSettingsOpen(false);
+    setRoomDraftPending(false);
     savedRef.current = false;
     samplesRef.current = [];
     secondRef.current = 0;
@@ -732,17 +735,6 @@ export default function CodePace({
       return false;
     } finally {
       setPending(false);
-    }
-  }
-  async function copyInvite() {
-    if (!room) return;
-    try {
-      const url = new URL(location.href);
-      url.searchParams.set("room", room.code);
-      await navigator.clipboard.writeText(url.toString());
-      notify("Invite link copied.");
-    } catch {
-      notify(`Share this room code: ${room.code}`);
     }
   }
 
@@ -1423,39 +1415,96 @@ export default function CodePace({
                 role="group"
                 aria-label="Room controls"
               >
-                <button
-                  className="room-invite"
-                  onClick={() => void copyInvite()}
-                  aria-label={`Copy invite link for room ${room.code}`}
-                  title="Copy invite link"
-                >
+                <div className="room-identity">
                   <span className="room-code-value">{room.code}</span>
-                  <CopyIcon aria-hidden="true" />
-                </button>
-                <span
-                  className={`room-occupancy ${connection ? "" : "offline"}`}
-                  role="status"
-                  aria-label={
-                    connection
-                      ? `${room.players.length} of ${ROOM_CAPACITY} players in room`
-                      : "Reconnecting to room"
-                  }
-                >
-                  <UsersGroupRoundedIcon aria-hidden="true" />
-                  <span aria-hidden="true">
-                    {connection
-                      ? `${room.players.length}/${ROOM_CAPACITY}`
-                      : "Reconnecting…"}
+                  <span
+                    className={`room-occupancy ${connection ? "" : "offline"}`}
+                    role="status"
+                    aria-label={
+                      connection
+                        ? `${room.players.length} of ${ROOM_CAPACITY} players in room`
+                        : "Reconnecting to room"
+                    }
+                  >
+                    <UsersGroupRoundedIcon aria-hidden="true" />
+                    <span aria-hidden="true">
+                      {connection
+                        ? `${room.players.length}/${ROOM_CAPACITY}`
+                        : "Reconnecting…"}
+                    </span>
                   </span>
-                </span>
-                <button
-                  className="button secondary room-leave"
-                  disabled={pending}
-                  onClick={() => void roomAction("leave")}
-                >
-                  <LogoutIcon aria-hidden="true" />
-                  Leave room
-                </button>
+                </div>
+                {room.phase === "lobby" && (
+                  <RoomSchedule
+                    key={`${room.code}:${room.round}`}
+                    scheduledAt={room.scheduledAt ?? null}
+                    serverNow={room.serverNow}
+                    host={host}
+                    disabled={pending || roomDraftPending}
+                    onSchedule={(scheduledAt) =>
+                      roomAction("schedule", { scheduledAt })
+                    }
+                    onCancel={() => void roomAction("cancel_schedule")}
+                  />
+                )}
+                <div className="room-control-actions">
+                  <RoomInvite key={room.code} code={room.code} />
+                  {host && room.phase === "lobby" && !room.scheduledAt && (
+                    <button
+                      className="text-button room-settings-trigger"
+                      disabled={pending}
+                      aria-expanded={roomSettingsOpen}
+                      aria-controls={
+                        roomSettingsOpen ? "room-settings" : undefined
+                      }
+                      onClick={() => {
+                        setRoomSettingsOpen(!roomSettingsOpen);
+                        if (roomSettingsOpen) setRoomDraftPending(false);
+                      }}
+                    >
+                      Settings
+                    </button>
+                  )}
+                  {room.phase === "lobby" &&
+                    (host ? (
+                      <button
+                        className="button primary small room-start"
+                        disabled={
+                          pending ||
+                          roomDraftPending ||
+                          room.players.filter(
+                            (player) => room.serverNow - player.seenAt < 30000,
+                          ).length < 2
+                        }
+                        title="At least 2 connected players are needed"
+                        onClick={() => void roomAction("start")}
+                      >
+                        {room.scheduledAt ? "Start now" : "Start race"}
+                      </button>
+                    ) : room.serverNow -
+                        (room.players.find(
+                          (player) => player.id === room.hostId,
+                        )?.seenAt || 0) >
+                      30000 ? (
+                      <button
+                        className="button secondary small"
+                        disabled={pending}
+                        onClick={() => void roomAction("reclaim")}
+                      >
+                        Take over as host
+                      </button>
+                    ) : !room.scheduledAt ? (
+                      <span className="room-waiting">Waiting for host</span>
+                    ) : null)}
+                  <button
+                    className="button secondary room-leave"
+                    disabled={pending}
+                    onClick={() => void roomAction("leave")}
+                  >
+                    <LogoutIcon aria-hidden="true" />
+                    Leave room
+                  </button>
+                </div>
               </div>
             )}
             {isFriends && !room ? (
@@ -1586,40 +1635,34 @@ export default function CodePace({
                   {room &&
                     host &&
                     room.phase === "lobby" &&
-                    !room.scheduledAt && (
-                      <RoomConfiguration
-                        key={JSON.stringify([
-                          room.code,
-                          room.round,
-                          room.duration,
-                          room.content,
-                        ])}
-                        content={room.content || { mode: "quotes" }}
-                        duration={room.duration}
-                        disabled={pending}
-                        onDirtyChange={setRoomDraftPending}
-                        onApply={(content, seconds) =>
-                          void roomAction("configure", {
-                            content,
-                            duration: seconds,
-                          })
-                        }
-                      />
+                    !room.scheduledAt &&
+                    roomSettingsOpen && (
+                      <div id="room-settings" className="room-settings-panel">
+                        <RoomConfiguration
+                          key={JSON.stringify([
+                            room.code,
+                            room.round,
+                            room.duration,
+                            room.content,
+                          ])}
+                          content={room.content || { mode: "quotes" }}
+                          duration={room.duration}
+                          disabled={pending}
+                          onDirtyChange={setRoomDraftPending}
+                          onApply={async (content, seconds) => {
+                            if (
+                              await roomAction("configure", {
+                                content,
+                                duration: seconds,
+                              })
+                            ) {
+                              setRoomSettingsOpen(false);
+                              setRoomDraftPending(false);
+                            }
+                          }}
+                        />
+                      </div>
                     )}
-                  {room && room.phase === "lobby" && (
-                    <RoomSchedule
-                      key={`${room.code}:${room.round}`}
-                      scheduledAt={room.scheduledAt ?? null}
-                      serverNow={room.serverNow}
-                      host={host}
-                      disabled={pending || roomDraftPending}
-                      onSchedule={(scheduledAt) =>
-                        roomAction("schedule", { scheduledAt })
-                      }
-                      onCancel={() => void roomAction("cancel_schedule")}
-                    />
-                  )}
-                  {room?.content && <RoomProblemInfo content={room.content} />}
                   {!room && (
                     <div className="race-toolbar">
                       {!isCoding && (
@@ -1814,6 +1857,12 @@ export default function CodePace({
                       </div>
                     )}
                   </div>
+                  {room?.content && (
+                    <RoomProblemInfo
+                      key={`${room.code}:${room.round}`}
+                      content={room.content}
+                    />
+                  )}
                   <details className="track-drawer" open>
                     <summary>
                       <span>
@@ -1977,47 +2026,6 @@ export default function CodePace({
                               </button>
                             ))}
                           </div>
-                        </div>
-                      )}
-                      {room && room.phase === "lobby" && (
-                        <div className="lobby-action">
-                          <p>
-                            {!!room.scheduledAt
-                              ? host
-                                ? "You can also start the race now."
-                                : "This race will start automatically."
-                              : host
-                                ? room.players.length < 2
-                                  ? "Share the invite link to bring a friend to the grid."
-                                  : "Your grid is ready. Start when everyone is here."
-                                : "Waiting for the host to start the race."}
-                          </p>
-                          {host ? (
-                            <button
-                              className="button primary small"
-                              disabled={
-                                pending ||
-                                roomDraftPending ||
-                                room.players.filter(
-                                  (p) => room.serverNow - p.seenAt < 30000,
-                                ).length < 2
-                              }
-                              onClick={() => void roomAction("start")}
-                            >
-                              {!!room.scheduledAt ? "Start now" : "Start race"}
-                            </button>
-                          ) : room.serverNow -
-                              (room.players.find((p) => p.id === room.hostId)
-                                ?.seenAt || 0) >
-                            30000 ? (
-                            <button
-                              className="button secondary small"
-                              disabled={pending}
-                              onClick={() => void roomAction("reclaim")}
-                            >
-                              Take over as host
-                            </button>
-                          ) : null}
                         </div>
                       )}
                     </section>

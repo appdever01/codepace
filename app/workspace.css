@@ -93,19 +93,47 @@
 .room-controls {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+}
+.room-identity,
+.room-control-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+.room-control-actions {
+  margin-left: auto;
+  gap: 8px;
+}
+.room-control-actions .text-button,
+.room-control-actions .room-start {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.room-waiting {
+  color: var(--muted);
+  font-size: 13px;
+}
+.room-share {
+  display: grid;
+  min-width: 0;
 }
 .room-invite {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  padding: 8px;
+  padding: 8px 12px;
   border-radius: 10px;
   color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
 }
 .room-invite:hover {
   background: var(--surface-hover);
@@ -123,6 +151,28 @@
 }
 .room-invite svg {
   color: var(--muted);
+}
+.room-share-fallback {
+  display: grid;
+  gap: 8px;
+  width: min(320px, calc(100vw - 48px));
+  max-width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  color: var(--muted);
+  font-size: 13px;
+}
+.room-share-fallback input {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font: 16px var(--sans);
 }
 .room-occupancy {
   display: inline-flex;

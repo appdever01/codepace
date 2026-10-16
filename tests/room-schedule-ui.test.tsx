@@ -56,9 +56,12 @@ test("the host schedules a local time, keeps a rejected draft and can change or 
       value,
     );
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Cancel scheduled start" }),
+    assert.equal(
+      Boolean(screen.queryByRole("button", { name: "Cancel schedule" })),
+      false,
     );
+    fireEvent.click(screen.getByRole("button", { name: "Change time" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel schedule" }));
     assert.equal(cancelled, true);
   } finally {
     cleanup();
@@ -79,7 +82,12 @@ test("guests see the shared time and waiting state without host controls", () =>
       />,
     );
     assert.equal(screen.queryByRole("button"), null);
-    assert.ok(screen.getByText(/Starts automatically with at least two/));
+    assert.ok(screen.getByRole("status").textContent?.includes("Starts"));
+    assert.equal(Boolean(screen.queryByText(/Starts automatically/)), false);
+    assert.equal(
+      document.querySelector("time")?.dateTime,
+      new Date(now + 3600000).toISOString(),
+    );
     view.rerender(
       <RoomSchedule
         scheduledAt={now - 1000}
@@ -90,7 +98,7 @@ test("guests see the shared time and waiting state without host controls", () =>
         onCancel={() => {}}
       />,
     );
-    assert.ok(screen.getByText(/Waiting for two connected players/));
+    assert.ok(screen.getByText("Waiting for 2 players"));
   } finally {
     cleanup();
   }
@@ -166,9 +174,8 @@ test("the real room saves its schedule across reloads and starts typing without 
       assert.ok(screen.getByRole("button", { name: "Change time" })),
     );
     assert.ok(screen.getByRole("button", { name: "Start now" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Cancel scheduled start" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Change time" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel schedule" }));
     await waitFor(() =>
       assert.ok(screen.getByRole("button", { name: "Schedule start" })),
     );

@@ -94,6 +94,34 @@ test("host chooses shared content, changes it before starting and restores code 
     );
     assert.equal(forbidden.status, 403);
 
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings" }),
+    );
+    choose("Content", "Words");
+    await waitFor(() =>
+      assert.equal(
+        (
+          screen.getByRole("button", {
+            name: "Start race",
+          }) as HTMLButtonElement
+        ).disabled,
+        true,
+      ),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings" }),
+    );
+    assert.equal(
+      Boolean(screen.queryByRole("form", { name: "Room setup" })),
+      false,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings" }),
+    );
+    assert.equal(
+      screen.getByRole("combobox", { name: "Content" }).textContent,
+      "Your text",
+    );
     choose("Content", "Words");
     fireEvent.click(screen.getByRole("button", { name: "Apply selection" }));
     await waitFor(() =>
@@ -104,6 +132,9 @@ test("host chooses shared content, changes it before starting and restores code 
     );
     assert.equal(document.querySelectorAll(".code-line").length, 0);
 
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings" }),
+    );
     choose("Content", "Code");
     choose("Language", "JavaScript");
 

@@ -28,6 +28,16 @@ export default function RoomSchedule({
   const [value, setValue] = useState("");
   const [problem, setProblem] = useState("");
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const fullDate =
+    scheduledAt === null
+      ? ""
+      : new Intl.DateTimeFormat(undefined, {
+          dateStyle: "full",
+          timeStyle: "long",
+        }).format(scheduledAt);
+  const sameDay =
+    scheduledAt !== null &&
+    new Date(scheduledAt).toDateString() === new Date(serverNow).toDateString();
   const edit = () => {
     setValue(localDateTime(scheduledAt || Date.now() + 600000));
     setProblem("");
@@ -35,41 +45,30 @@ export default function RoomSchedule({
   };
   if (!host && scheduledAt === null) return null;
   return (
-    <section className="room-schedule" aria-label="Scheduled start">
+    <section
+      className="room-schedule"
+      aria-label="Scheduled start"
+      data-editing={editing}
+    >
       {scheduledAt !== null && (
         <div className="room-schedule-status" role="status">
-          <strong>
+          <time dateTime={new Date(scheduledAt).toISOString()} title={fullDate}>
             Starts{" "}
             {new Intl.DateTimeFormat(undefined, {
-              dateStyle: "medium",
-              timeStyle: "long",
+              ...(sameDay ? {} : { month: "short", day: "numeric" }),
+              hour: "numeric",
+              minute: "2-digit",
+              timeZoneName: "short",
             }).format(scheduledAt)}
-          </strong>
-          <p>
-            {serverNow >= scheduledAt
-              ? "Waiting for two connected players. The race will start automatically."
-              : "Starts automatically with at least two connected players. You can join until the countdown begins."}
-          </p>
+          </time>
+          {serverNow >= scheduledAt && <span>Waiting for 2 players</span>}
         </div>
       )}
       {host && !editing && (
         <div className="room-schedule-actions">
-          <button
-            className="button secondary small"
-            disabled={disabled}
-            onClick={edit}
-          >
+          <button className="text-button" disabled={disabled} onClick={edit}>
             {scheduledAt === null ? "Schedule start" : "Change time"}
           </button>
-          {scheduledAt !== null && (
-            <button
-              className="text-button"
-              disabled={disabled}
-              onClick={onCancel}
-            >
-              Cancel scheduled start
-            </button>
-          )}
         </div>
       )}
       {host && editing && (
@@ -120,6 +119,22 @@ export default function RoomSchedule({
           >
             Cancel
           </button>
+          {scheduledAt !== null && (
+            <button
+              type="button"
+              className="text-button"
+              disabled={disabled}
+              onClick={() => {
+                onCancel();
+                setEditing(false);
+              }}
+            >
+              Cancel schedule
+            </button>
+          )}
+          <p className="room-schedule-hint">
+            Starts automatically with 2+ connected players.
+          </p>
           {problem && (
             <p id={`${inputId}-error`} className="form-error" role="alert">
               {problem}

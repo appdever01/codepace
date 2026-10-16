@@ -145,6 +145,9 @@ test("host creates a LeetCode room, applies another problem and a guest restores
     guest = joined.session;
     assert.equal(joined.room.content.problemId, "0206-reverse-linked-list");
     assert.ok(joined.room.passage.includes("\n"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings" }),
+    );
     choose("Language", "JavaScript");
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search problems" }),
@@ -176,6 +179,11 @@ test("host creates a LeetCode room, applies another problem and a guest restores
       Boolean(screen.queryByRole("form", { name: "Room setup" })),
       false,
     );
+    const details = screen.getByLabelText(
+      "Selected LeetCode problem",
+    ) as HTMLDetailsElement;
+    assert.equal(details.open, false);
+    fireEvent.click(within(details).getByText("Problem details"));
     assert.ok(
       screen
         .getByRole("link", { name: "NeetCode solution" })
