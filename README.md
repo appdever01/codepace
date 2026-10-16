@@ -2,6 +2,8 @@
 
 Keylane helps you practice typing code. Start with a snippet, a LeetCode solution or your own code, and track your speed and accuracy. Text practice, quick races and rooms with friends are also available.
 
+[Play Keylane](https://klnr.vercel.app)
+
 ## Play
 
 - Practice Python, JavaScript, TypeScript, Java, C++, Go and Rust with formatting and indentation preserved.
