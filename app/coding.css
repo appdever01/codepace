@@ -571,7 +571,7 @@
 .code-line-content > span {
   position: relative;
 }
-.code-newline {
+.code-newline:not(.correct-char) {
   opacity: 0.4;
 }
 .slick-codepace .coding-panel .typing-input {

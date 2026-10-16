@@ -285,9 +285,6 @@
   letter-spacing: -0.035em;
   color: var(--subtle);
 }
-.slick-codepace .correct-char {
-  color: var(--ink);
-}
 .slick-codepace .caret:before {
   width: 2px;
   left: -3px;

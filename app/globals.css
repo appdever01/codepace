@@ -18,6 +18,7 @@
   --surface-raised: #11161f;
   --surface-hover: #171d28;
   --ink: #f4f7fb;
+  --correct: #fff;
   --muted: #a3aec1;
   --subtle: #b4bdcb;
   --line: #ffffff0f;
@@ -46,6 +47,7 @@
   --surface-raised: #f6f8fb;
   --surface-hover: #e7ebf3;
   --ink: #0e1626;
+  --correct: var(--ink);
   --muted: #475166;
   --subtle: #647087;
   --line: #0e162610;
@@ -565,7 +567,8 @@ kbd {
   position: relative;
 }
 .correct-char {
-  color: var(--accent);
+  color: var(--correct);
+  font-weight: 600;
 }
 .wrong-char {
   color: var(--danger);
