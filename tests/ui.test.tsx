@@ -29,6 +29,10 @@ test("complete a corrected race, save it, inspect progress and reload it", async
       await pause(10);
     });
     assert.ok(screen.getByRole("heading", { name: "Typing race", level: 1 }));
+    assert.equal(
+      document.querySelector<HTMLDetailsElement>(".track-drawer")?.open,
+      true,
+    );
     fireEvent.click(screen.getByRole("button", { name: "15 s" }));
     fireEvent.click(screen.getByRole("button", { name: /Start race/ }));
     await tick(3100);

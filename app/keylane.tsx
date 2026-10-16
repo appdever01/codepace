@@ -1652,7 +1652,7 @@ export default function Keylane({
                       </div>
                     </div>
                   </div>
-                  <details className="track-drawer" open={!!room}>
+                  <details className="track-drawer" open>
                     <summary>
                       <span>
                         <CarIcon />
