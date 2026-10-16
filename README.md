@@ -1,8 +1,8 @@
-# Keylane
+# CodePace
 
-Keylane helps you practice typing code. Start with a snippet, a LeetCode solution or your own code, and track your speed and accuracy. Text practice, quick races and rooms with friends are also available.
+CodePace helps you practice typing code. Start with a snippet, a LeetCode solution or your own code, and track your speed and accuracy. Text practice, quick races and rooms with friends are also available.
 
-[Play Keylane](https://klnr.vercel.app)
+[Play CodePace](https://codepace.vercel.app)
 
 ## Play
 
@@ -18,11 +18,11 @@ Keylane helps you practice typing code. Start with a snippet, a LeetCode solutio
 Use Node.js 24, npm and PostgreSQL 17 or later.
 
 ```sh
-git clone https://github.com/appdever01/keylane.git
-cd keylane
+git clone https://github.com/appdever01/codepace.git
+cd codepace
 npm ci
 cp .env.example .env.local
-createdb keylane
+createdb codepace
 npm run db:migrate
 npm run dev
 ```

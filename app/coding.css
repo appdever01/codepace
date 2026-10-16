@@ -1,11 +1,11 @@
-.slick-keylane .main.code-main {
+.slick-codepace .main.code-main {
   width: min(92%, 1320px);
   max-width: 1320px;
 }
-.slick-keylane .code-main .page-heading h1 {
+.slick-codepace .code-main .page-heading h1 {
   font-size: 28px;
 }
-.slick-keylane .race-column.code-workspace {
+.slick-codepace .race-column.code-workspace {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
   align-items: start;
@@ -441,7 +441,7 @@
   font-size: 12px;
   color: var(--muted);
 }
-.slick-keylane .code-workspace > .arena {
+.slick-codepace .code-workspace > .arena {
   grid-column: 2;
   grid-row: 2;
   display: flex;
@@ -481,7 +481,7 @@
   align-items: center;
   gap: 16px;
 }
-.slick-keylane .code-start-button {
+.slick-codepace .code-start-button {
   min-height: 36px;
   padding: 8px 14px;
   border-radius: 999px;
@@ -492,39 +492,39 @@
   width: 14px;
   height: 14px;
 }
-.slick-keylane .coding-panel {
+.slick-codepace .coding-panel {
   flex: 1;
 }
-.slick-keylane .coding-panel .typing-top {
+.slick-codepace .coding-panel .typing-top {
   padding: 20px 24px;
   justify-content: flex-start;
   border: 0;
 }
-.slick-keylane .coding-panel .live-stats {
+.slick-codepace .coding-panel .live-stats {
   width: 100%;
   justify-content: flex-start;
   gap: 28px;
 }
-.slick-keylane .coding-panel .live-stats > span {
+.slick-codepace .coding-panel .live-stats > span {
   flex: 0 1 auto;
   flex-direction: row;
   align-items: baseline;
   gap: 7px;
 }
-.slick-keylane .coding-panel .live-stats > span::before {
+.slick-codepace .coding-panel .live-stats > span::before {
   display: none;
 }
-.slick-keylane .coding-panel .live-stats b {
+.slick-codepace .coding-panel .live-stats b {
   font: 500 22px var(--sans);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-.slick-keylane .coding-panel .live-stats > span > span {
+.slick-codepace .coding-panel .live-stats > span > span {
   font-size: 12px;
   letter-spacing: 0;
   text-transform: none;
 }
-.slick-keylane .coding-panel .play-hud {
+.slick-codepace .coding-panel .play-hud {
   margin: 20px 24px 16px;
   gap: 12px;
   flex-wrap: wrap;
@@ -533,11 +533,11 @@
   overflow-wrap: anywhere;
   min-width: 0;
 }
-.slick-keylane .coding-panel .typing-surface {
+.slick-codepace .coding-panel .typing-surface {
   height: clamp(300px, 42svh, 540px);
   margin: 0 24px;
 }
-.slick-keylane .coding-panel .passage {
+.slick-codepace .coding-panel .passage {
   font: 14px/2 var(--mono);
   letter-spacing: 0;
   white-space: pre;
@@ -574,53 +574,53 @@
 .code-newline {
   opacity: 0.4;
 }
-.slick-keylane .coding-panel .typing-input {
+.slick-codepace .coding-panel .typing-input {
   font-size: 16px;
 }
-.slick-keylane .coding-panel .race-meter {
+.slick-codepace .coding-panel .race-meter {
   width: auto;
   margin: 24px 24px 0;
 }
-.slick-keylane .coding-panel .typing-bottom {
+.slick-codepace .coding-panel .typing-bottom {
   margin: 0 24px;
   padding: 14px 0 20px;
   font-size: 12px;
 }
-.slick-keylane .code-workspace .race-actions {
+.slick-codepace .code-workspace .race-actions {
   margin-top: auto;
   padding: 16px 24px;
   border: 0;
 }
-.slick-keylane .code-workspace .start-button {
+.slick-codepace .code-workspace .start-button {
   min-width: 0;
   font-size: 12px;
 }
-.slick-keylane.zen .race-column.code-workspace {
+.slick-codepace.zen .race-column.code-workspace {
   grid-template-columns: minmax(0, 1fr);
 }
-.slick-keylane.zen .code-workspace > .code-practice,
-.slick-keylane.zen .code-workspace > .race-toolbar {
+.slick-codepace.zen .code-workspace > .code-practice,
+.slick-codepace.zen .code-workspace > .race-toolbar {
   display: none;
 }
-.slick-keylane.zen .code-workspace > .arena {
+.slick-codepace.zen .code-workspace > .arena {
   grid-column: 1;
   grid-row: auto;
   border-radius: 20px;
 }
 @media (max-width: 1100px) {
-  .slick-keylane .race-column.code-workspace {
+  .slick-codepace .race-column.code-workspace {
     grid-template-columns: 300px minmax(0, 1fr);
   }
-  .slick-keylane .coding-panel .live-stats {
+  .slick-codepace .coding-panel .live-stats {
     gap: 18px;
   }
-  .slick-keylane .coding-panel .live-stats > span {
+  .slick-codepace .coding-panel .live-stats > span {
     flex-direction: column;
     gap: 3px;
   }
 }
 @media (max-width: 880px) {
-  .slick-keylane .race-column.code-workspace {
+  .slick-codepace .race-column.code-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
   .code-practice {
@@ -653,19 +653,19 @@
     min-height: 140px;
     font-size: 13px;
   }
-  .slick-keylane .code-workspace > .arena {
+  .slick-codepace .code-workspace > .arena {
     grid-column: 1;
     grid-row: auto;
     border-radius: 20px;
   }
-  .slick-keylane .coding-panel .live-stats > span {
+  .slick-codepace .coding-panel .live-stats > span {
     flex-direction: row;
   }
-  .slick-keylane .coding-panel .live-stats {
+  .slick-codepace .coding-panel .live-stats {
     justify-content: space-between;
     gap: 12px;
   }
-  .slick-keylane .coding-panel .typing-surface {
+  .slick-codepace .coding-panel .typing-surface {
     height: 330px;
   }
 }
@@ -673,43 +673,43 @@
   .code-editor-actions > span {
     display: none;
   }
-  .slick-keylane .code-start-button {
+  .slick-codepace .code-start-button {
     min-height: 44px;
     padding-inline: 10px;
   }
-  .slick-keylane .code-main .page-heading h1 {
+  .slick-codepace .code-main .page-heading h1 {
     font-size: 25px;
   }
   .code-editor-bar {
     padding-inline: 18px;
   }
-  .slick-keylane .coding-panel .typing-top {
+  .slick-codepace .coding-panel .typing-top {
     padding: 18px;
   }
-  .slick-keylane .coding-panel .live-stats > span {
+  .slick-codepace .coding-panel .live-stats > span {
     flex-direction: column;
     gap: 3px;
   }
-  .slick-keylane .coding-panel .play-hud {
+  .slick-codepace .coding-panel .play-hud {
     margin-inline: 18px;
   }
-  .slick-keylane .coding-panel .passage-label {
+  .slick-codepace .coding-panel .passage-label {
     flex-basis: 100%;
   }
-  .slick-keylane .coding-panel .combo-chip {
+  .slick-codepace .coding-panel .combo-chip {
     margin-left: 0;
   }
-  .slick-keylane .coding-panel .typing-surface {
+  .slick-codepace .coding-panel .typing-surface {
     margin-inline: 12px;
   }
-  .slick-keylane .coding-panel .passage {
+  .slick-codepace .coding-panel .passage {
     font-size: 12px;
   }
-  .slick-keylane .coding-panel .race-meter,
-  .slick-keylane .coding-panel .typing-bottom {
+  .slick-codepace .coding-panel .race-meter,
+  .slick-codepace .coding-panel .typing-bottom {
     margin-inline: 18px;
   }
-  .slick-keylane .code-workspace .race-actions {
+  .slick-codepace .code-workspace .race-actions {
     padding: 16px 18px;
   }
   .code-select-menu > li {

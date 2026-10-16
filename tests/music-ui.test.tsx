@@ -8,7 +8,7 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 const prototype = window.HTMLMediaElement.prototype;
 const originals = Object.fromEntries(
@@ -70,7 +70,7 @@ afterEach(() => {
 
 async function openGame() {
   await act(async () => {
-    render(<Keylane />);
+    render(<CodePace />);
     await Promise.resolve();
   });
   return document.querySelector("audio")!;
@@ -179,7 +179,7 @@ test("muting while playback is pending prevents a late start", async () => {
   await act(async () => complete!());
   assert.equal(audio.paused, true);
   assert.equal(
-    JSON.parse(localStorage.getItem("keylane:music:v1")!).enabled,
+    JSON.parse(localStorage.getItem("codepace:music:v1")!).enabled,
     false,
   );
 });

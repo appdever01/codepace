@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const origin = process.env.KEYLANE_TEST_URL || "http://127.0.0.1:5189";
+const origin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
 let checks = 0;
 async function request(path, data, session, status = 200, headers = {}) {
   const response = await fetch(origin + path, {

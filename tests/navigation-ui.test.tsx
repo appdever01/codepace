@@ -9,14 +9,14 @@ import {
   screen,
   within,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 test("Code is the first navigation item, opens by default and is the home destination", async () => {
   localStorage.clear();
   sessionStorage.clear();
   try {
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
     });
     const navigation = screen.getByRole("navigation", {
       name: "Main navigation",
@@ -63,7 +63,7 @@ test("a friend invitation still opens the room entry screen instead of Code", as
   sessionStorage.clear();
   try {
     await act(async () => {
-      render(<Keylane initialRoom="ABC234" />);
+      render(<CodePace initialRoom="ABC234" />);
     });
     assert.equal(
       screen

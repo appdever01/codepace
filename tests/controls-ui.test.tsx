@@ -11,7 +11,7 @@ import {
 } from "@testing-library/react";
 import CustomSelect from "../components/custom-select";
 import AudioControls from "../components/audio-controls";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 const options = [
   { value: "python", label: "Python", detail: ".py" },
@@ -221,7 +221,7 @@ test("Friends uses a custom race-length picker and sends the selected duration w
   sessionStorage.clear();
   try {
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await Promise.resolve();
     });
     fireEvent.click(screen.getByRole("button", { name: "Friends" }));

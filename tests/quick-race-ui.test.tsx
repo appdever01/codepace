@@ -8,7 +8,7 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 test("a 15-second race records clean-key streaks without the daily sprint", async () => {
   const clock = Date.now;
@@ -24,7 +24,7 @@ test("a 15-second race records clean-key streaks without the daily sprint", asyn
     localStorage.clear();
     sessionStorage.clear();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
     fireEvent.click(screen.getByRole("button", { name: "Race" }));
@@ -48,7 +48,7 @@ test("a 15-second race records clean-key streaks without the daily sprint", asyn
     fireEvent.change(input, { target: { value: text.slice(0, 50) } });
     assert.equal(document.querySelector(".combo-chip b")?.textContent, "50");
     await tick(15000);
-    const history = JSON.parse(localStorage.getItem("keylane:history")!);
+    const history = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(history[0].mode, "Race");
     assert.equal(history[0].wpm, 40);
     assert.equal(history[0].accuracy, 100);

@@ -15,7 +15,7 @@ export function getPool() {
       idleTimeoutMillis: 5000,
       connectionTimeoutMillis: 5000,
       statement_timeout: 5000,
-      application_name: "keylane",
+      application_name: "codepace",
     });
     pool.on("error", (error) =>
       console.error("Database connection failed:", error.message),

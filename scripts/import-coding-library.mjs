@@ -20,7 +20,7 @@ const languages = {
   go: "go",
   rust: "rs",
 };
-const temporary = await mkdtemp(path.join(tmpdir(), "keylane-solutions-"));
+const temporary = await mkdtemp(path.join(tmpdir(), "codepace-solutions-"));
 try {
   const response = await fetch(
     `https://codeload.github.com/neetcode-gh/leetcode/tar.gz/${revision}`,

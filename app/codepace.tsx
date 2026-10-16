@@ -71,6 +71,7 @@ import {
 } from "@/lib/race";
 import { makePassage } from "@/lib/passages";
 import type { RoomSession, RoomSnapshot } from "@/lib/room-types";
+import { readSavedValue, removeSavedValue } from "@/lib/storage";
 
 type Tab = "code" | "race" | "practice" | "friends" | "progress";
 type Phase = "ready" | "countdown" | "running" | "finished";
@@ -84,7 +85,7 @@ type Settings = {
 const palette = ["cobalt", "violet", "coral", "blue", "pink", "yellow"];
 const initialSettings: Settings = {
   name: "You",
-  avatarSeed: "keylane",
+  avatarSeed: "codepace",
   pace: 60,
   sound: false,
   light: false,
@@ -96,7 +97,7 @@ const formatDate = (date: string) =>
     day: "numeric",
   });
 
-export default function Keylane({
+export default function CodePace({
   initialRoom = "",
 }: { initialRoom?: string } = {}) {
   const [tab, setTab] = useState<Tab>(initialRoom ? "friends" : "code");
@@ -294,9 +295,9 @@ export default function Keylane({
     const load = async () => {
       await Promise.resolve();
       try {
-        setHistory(readHistory(localStorage.getItem("keylane:history")));
+        setHistory(readHistory(readSavedValue(localStorage, "codepace:history")));
         const saved = JSON.parse(
-          localStorage.getItem("keylane:settings:v2") || "{}",
+          readSavedValue(localStorage, "codepace:settings:v2") || "{}",
         );
         setSettings({
           name:
@@ -322,7 +323,7 @@ export default function Keylane({
           setJoinCode(requested.toUpperCase().slice(0, 6));
         }
         const remembered: RoomSession | null = JSON.parse(
-          sessionStorage.getItem("keylane:room") || "null",
+          readSavedValue(sessionStorage, "codepace:room") || "null",
         );
         if (
           remembered &&
@@ -362,7 +363,7 @@ export default function Keylane({
               error instanceof RequestError &&
               [400, 401, 404].includes(error.status)
             ) {
-              sessionStorage.removeItem("keylane:room");
+              removeSavedValue(sessionStorage, "codepace:room");
               setRoomError(error.message);
             }
           } finally {
@@ -383,8 +384,8 @@ export default function Keylane({
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem("keylane:history", JSON.stringify(history));
-      localStorage.setItem("keylane:settings:v2", JSON.stringify(settings));
+      localStorage.setItem("codepace:history", JSON.stringify(history));
+      localStorage.setItem("codepace:settings:v2", JSON.stringify(settings));
     } catch {
       queueMicrotask(() => setStorageWorks(false));
     }
@@ -394,8 +395,8 @@ export default function Keylane({
     if (!hydrated) return;
     try {
       if (session)
-        sessionStorage.setItem("keylane:room", JSON.stringify(session));
-      else sessionStorage.removeItem("keylane:room");
+        sessionStorage.setItem("codepace:room", JSON.stringify(session));
+      else removeSavedValue(sessionStorage, "codepace:room");
     } catch {
       queueMicrotask(() => setStorageWorks(false));
     }
@@ -640,7 +641,7 @@ export default function Keylane({
       clockRttRef.current = Infinity;
       sessionRef.current = data.session;
       try {
-        sessionStorage.setItem("keylane:room", JSON.stringify(data.session));
+        sessionStorage.setItem("codepace:room", JSON.stringify(data.session));
       } catch {
         setStorageWorks(false);
       }
@@ -673,7 +674,7 @@ export default function Keylane({
         roomSyncRef.current?.stop();
         sessionRef.current = null;
         try {
-          sessionStorage.removeItem("keylane:room");
+          removeSavedValue(sessionStorage, "codepace:room");
         } catch {
           setStorageWorks(false);
         }
@@ -1101,7 +1102,7 @@ export default function Keylane({
 
   return (
     <div
-      className={`app slick-keylane view-${tab} ${zen ? "zen" : ""} phase-${phase}`}
+      className={`app slick-codepace view-${tab} ${zen ? "zen" : ""} phase-${phase}`}
       onPointerDownCapture={unlockMusic}
       onKeyDownCapture={unlockMusic}
     >
@@ -1119,12 +1120,12 @@ export default function Keylane({
         <button
           className="brand"
           onClick={() => navigate("code")}
-          aria-label="Keylane home"
+          aria-label="CodePace home"
         >
           <span className="brand-mark" aria-hidden="true">
             <BoltIcon />
           </span>
-          keylane<span className="brand-period">.</span>
+          codepace<span className="brand-period">.</span>
         </button>
         <nav aria-label="Main navigation">
           {(
@@ -1302,7 +1303,7 @@ export default function Keylane({
                   const url = URL.createObjectURL(blob);
                   const anchor = document.createElement("a");
                   anchor.href = url;
-                  anchor.download = "keylane-history.json";
+                  anchor.download = "codepace-history.json";
                   anchor.click();
                   setTimeout(() => URL.revokeObjectURL(url), 1000);
                 }}

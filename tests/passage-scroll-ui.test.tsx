@@ -10,7 +10,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 for (const mode of ["race", "practice", "code"] as const) {
   test(`${mode} passage allows scrolling without blocking typing or caret following`, async () => {
@@ -34,7 +34,7 @@ for (const mode of ["race", "practice", "code"] as const) {
     sessionStorage.clear();
     try {
       await act(async () => {
-        render(<Keylane />);
+        render(<CodePace />);
         await new Promise((resolve) => setTimeout(resolve, 10));
       });
       if (mode === "race")

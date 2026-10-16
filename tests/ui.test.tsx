@@ -9,9 +9,9 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
-const testOrigin = process.env.KEYLANE_TEST_URL || "http://127.0.0.1:5189";
+const testOrigin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const clock = Date.now;
 let offset = 0;
@@ -26,7 +26,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
   Date.now = () => clock() + offset;
   try {
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await pause(10);
     });
     fireEvent.click(screen.getByRole("button", { name: "Race" }));
@@ -59,7 +59,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
     assert.equal(pasted.defaultPrevented, true);
     assert.equal(input.value, text.slice(0, 30));
     await tick(15000);
-    const saved = JSON.parse(localStorage.getItem("keylane:history")!);
+    const saved = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(saved.length, 1);
     assert.equal(saved[0].wpm, 24);
     assert.equal(saved[0].accuracy, 96.8);
@@ -68,7 +68,7 @@ test("complete a corrected race, save it, inspect progress and reload it", async
     assert.ok(screen.getByRole("cell", { name: "24 wpm" }));
     cleanup();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await pause(10);
     });
     fireEvent.click(screen.getByRole("button", { name: "Race" }));
@@ -117,7 +117,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
   try {
     sessionStorage.clear();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await pause(10);
     });
     fireEvent.click(screen.getByRole("button", { name: "Friends" }));
@@ -126,7 +126,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     });
     fireEvent.click(screen.getByRole("button", { name: "Create a room" }));
     await waitFor(() => assert.ok(screen.getByText(/1\/6 in room/)));
-    const own = JSON.parse(sessionStorage.getItem("keylane:room")!);
+    const own = JSON.parse(sessionStorage.getItem("codepace:room")!);
     const joined = await nativeFetch(`${testOrigin}/api/rooms/${own.code}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -162,9 +162,11 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     await act(async () => {
       await pause(1000);
     });
+    sessionStorage.setItem("keylane:room", sessionStorage.getItem("codepace:room")!);
+    sessionStorage.removeItem("codepace:room");
     cleanup();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await pause(100);
     });
     await waitFor(
@@ -184,6 +186,7 @@ test("friend-room screen creates, races, restores after reload and leaves throug
     await waitFor(() =>
       assert.ok(screen.getByRole("heading", { name: "Typing race", level: 1 })),
     );
+    assert.equal(sessionStorage.getItem("codepace:room"), null);
     assert.equal(sessionStorage.getItem("keylane:room"), null);
   } finally {
     cleanup();

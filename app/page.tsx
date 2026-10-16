@@ -1,5 +1,5 @@
-import Keylane from "./keylane";
+import CodePace from "./codepace";
 
 export default function Home() {
-  return <Keylane />;
+  return <CodePace />;
 }

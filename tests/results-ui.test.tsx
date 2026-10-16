@@ -10,7 +10,7 @@ import {
   within,
 } from "@testing-library/react";
 import RaceResults from "../components/race-results";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 import type { RaceResult } from "../lib/race";
 
 const result: RaceResult = {
@@ -41,7 +41,7 @@ test("an untouched timed round shows a retry state without scores, placing, rewa
     localStorage.clear();
     sessionStorage.clear();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
     fireEvent.click(screen.getByRole("button", { name: "Race" }));
@@ -59,7 +59,7 @@ test("an untouched timed round shows a retry state without scores, placing, rewa
     assert.equal(within(summary).queryByRole("img"), null);
     assert.ok(within(summary).getByText(/No result was saved/));
     assert.deepEqual(
-      JSON.parse(localStorage.getItem("keylane:history") || "[]"),
+      JSON.parse(localStorage.getItem("codepace:history") || "[]"),
       [],
     );
     fireEvent.click(screen.getByRole("button", { name: /Race again/ }));

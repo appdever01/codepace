@@ -96,7 +96,7 @@ async function body(request: Request) {
     throw new ApiError(415, "Send JSON data.");
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin)
-    throw new ApiError(403, "Open Keylane directly to use friend rooms.");
+    throw new ApiError(403, "Open CodePace directly to use friend rooms.");
   const reader = request.body?.getReader();
   if (!reader) throw new ApiError(400, "Missing request data.");
   const chunks: Uint8Array[] = [];

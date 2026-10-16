@@ -1,4 +1,9 @@
-KEYLANE MEDIA CREDITS
+CODEPACE MEDIA CREDITS
+
+Open Graph image: CodePace wordmark and typing caret
+Created for CodePace with OpenAI ImageGen on 16 October 2026.
+Prompt: A minimal near-black 1200 by 630 share image with warm-white CodePace text, a pale blue typing caret, and the words Code typing practice.
+Changes: Resampled to 1200 by 630 pixels for social previews.
 
 Background photograph: The night sky with stars above a mountain range
 Photographer: Aimee Zaugg (@aimee_naomi)

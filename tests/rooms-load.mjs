@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
 
-const origin = process.env.KEYLANE_TEST_URL || "http://127.0.0.1:5189";
+const origin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
 const timings = [];
 const sessions = [];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

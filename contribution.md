@@ -1,4 +1,4 @@
-# Contributing to Keylane
+# Contributing to CodePace
 
 Bug fixes, clearer documentation and improvements to the typing experience are welcome. Keep each contribution focused so it is easy to review and test.
 
@@ -55,10 +55,10 @@ npm run check
 
 `npm test` covers scoring, typing state and passage generation. `npm run test:ui` checks player workflows, including a friend-room race through the running API. It expects the server on port 5189.
 
-`npm run test:rooms` checks room creation, shared starts, progress, capacity, access rules, concurrent rematches and host handover. `npm run test:load` exercises six players updating one room and reports response times. To use a different local server, set `KEYLANE_TEST_URL`:
+`npm run test:rooms` checks room creation, shared starts, progress, capacity, access rules, concurrent rematches and host handover. `npm run test:load` exercises six players updating one room and reports response times. To use a different local server, set `CODEPACE_TEST_URL`:
 
 ```sh
-KEYLANE_TEST_URL=http://127.0.0.1:5190 npm run test:rooms
+CODEPACE_TEST_URL=http://127.0.0.1:5190 npm run test:rooms
 ```
 
 These checks create test rooms. Run them against a local development database. The test scripts already limit concurrency; run the commands one at a time.

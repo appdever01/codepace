@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { readSavedValue } from "@/lib/storage";
 
-const storageKey = "keylane:music:v1";
+const storageKey = "codepace:music:v1";
 const initialVolume = 0.16;
 
 export function useBackgroundMusic() {
@@ -21,7 +22,7 @@ export function useBackgroundMusic() {
   useEffect(() => {
     let active = true;
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      const saved = JSON.parse(readSavedValue(localStorage, storageKey) || "{}");
       enabledRef.current = saved.enabled !== false;
       volumeRef.current =
         typeof saved.volume === "number" && Number.isFinite(saved.volume)

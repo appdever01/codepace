@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CustomSelect from "@/components/custom-select";
+import { readSavedValue } from "@/lib/storage";
 import { CodeSquareIcon } from "@solar-icons/react/linear/code-square";
 import { MagnifierIcon } from "@solar-icons/react/linear/magnifier";
 import { AltArrowDownIcon } from "@solar-icons/react/linear/alt-arrow-down";
@@ -62,7 +63,7 @@ export default function CodePractice({
     queueMicrotask(() => {
       try {
         setPreferences(
-          readCodePreferences(localStorage.getItem("keylane:coding:v1")),
+          readCodePreferences(readSavedValue(localStorage, "codepace:coding:v1")),
         );
       } catch {
         onStorageError();
@@ -73,7 +74,7 @@ export default function CodePractice({
   useEffect(() => {
     if (!ready) return;
     try {
-      localStorage.setItem("keylane:coding:v1", JSON.stringify(preferences));
+      localStorage.setItem("codepace:coding:v1", JSON.stringify(preferences));
     } catch {
       onStorageError();
     }

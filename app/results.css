@@ -1,10 +1,10 @@
-.slick-keylane.phase-finished .race-column:not(.code-workspace) > .arena {
+.slick-codepace.phase-finished .race-column:not(.code-workspace) > .arena {
   width: 100%;
   max-width: 800px;
   align-self: center;
   padding: 32px 36px 0;
 }
-.slick-keylane.phase-finished
+.slick-codepace.phase-finished
   .race-column:not(.code-workspace)
   > .arena:has(.empty-result) {
   max-width: 560px;
@@ -178,20 +178,20 @@
   width: 22px;
   height: 22px;
 }
-.slick-keylane.phase-finished .race-actions {
+.slick-codepace.phase-finished .race-actions {
   padding-block: 24px;
 }
-.slick-keylane.phase-finished .start-button {
+.slick-codepace.phase-finished .start-button {
   min-width: 0;
 }
-.slick-keylane .coding-panel .race-results {
+.slick-codepace .coding-panel .race-results {
   padding: 28px 24px;
 }
 .race-results .room-standings {
   margin-top: 28px;
 }
 @media (max-width: 760px) {
-  .slick-keylane.phase-finished .race-column:not(.code-workspace) > .arena {
+  .slick-codepace.phase-finished .race-column:not(.code-workspace) > .arena {
     padding: 24px 20px 0;
   }
 }
@@ -219,10 +219,10 @@
     width: 40px;
     height: 40px;
   }
-  .slick-keylane .coding-panel .race-results {
+  .slick-codepace .coding-panel .race-results {
     padding: 24px 18px;
   }
-  .slick-keylane.phase-finished .start-button kbd {
+  .slick-codepace.phase-finished .start-button kbd {
     display: none;
   }
 }

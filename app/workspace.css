@@ -1,67 +1,67 @@
-.slick-keylane .header {
+.slick-codepace .header {
   padding: 20px 4%;
   gap: 20px;
 }
-.slick-keylane .brand {
+.slick-codepace .brand {
   font-size: 24px;
   letter-spacing: -0.035em;
 }
-.slick-keylane .header nav {
+.slick-codepace .header nav {
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
 }
-.slick-keylane .header nav button {
+.slick-codepace .header nav button {
   padding: 9px 14px;
   min-height: 40px;
   font-size: 14px;
   border-radius: 999px;
 }
-.slick-keylane .header nav button:hover {
+.slick-codepace .header nav button:hover {
   background: var(--surface-raised);
 }
-.slick-keylane .header nav .nav-active {
+.slick-codepace .header nav .nav-active {
   background: var(--surface-hover);
 }
 @media (max-width: 480px) {
-  .slick-keylane .header nav button {
+  .slick-codepace .header nav button {
     flex: 1 1 0;
     min-width: 0;
     gap: 0;
     padding-inline: 4px;
   }
-  .slick-keylane .header nav button > svg {
+  .slick-codepace .header nav button > svg {
     display: none;
   }
 }
-.slick-keylane .header-tools {
+.slick-codepace .header-tools {
   gap: 6px;
 }
-.slick-keylane .github-links {
+.slick-codepace .github-links {
   background: transparent;
   border: 0;
   border-radius: 999px;
 }
-.slick-keylane .github-links a {
+.slick-codepace .github-links a {
   width: 38px;
   min-width: 38px;
   min-height: 38px;
   padding: 0;
 }
-.slick-keylane .github-label,
-.slick-keylane .github-star span {
+.slick-codepace .github-label,
+.slick-codepace .github-star span {
   display: none;
 }
-.slick-keylane .header-tools > .icon-button,
-.slick-keylane .audio-trigger,
-.slick-keylane .profile-button {
+.slick-codepace .header-tools > .icon-button,
+.slick-codepace .audio-trigger,
+.slick-codepace .profile-button {
   width: 40px;
   height: 40px;
   border-radius: 999px;
 }
-.slick-keylane .profile-button {
+.slick-codepace .profile-button {
   padding: 0;
   overflow: hidden;
 }
@@ -72,198 +72,198 @@
   object-fit: cover;
   border-radius: inherit;
 }
-.slick-keylane .main {
+.slick-codepace .main {
   width: min(92%, 1200px);
   max-width: 1200px;
   margin: 28px auto 48px;
 }
-.slick-keylane .page-heading {
+.slick-codepace .page-heading {
   margin-bottom: 28px;
   align-items: center;
 }
-.slick-keylane .page-heading h1 {
+.slick-codepace .page-heading h1 {
   font-size: clamp(27px, 3vw, 34px);
   font-weight: 550;
   letter-spacing: -0.035em;
 }
-.slick-keylane .page-heading p {
+.slick-codepace .page-heading p {
   margin-top: 7px;
   font-size: 14px;
 }
-.slick-keylane .race-column {
+.slick-codepace .race-column {
   min-height: 0;
 }
-.slick-keylane .race-toolbar {
+.slick-codepace .race-toolbar {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 20px;
 }
-.slick-keylane .segments {
+.slick-codepace .segments {
   background: var(--field);
   border-radius: 999px;
   border: 0;
   padding: 4px;
 }
-.slick-keylane .segments button {
+.slick-codepace .segments button {
   padding: 8px 18px;
   min-height: 36px;
   border-radius: 999px;
   font-size: 13px;
 }
-.slick-keylane .segments .selected {
+.slick-codepace .segments .selected {
   background: var(--accent-soft);
   color: var(--ink);
 }
-.slick-keylane .times button {
+.slick-codepace .times button {
   font-size: 13px;
   min-height: 36px;
 }
-.slick-keylane .arena {
+.slick-codepace .arena {
   border: 0;
   border-radius: 24px;
   padding: 28px 32px 0;
   background: var(--surface);
 }
-.slick-keylane .live-stats {
+.slick-codepace .live-stats {
   width: min(100%, 540px);
 }
-.slick-keylane .live-stats b {
+.slick-codepace .live-stats b {
   font-size: 34px;
   font-weight: 400;
   letter-spacing: -0.04em;
 }
-.slick-keylane .live-stats > span {
+.slick-codepace .live-stats > span {
   gap: 5px;
 }
-.slick-keylane .live-stats > span > span {
+.slick-codepace .live-stats > span > span {
   font-size: 12px;
   letter-spacing: 0;
 }
-.slick-keylane .live-stats > span + span::before {
+.slick-codepace .live-stats > span + span::before {
   top: 5px;
   height: 32px;
 }
-.slick-keylane .play-hud {
+.slick-codepace .play-hud {
   margin: 28px 0 18px;
 }
-.slick-keylane .typing-surface {
+.slick-codepace .typing-surface {
   height: 190px;
 }
-.slick-keylane .passage {
+.slick-codepace .passage {
   font-size: clamp(23px, 2.35vw, 29px);
   line-height: 1.85;
   letter-spacing: -0.03em;
 }
-.slick-keylane .race-meter {
+.slick-codepace .race-meter {
   width: 100%;
   margin-top: 24px;
 }
-.slick-keylane .typing-bottom {
+.slick-codepace .typing-bottom {
   justify-content: flex-start;
   padding-top: 14px;
   line-height: 1.7;
 }
-.slick-keylane .race-actions {
+.slick-codepace .race-actions {
   justify-content: space-between;
   padding: 22px 0 26px;
   gap: 12px;
   flex-wrap: wrap;
 }
-.slick-keylane .action-tools {
+.slick-codepace .action-tools {
   position: static;
   gap: 4px;
 }
-.slick-keylane .button {
+.slick-codepace .button {
   border-radius: 999px;
 }
-.slick-keylane .button kbd {
+.slick-codepace .button kbd {
   margin-left: 12px;
 }
-.slick-keylane .start-button kbd {
+.slick-codepace .start-button kbd {
   background: #f5cf58;
   border-color: #f5cf58;
   color: #28210b;
   box-shadow: 0 3px 1px #b8912e, 0 5px 9px #0003;
 }
-.slick-keylane .track-drawer {
+.slick-codepace .track-drawer {
   padding-top: 18px;
   margin-top: 0;
 }
-.slick-keylane .track-drawer > summary {
+.slick-codepace .track-drawer > summary {
   border: 0;
   background: var(--surface);
   border-radius: 20px;
   font-size: 13px;
 }
-.slick-keylane .track-drawer[open] > summary {
+.slick-codepace .track-drawer[open] > summary {
   border-radius: 20px 20px 0 0;
 }
-.slick-keylane .track-panel {
+.slick-codepace .track-panel {
   margin-top: 0;
   border: 0;
   border-radius: 0 0 20px 20px;
   padding: 20px 24px;
 }
-.slick-keylane .lane {
+.slick-codepace .lane {
   min-height: 56px;
 }
-.slick-keylane .progress-sidebar {
+.slick-codepace .progress-sidebar {
   margin-top: 28px;
   gap: 16px;
 }
-.slick-keylane :is(.session-stats, .recent-races) {
+.slick-codepace :is(.session-stats, .recent-races) {
   border: 0;
   border-radius: 20px;
   padding: 22px;
 }
-.slick-keylane .personal-best strong {
+.slick-codepace .personal-best strong {
   font-size: 36px;
   letter-spacing: -0.04em;
 }
-.slick-keylane .personal-best h3 {
+.slick-codepace .personal-best h3 {
   font-size: 20px;
 }
-.slick-keylane .personal-best p {
+.slick-codepace .personal-best p {
   line-height: 1.7;
 }
-.slick-keylane :is(.progress-summary > div, .history-panel, .friends-form) {
+.slick-codepace :is(.progress-summary > div, .history-panel, .friends-form) {
   background: var(--surface);
   border: 0;
   border-radius: 20px;
 }
-.slick-keylane .progress-summary {
+.slick-codepace .progress-summary {
   gap: 16px;
 }
-.slick-keylane .progress-summary > div {
+.slick-codepace .progress-summary > div {
   padding: 22px;
 }
-.slick-keylane .progress-summary strong {
+.slick-codepace .progress-summary strong {
   font-size: 28px;
   letter-spacing: -0.03em;
 }
-.slick-keylane .history-panel {
+.slick-codepace .history-panel {
   padding: 24px;
 }
-.slick-keylane .history-panel th {
+.slick-codepace .history-panel th {
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
 }
-.slick-keylane .history-panel td {
+.slick-codepace .history-panel td {
   font-size: 13px;
 }
-.slick-keylane .friends-layout {
+.slick-codepace .friends-layout {
   gap: 40px;
   padding-top: 8px;
 }
-.slick-keylane .friends-info h2 {
+.slick-codepace .friends-info h2 {
   font-size: 30px;
   font-weight: 450;
 }
-.slick-keylane .friends-form h2 {
+.slick-codepace .friends-form h2 {
   font-size: 20px;
 }
-.slick-keylane .friends-duration {
+.slick-codepace .friends-duration {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 180px);
   align-items: center;
@@ -280,25 +280,25 @@
   min-height: 44px;
   font-size: 14px;
 }
-.slick-keylane .friend-game-art {
+.slick-codepace .friend-game-art {
   max-height: 150px;
 }
-.slick-keylane .custom-text {
+.slick-codepace .custom-text {
   margin: 0 0 20px;
   border: 0;
   padding: 20px;
 }
-.slick-keylane .focused-banner {
+.slick-codepace .focused-banner {
   margin: 0 0 20px;
 }
-.slick-keylane .dialog {
+.slick-codepace .dialog {
   border: 0;
   border-radius: 24px;
 }
-.slick-keylane
+.slick-codepace
   .dialog
   :is(input:not([type="checkbox"]):not([type="range"]), select),
-.slick-keylane .friends-form :is(input, select) {
+.slick-codepace .friends-form :is(input, select) {
   border: 0;
   border-radius: 12px;
   min-height: 44px;
@@ -421,74 +421,74 @@
   }
 }
 @media (max-width: 760px) {
-  .slick-keylane .header {
+  .slick-codepace .header {
     padding: 16px 4%;
     gap: 14px;
   }
-  .slick-keylane .brand {
+  .slick-codepace .brand {
     font-size: 23px;
   }
-  .slick-keylane .header-tools .github-links {
+  .slick-codepace .header-tools .github-links {
     display: none;
   }
-  .slick-keylane .header-tools > .icon-button,
-  .slick-keylane .audio-trigger,
-  .slick-keylane .profile-button {
+  .slick-codepace .header-tools > .icon-button,
+  .slick-codepace .audio-trigger,
+  .slick-codepace .profile-button {
     width: 44px;
     height: 44px;
   }
-  .slick-keylane .header nav {
+  .slick-codepace .header nav {
     gap: 4px;
   }
-  .slick-keylane .header nav button {
+  .slick-codepace .header nav button {
     font-size: 12px;
     min-height: 44px;
     padding: 10px 4px;
     gap: 5px;
   }
-  .slick-keylane .main {
+  .slick-codepace .main {
     margin-top: 18px;
   }
-  .slick-keylane .race-toolbar {
+  .slick-codepace .race-toolbar {
     justify-content: center;
     gap: 12px;
   }
-  .slick-keylane .segments button {
+  .slick-codepace .segments button {
     padding-inline: 14px;
   }
-  .slick-keylane .arena {
+  .slick-codepace .arena {
     padding: 22px 18px 0;
   }
-  .slick-keylane .live-stats b {
+  .slick-codepace .live-stats b {
     font-size: 28px;
   }
-  .slick-keylane .typing-surface {
+  .slick-codepace .typing-surface {
     height: 205px;
   }
-  .slick-keylane .play-hud {
+  .slick-codepace .play-hud {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 24px;
   }
-  .slick-keylane .passage {
+  .slick-codepace .passage {
     font-size: 23px;
   }
-  .slick-keylane .race-actions {
+  .slick-codepace .race-actions {
     padding-bottom: 22px;
   }
-  .slick-keylane .progress-sidebar {
+  .slick-codepace .progress-sidebar {
     grid-template-columns: 1fr;
     margin-top: 24px;
   }
-  .slick-keylane .track-panel {
+  .slick-codepace .track-panel {
     padding: 16px;
   }
-  .slick-keylane .page-heading {
+  .slick-codepace .page-heading {
     gap: 18px;
     flex-wrap: wrap;
     margin-bottom: 24px;
   }
-  .slick-keylane .history-panel {
+  .slick-codepace .history-panel {
     padding: 18px;
   }
   .audio-popover {

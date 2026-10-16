@@ -10,7 +10,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import Keylane from "../app/keylane";
+import CodePace from "../app/codepace";
 
 const clock = Date.now;
 let offset = 0;
@@ -28,7 +28,7 @@ const target = () =>
     .textContent!.replace("Type this passage: ", "");
 async function openCode() {
   await act(async () => {
-    render(<Keylane />);
+    render(<CodePace />);
     await pause(10);
   });
   fireEvent.click(screen.getByRole("button", { name: "Code" }));
@@ -105,14 +105,14 @@ test("choose language, type formatted code with correction, finish without a tim
     await waitFor(() =>
       assert.ok(screen.getByText("Code typed. Nicely done.")),
     );
-    const history = JSON.parse(localStorage.getItem("keylane:history")!);
+    const history = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(history[0].coding.completed, true);
     assert.equal(history[0].coding.language, "typescript");
     assert.equal(history[0].errors, 1);
     assert.ok(history[0].duration > 60);
     cleanup();
     await act(async () => {
-      render(<Keylane />);
+      render(<CodePace />);
       await pause(10);
     });
     fireEvent.click(screen.getByRole("button", { name: "Code" }));
@@ -185,7 +185,7 @@ test("filter real LeetCode solutions, save completion and distinguish timed part
     );
     await tick(60000);
     assert.ok(screen.getByText("Practice time complete."));
-    const history = JSON.parse(localStorage.getItem("keylane:history")!);
+    const history = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(history[0].coding.completed, false);
     assert.equal(history[1].coding.problemId, "0704-binary-search");
     fireEvent.change(screen.getByLabelText("Search problems"), {
@@ -286,11 +286,11 @@ test("header audio controls preserve an active code attempt and Escape only clos
     assert.equal(input.value, code.slice(0, 8));
     assert.equal(target(), code);
     assert.equal(
-      JSON.parse(localStorage.getItem("keylane:music:v1")!).volume,
+      JSON.parse(localStorage.getItem("codepace:music:v1")!).volume,
       0.4,
     );
     assert.equal(
-      JSON.parse(localStorage.getItem("keylane:music:v1")!).enabled,
+      JSON.parse(localStorage.getItem("codepace:music:v1")!).enabled,
       false,
     );
   } finally {
