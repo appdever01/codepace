@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/keylane_test
-      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_TELEMETRY_DISABLED: "1"
     services:
       postgres:
         image: postgres:17
@@ -22,7 +22,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: keylane_test
-        ports: [5432:5432]
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
           npm start > /tmp/keylane.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" || true' EXIT
-          for attempt in {1..40}; do
+          for _attempt in {1..40}; do
             if curl --fail --silent http://localhost:5189 > /dev/null; then break; fi
             sleep 1
           done

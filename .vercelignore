@@ -15,3 +15,13 @@ CODEX.md
 setup.sh
 .env*
 tests
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.pnpm-store
+.agents
+.codex
+.claude
+.cursor
+outputs
+work
+*.tsbuildinfo
