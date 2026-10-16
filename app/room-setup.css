@@ -85,7 +85,17 @@
 .room-problem-info strong {
   font-weight: 500;
 }
-.room-problem-info > span,
+.room-problem-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  min-width: 0;
+}
+.room-problem-heading .code-source-links {
+  margin-top: 0;
+}
+.room-problem-meta,
 .room-problem-info p {
   color: var(--muted);
 }

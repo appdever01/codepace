@@ -11,30 +11,36 @@ export default function RoomProblemInfo({ content }: { content: RoomContent }) {
   )!.extension;
   return (
     <div className="room-problem-info" aria-label="Selected LeetCode problem">
-      <strong>
-        #{problem.number} {problem.title}
-      </strong>
-      <span>
-        {problem.difficulty} · {problem.topic}
-      </span>
-      <div className="code-source-links">
-        <a
-          href={`https://leetcode.com/problems/${problem.slug}/`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Read problem
-        </a>
-        <a
-          href={`https://github.com/neetcode-gh/leetcode/blob/d5ebb3ea8bd4b52d605bc7aa179e22af684d31bb/${content.language}/${problem.id}.${extension}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          NeetCode solution
-        </a>
-        <a href="/coding/LICENSE-neetcode.txt" target="_blank" rel="noreferrer">
-          MIT license
-        </a>
+      <div className="room-problem-heading">
+        <strong>
+          #{problem.number} {problem.title}
+        </strong>
+        <span className="room-problem-meta">
+          {problem.difficulty} · {problem.topic}
+        </span>
+        <div className="code-source-links">
+          <a
+            href={`https://leetcode.com/problems/${problem.slug}/`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Read problem
+          </a>
+          <a
+            href={`https://github.com/neetcode-gh/leetcode/blob/d5ebb3ea8bd4b52d605bc7aa179e22af684d31bb/${content.language}/${problem.id}.${extension}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            NeetCode solution
+          </a>
+          <a
+            href="/coding/LICENSE-neetcode.txt"
+            target="_blank"
+            rel="noreferrer"
+          >
+            MIT license
+          </a>
+        </div>
       </div>
       <p>Type the shared solution. Code is not executed or graded.</p>
     </div>
