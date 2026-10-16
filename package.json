@@ -17,6 +17,7 @@
     "test:rooms": "node tests/rooms-smoke.mjs",
     "test:load": "node tests/rooms-load.mjs",
     "test:schedules": "node tests/rooms-schedule.mjs",
+    "test:leetcode": "node tests/rooms-leetcode.mjs",
     "test:seo": "node tests/seo-smoke.mjs",
     "test:ui": "node --import ./tests/dom-setup.mjs --import tsx --test --test-concurrency=1 tests/*ui.test.tsx",
     "check": "npm test && npm run typecheck && npm run lint && npm run build"

@@ -15,6 +15,7 @@ import RaceResults from "@/components/race-results";
 import AudioControls from "@/components/audio-controls";
 import UserAvatar from "@/components/user-avatar";
 import RoomSetup, { RoomConfiguration } from "@/components/room-setup";
+import RoomProblemInfo from "@/components/room-problem-info";
 import RoomSchedule from "@/components/room-schedule";
 import {
   defaultRoomContent,
@@ -1618,6 +1619,7 @@ export default function CodePace({
                       onCancel={() => void roomAction("cancel_schedule")}
                     />
                   )}
+                  {room?.content && <RoomProblemInfo content={room.content} />}
                   {!room && (
                     <div className="race-toolbar">
                       {!isCoding && (

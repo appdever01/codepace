@@ -1,8 +1,73 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { roomContentSchema } from "../lib/room-content-schema.ts";
-import { makeRoomPassage, validRoomContent } from "../lib/room-content.ts";
+import { roomContentLabel, validRoomContent } from "../lib/room-content.ts";
+import { makeRoomPassage } from "../lib/room-passage.ts";
 import { codeLanguages, codeSnippet } from "../lib/coding.ts";
+import { roomProblems } from "../lib/room-problems.ts";
+import { ROOM_MAX_TYPED_LENGTH } from "../lib/room-limits.ts";
+import { readFileSync } from "node:fs";
+
+test("every room library problem resolves to the complete authoritative solution in its language", () => {
+  for (const { id: language } of codeLanguages) {
+    const bundle = JSON.parse(
+      readFileSync(
+        new URL(`../public/coding/${language}.json`, import.meta.url),
+        "utf8",
+      ),
+    );
+    for (const problem of roomProblems(language)) {
+      const content = roomContentSchema.parse({
+        mode: "code",
+        language,
+        snippet: 0,
+        problemId: problem.id,
+        text: "client supplied code",
+      });
+      assert.ok(validRoomContent(content));
+      assert.equal("text" in content, false);
+      const passage = makeRoomPassage(content, 0, 15);
+      assert.equal(passage, bundle[problem.id]);
+      assert.ok(passage.length <= ROOM_MAX_TYPED_LENGTH);
+      assert.equal(makeRoomPassage(content, 999, 60), passage);
+      assert.ok(
+        roomContentLabel(content).includes(
+          `#${problem.number} ${problem.title}`,
+        ),
+      );
+    }
+  }
+});
+
+test("rooms reject missing and unsupported LeetCode solutions", () => {
+  for (const problemId of [
+    "",
+    "../../secrets",
+    "not-a-problem",
+    "a".repeat(151),
+  ]) {
+    const content = {
+      mode: "code",
+      language: "python",
+      snippet: 0,
+      problemId,
+    } as const;
+    assert.equal(roomContentSchema.safeParse(content).success, false);
+    assert.equal(validRoomContent(content), false);
+  }
+  const unavailable = roomProblems("python").find(
+    (problem) => !problem.languages.includes("rust"),
+  )!;
+  assert.equal(
+    roomContentSchema.safeParse({
+      mode: "code",
+      language: "rust",
+      snippet: 0,
+      problemId: unavailable.id,
+    }).success,
+    false,
+  );
+});
 
 test("all room code languages preserve their chosen snippet and formatting", () => {
   for (const language of codeLanguages) {

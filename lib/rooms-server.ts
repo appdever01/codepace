@@ -2,11 +2,16 @@ import { timingSafeEqual } from "node:crypto";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 import { getPool } from "../db/index";
-import { makeRoomPassage, type RoomContent } from "./room-content";
+import type { RoomContent } from "./room-content";
+import { makeRoomPassage } from "./room-passage";
 import { roomContentSchema } from "./room-content-schema";
 import { correctPrefix, wpm, accuracy } from "./scoring";
 import type { RoomSnapshot } from "./room-types";
-import { ROOM_CAPACITY } from "./room-limits";
+import {
+  ROOM_CAPACITY,
+  ROOM_MAX_TYPED_LENGTH,
+  ROOM_MAX_REQUEST_BYTES,
+} from "./room-limits";
 import {
   ROOM_COUNTDOWN_MS,
   scheduleProblem,
@@ -81,7 +86,7 @@ const actionSchema = z.discriminatedUnion("action", [
     action: z.literal("sync"),
     round: z.number().int().positive(),
     seq: z.number().int().min(0).max(100000),
-    typed: z.string().max(3000),
+    typed: z.string().max(ROOM_MAX_TYPED_LENGTH),
     strokes: z.number().int().min(0).max(100000),
     errors: z.number().int().min(0).max(100000),
   }),
@@ -129,7 +134,7 @@ async function body(request: Request) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > 16384) {
+    if (size > ROOM_MAX_REQUEST_BYTES) {
       await reader.cancel();
       throw new ApiError(413, "That request is too large.");
     }
@@ -554,6 +559,7 @@ export async function updateRoom(request: Request, code: string) {
         input.seq > player.seq
       ) {
         if (
+          input.typed.length > room.passage.length ||
           input.errors > input.strokes ||
           input.strokes < input.typed.length ||
           input.strokes < player.strokes ||

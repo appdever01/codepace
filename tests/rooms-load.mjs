@@ -78,15 +78,23 @@ function summary(values) {
 }
 let report;
 try {
-  const content = {
-    mode: "code",
-    language: "typescript",
-    snippet: -1,
-    text: Array.from(
-      { length: 70 },
-      (_, index) => `const sample${index} = ${index};`,
-    ).join("\n"),
-  };
+  const content =
+    process.env.CODEPACE_LOAD_LEETCODE === "true"
+      ? {
+          mode: "code",
+          language: "javascript",
+          snippet: 0,
+          problemId: "0054-spiral-matrix",
+        }
+      : {
+          mode: "code",
+          language: "typescript",
+          snippet: -1,
+          text: Array.from(
+            { length: 70 },
+            (_, index) => `const sample${index} = ${index};`,
+          ).join("\n"),
+        };
   const created = await request(
     "/api/rooms",
     { name: "Load host", duration, content },
@@ -170,10 +178,10 @@ try {
       while (performance.now() < raceDeadline) {
         const elapsed = Math.max(0, performance.now() - raceStarted);
         const length = Math.min(
-          content.text.length - 1,
+          created.room.passage.length - 1,
           Math.floor((elapsed / 1000) * (4 + (index % 5))) + 1,
         );
-        const typed = content.text.slice(0, length);
+        const typed = created.room.passage.slice(0, length);
         const previous = progress.get(session.id);
         const data =
           typed === previous?.typed

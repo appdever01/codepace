@@ -45,6 +45,7 @@ npm run test:ui
 npm run test:seo
 npm run test:rooms
 npm run test:schedules
+npm run test:leetcode
 npm run test:load
 ```
 
@@ -65,6 +66,8 @@ Speed counts five correct characters as one word. Backspace lets you correct mis
 Results and preferences stay in your browser. They do not sync between devices or domains. Export any results you want to keep before changing browsers or clearing storage.
 
 Friend rooms use shared PostgreSQL storage and expire after two hours, or two hours after a scheduled start. The host can start each round immediately or schedule it up to seven days ahead using their local date and time. Everyone sees the scheduled time in their own time zone. The shared countdown starts automatically with at least two connected players, including when the host tab is closed. If fewer than two are connected, the room waits and starts when two are ready. Joining closes when the countdown begins. The host can change or cancel a schedule before that countdown, or choose Start now. A new round clears the previous schedule, and another player takes over if the host leaves. Room sessions survive reloads and temporary connection failures. Rooms are intended for casual play and rely on progress reported by each player's browser.
+
+In a code room, choose LeetCode from Exercise, search for a problem and select it. Everyone types the same complete NeetCode solution in the chosen language. The host can change the problem before starting or scheduling the round. This is a typing race; code is not executed or graded.
 
 ## Deploy to Vercel
 

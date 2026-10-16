@@ -47,6 +47,7 @@ jobs:
           npm run test:ui
           npm run test:rooms
           npm run test:schedules
+          npm run test:leetcode
           npm run test:load
       - name: Upload server log on failure
         if: failure()

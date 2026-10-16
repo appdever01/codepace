@@ -2,6 +2,7 @@ import { z } from "zod";
 import { codeLanguages, normalizeCode, type CodeLanguage } from "./coding.ts";
 import { makePassage } from "./passages.ts";
 import type { RoomContent } from "./room-content.ts";
+import { roomProblem } from "./room-problems.ts";
 
 export const roomContentSchema = z
   .discriminatedUnion("mode", [
@@ -18,9 +19,17 @@ export const roomContentSchema = z
       ),
       snippet: z.number().int().min(-1).max(2),
       text: z.string().max(2000).optional(),
+      problemId: z.string().min(1).max(150).optional(),
     }),
   ])
   .transform((content): RoomContent => {
+    if (content.mode === "code" && content.problemId !== undefined)
+      return {
+        mode: "code",
+        language: content.language,
+        snippet: 0,
+        problemId: content.problemId,
+      };
     if (content.mode === "custom")
       return { ...content, text: makePassage("custom", 0, content.text) };
     if (content.mode === "code" && content.snippet === -1)
@@ -28,6 +37,15 @@ export const roomContentSchema = z
     return content;
   })
   .superRefine((content, context) => {
+    if (
+      content.mode === "code" &&
+      content.problemId !== undefined &&
+      !roomProblem(content.language, content.problemId)
+    )
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Choose a problem available in this language.",
+      });
     if (content.mode === "custom" && content.text.length < 30)
       context.addIssue({
         code: z.ZodIssueCode.custom,
