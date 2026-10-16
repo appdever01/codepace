@@ -261,7 +261,14 @@ test("Friends uses a custom race-length picker and sends the selected duration w
       assert.ok(screen.getByText("Room service unavailable")),
     );
     assert.deepEqual(requests, [
-      { url: "/api/rooms", body: { name: "Dropdown racer", duration: 60 } },
+      {
+        url: "/api/rooms",
+        body: {
+          name: "Dropdown racer",
+          duration: 60,
+          content: { mode: "code", language: "python", snippet: 0 },
+        },
+      },
     ]);
     assert.equal((trigger as HTMLButtonElement).disabled, false);
   } finally {

@@ -1,4 +1,12 @@
-import { pgTable, text, integer, bigint, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  bigint,
+  index,
+  jsonb,
+} from "drizzle-orm/pg-core";
+import type { RoomContent } from "../lib/room-content";
 
 export const rooms = pgTable(
   "rooms",
@@ -6,6 +14,10 @@ export const rooms = pgTable(
     code: text("code").primaryKey(),
     hostId: text("host_id").notNull(),
     passage: text("passage").notNull(),
+    content: jsonb("content")
+      .$type<RoomContent>()
+      .notNull()
+      .default({ mode: "quotes" }),
     duration: integer("duration").notNull(),
     round: integer("round").notNull().default(1),
     revision: integer("revision").notNull().default(1),

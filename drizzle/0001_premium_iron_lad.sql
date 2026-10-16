@@ -1,0 +1,1 @@
+ALTER TABLE "rooms" ADD COLUMN "content" jsonb DEFAULT '{"mode":"quotes"}'::jsonb NOT NULL;

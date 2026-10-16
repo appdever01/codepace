@@ -4,6 +4,7 @@ import "./immersive.css";
 import "./workspace.css";
 import "./coding.css";
 import "./results.css";
+import "./room-setup.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://codepace.vercel.app"),

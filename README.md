@@ -10,7 +10,7 @@ CodePace helps you practice typing code. Start with a snippet, a LeetCode soluti
 - Type open-source solutions from a library of 410 coding problems.
 - Finish a complete code exercise or practice for 60 or 180 seconds. Code is not executed or graded.
 - Race for 15, 30 or 60 seconds against three pace bots, or practice words, passages and custom text.
-- Invite up to five friends for a shared race, then play another round.
+- Invite up to five friends to race with code, passages, words or your own text. The host chooses the shared content and can change it before each round.
 - Review your progress, export results, and adjust the theme and sound.
 
 ## Run locally

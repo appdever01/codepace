@@ -1,3 +1,5 @@
+import type { RoomContent } from "./room-content.ts";
+
 export type RoomPlayer = {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ export type RoomSnapshot = {
   hostId: string;
   round: number;
   passage: string;
+  content?: RoomContent;
   revision: number;
   duration: number;
   startAt: number | null;

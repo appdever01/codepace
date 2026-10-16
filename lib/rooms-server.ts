@@ -2,7 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 import { getPool } from "../db/index";
-import { makePassage } from "./passages";
+import { makeRoomPassage, type RoomContent } from "./room-content";
+import { roomContentSchema } from "./room-content-schema";
 import { correctPrefix, wpm, accuracy } from "./scoring";
 import type { RoomSnapshot } from "./room-types";
 
@@ -25,6 +26,7 @@ type StoredRoom = {
   code: string;
   host_id: string;
   passage: string;
+  content: RoomContent;
   duration: number;
   round: number;
   revision: number;
@@ -46,6 +48,12 @@ const nameSchema = z
 const durationSchema = z.union([z.literal(15), z.literal(30), z.literal(60)]);
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("join"), name: nameSchema }),
+  z.object({
+    action: z.literal("configure"),
+    round: z.number().int().positive(),
+    content: roomContentSchema,
+    duration: durationSchema,
+  }),
   z.object({ action: z.literal("start"), round: z.number().int().positive() }),
   z.object({
     action: z.literal("rematch"),
@@ -186,6 +194,7 @@ function snapshot(room: StoredRoom): RoomSnapshot {
     round: room.round,
     revision: room.revision,
     passage: room.passage,
+    content: room.content,
     duration: room.duration,
     startAt: room.start_at,
     expiresAt: room.expires_at,
@@ -275,7 +284,11 @@ export async function handleApi(operation: () => Promise<Response>) {
 }
 export async function createRoom(request: Request) {
   const input = z
-    .object({ name: nameSchema, duration: durationSchema })
+    .object({
+      name: nameSchema,
+      duration: durationSchema,
+      content: roomContentSchema.default({ mode: "quotes" }),
+    })
     .parse(await body(request));
   await rateLimit(request, "create", 30);
   const now = Date.now();
@@ -299,14 +312,15 @@ export async function createRoom(request: Request) {
     try {
       const room = await transaction(async (db) => {
         await db.query(
-          "INSERT INTO rooms (code, host_id, passage, duration, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6)",
+          "INSERT INTO rooms (code, host_id, passage, duration, created_at, expires_at, content) VALUES ($1, $2, $3, $4, $5, $6, $7)",
           [
             code,
             id,
-            makePassage("quotes", now, "", [], input.duration),
+            makeRoomPassage(input.content, now, input.duration),
             input.duration,
             now,
             now + 7200000,
+            JSON.stringify(input.content),
           ],
         );
         await db.query(
@@ -368,6 +382,22 @@ export async function updateRoom(request: Request, code: string) {
     let changed = false;
     if ("round" in input && input.round !== room.round)
       throw new ApiError(409, "The room has moved to a new round.");
+    if (input.action === "configure") {
+      if (player.id !== room.host_id)
+        throw new ApiError(403, "Only the host can choose the room content.");
+      if (room.start_at !== null)
+        throw new ApiError(409, "Change the selection before the race starts.");
+      await db.query(
+        "UPDATE rooms SET content = $1, duration = $2, passage = $3 WHERE code = $4",
+        [
+          JSON.stringify(input.content),
+          input.duration,
+          makeRoomPassage(input.content, now, input.duration),
+          code,
+        ],
+      );
+      changed = true;
+    }
     if (input.action === "start") {
       if (player.id !== room.host_id)
         throw new ApiError(403, "Only the host can start the race.");
@@ -392,7 +422,7 @@ export async function updateRoom(request: Request, code: string) {
         throw new ApiError(409, "Finish this race first.");
       await db.query(
         "UPDATE rooms SET start_at = NULL, round = round + 1, passage = $1 WHERE code = $2",
-        [makePassage("quotes", now, "", [], room.duration), code],
+        [makeRoomPassage(room.content, now, room.duration), code],
       );
       await db.query(
         "UPDATE players SET typed = '', strokes = 0, errors = 0, correct = 0, seq = 0, finished_at = NULL, round = $1 WHERE room_code = $2",

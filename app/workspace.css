@@ -323,23 +323,6 @@
 .slick-codepace .friends-form h2 {
   font-size: 20px;
 }
-.slick-codepace .friends-duration {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 180px);
-  align-items: center;
-  gap: 16px;
-  margin: 20px 0;
-  font-size: 13px;
-}
-.friends-duration .code-select-menu {
-  width: 100%;
-  max-width: 100%;
-  border: 1px solid var(--line);
-}
-.friends-duration .code-select-menu > li {
-  min-height: 44px;
-  font-size: 14px;
-}
 .slick-codepace .friend-game-art {
   max-height: 150px;
 }

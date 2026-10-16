@@ -14,7 +14,13 @@ import Image from "next/image";
 import RaceResults from "@/components/race-results";
 import AudioControls from "@/components/audio-controls";
 import UserAvatar from "@/components/user-avatar";
-import CustomSelect from "@/components/custom-select";
+import RoomSetup, { RoomConfiguration } from "@/components/room-setup";
+import {
+  defaultRoomContent,
+  roomContentLabel,
+  validRoomContent,
+  type RoomContent,
+} from "@/lib/room-content";
 import CodePassage from "@/components/code-passage";
 import TypingPassage from "@/components/typing-passage";
 import {
@@ -137,6 +143,9 @@ export default function CodePace({
   const [weakKeys, setWeakKeys] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [roomError, setRoomError] = useState("");
+  const [roomContent, setRoomContent] =
+    useState<RoomContent>(defaultRoomContent);
+  const [roomDraftPending, setRoomDraftPending] = useState(false);
   const [joinCode, setJoinCode] = useState(initialRoom.toUpperCase());
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
@@ -254,17 +263,22 @@ export default function CodePace({
   const acceptRoom = useCallback(
     (snapshot: RoomSnapshot, sentAt: number) => {
       if (!isNewerRoom(snapshot, snapshotRef.current)) return;
+      const previous = snapshotRef.current;
       snapshotRef.current = snapshot;
       const rtt = Date.now() - sentAt;
       if (rtt < clockRttRef.current || snapshot.round !== roundRef.current) {
         clockRttRef.current = rtt;
         offsetRef.current = snapshot.serverNow - (sentAt + Date.now()) / 2;
       }
-      if (roundRef.current !== snapshot.round) {
+      if (
+        roundRef.current !== snapshot.round ||
+        (previous && previous.passage !== snapshot.passage)
+      ) {
         clearEngine();
         roundRef.current = snapshot.round;
       }
       setRoom(snapshot);
+      setMode(snapshot.content?.mode || "quotes");
       setConnection(true);
       setDuration(snapshot.duration);
       setPassage(snapshot.passage);
@@ -632,7 +646,7 @@ export default function CodePace({
       const data = await api(
         create ? "/api/rooms" : `/api/rooms/${joinCode.toUpperCase()}`,
         create
-          ? { name: name.trim(), duration }
+          ? { name: name.trim(), duration, content: roomContent }
           : { action: "join", name: name.trim() },
       );
       setSettings((previous) => ({ ...previous, name: name.trim() }));
@@ -659,7 +673,10 @@ export default function CodePace({
       setPending(false);
     }
   }
-  async function roomAction(action: "start" | "rematch" | "leave" | "reclaim") {
+  async function roomAction(
+    action: "start" | "rematch" | "leave" | "reclaim" | "configure",
+    selection?: { content: RoomContent; duration: number },
+  ) {
     if (!session || pending) return;
     setPending(true);
     setRoomError("");
@@ -667,7 +684,7 @@ export default function CodePace({
     try {
       const data = await api(
         `/api/rooms/${session.code}`,
-        { action, round: room?.round },
+        { action, round: room?.round, ...selection },
         session.token,
       );
       if (action === "leave") {
@@ -728,7 +745,12 @@ export default function CodePace({
   const remaining = effectiveDuration
     ? Math.max(0, Math.ceil(effectiveDuration - elapsed / 1000))
     : Math.floor(elapsed / 1000);
-  const isCoding = tab === "code" && !room;
+  const isSoloCoding = tab === "code" && !room;
+  const isCoding = isSoloCoding || room?.content?.mode === "code";
+  const activeCodeLanguage =
+    room?.content?.mode === "code"
+      ? room.content.language
+      : codeExercise?.language;
   const localBots = [settings.pace - 20, settings.pace, settings.pace + 20].map(
     (pace, index) => ({
       id: `bot-${index}`,
@@ -816,9 +838,9 @@ export default function CodePace({
         <div className="code-editor-bar">
           <span className="code-file-tab">
             <CodeSquareIcon aria-hidden="true" />
-            practice.
+            {room ? "race" : "practice"}.
             {codeLanguages.find(
-              (language) => language.id === codeExercise?.language,
+              (language) => language.id === activeCodeLanguage,
             )?.extension || "txt"}
           </span>
           <div className="code-editor-actions">
@@ -827,7 +849,7 @@ export default function CodePace({
                 ? `${passage.split("\n").length} lines`
                 : "Choose an exercise"}
             </span>
-            {phase === "ready" || phase === "finished" ? (
+            {room ? null : phase === "ready" || phase === "finished" ? (
               <button
                 className="button primary code-start-button"
                 aria-label={
@@ -885,7 +907,7 @@ export default function CodePace({
         <span className="passage-label">
           <KeyboardIcon />
           {room
-            ? "Shared passage"
+            ? roomContentLabel(room.content || { mode: "quotes" })
             : mode === "code"
               ? codeExercise
                 ? `${codeLanguages.find((l) => l.id === codeExercise.language)?.name} · ${codeExercise.title}`
@@ -1038,7 +1060,7 @@ export default function CodePace({
             <span className="language">
               <span className="tiny-dot" />
               {isCoding
-                ? codeLanguages.find((l) => l.id === codeExercise?.language)
+                ? codeLanguages.find((l) => l.id === activeCodeLanguage)
                     ?.name || "Code"
                 : "English"}
             </span>
@@ -1048,13 +1070,14 @@ export default function CodePace({
         <RaceResults
           result={result}
           attempted={engine.strokes > 0}
-          practice={tab === "practice" || isCoding}
+          practice={tab === "practice" || isSoloCoding}
           code={
             isCoding
               ? {
                   completed: engine.typed === passage,
                   length: passage.length,
-                  fromLibrary: codeExercise?.kind === "leetcode",
+                  fromLibrary:
+                    isSoloCoding && codeExercise?.kind === "leetcode",
                 }
               : undefined
           }
@@ -1195,7 +1218,7 @@ export default function CodePace({
       </header>
       <main
         id="main"
-        className={`main ${isCoding ? "code-main" : ""}`}
+        className={`main ${isSoloCoding ? "code-main" : ""}`}
         tabIndex={-1}
       >
         {tab === "progress" ? (
@@ -1402,20 +1425,20 @@ export default function CodePace({
                     placeholder="What should we call you?"
                     autoComplete="nickname"
                   />
-                  <CustomSelect
-                    className="friends-duration"
-                    label="Race length"
-                    value={String(duration)}
+                  <RoomSetup
+                    content={roomContent}
+                    duration={duration}
                     disabled={pending}
-                    options={[15, 30, 60].map((seconds) => ({
-                      value: String(seconds),
-                      label: `${seconds} seconds`,
-                    }))}
-                    onChange={(seconds) => setDuration(Number(seconds))}
+                    onChange={(content, seconds) => {
+                      setRoomContent(content);
+                      setDuration(seconds);
+                    }}
                   />
                   <button
                     className="button primary full-width"
-                    disabled={pending || !name.trim()}
+                    disabled={
+                      pending || !name.trim() || !validRoomContent(roomContent)
+                    }
                     onClick={() => void enterRoom(true)}
                   >
                     {pending ? (
@@ -1498,8 +1521,28 @@ export default function CodePace({
             ) : (
               <div className="workspace">
                 <div
-                  className={`race-column ${isCoding ? "code-workspace" : ""}`}
+                  className={`race-column ${isSoloCoding ? "code-workspace" : ""} ${room ? "room-race" : ""}`}
                 >
+                  {room && host && room.phase === "lobby" && (
+                    <RoomConfiguration
+                      key={JSON.stringify([
+                        room.code,
+                        room.round,
+                        room.duration,
+                        room.content,
+                      ])}
+                      content={room.content || { mode: "quotes" }}
+                      duration={room.duration}
+                      disabled={pending}
+                      onDirtyChange={setRoomDraftPending}
+                      onApply={(content, seconds) =>
+                        void roomAction("configure", {
+                          content,
+                          duration: seconds,
+                        })
+                      }
+                    />
+                  )}
                   {!room && (
                     <div className="race-toolbar">
                       {!isCoding && (
@@ -1588,7 +1631,7 @@ export default function CodePace({
                       </div>
                     </div>
                   )}
-                  {isCoding && (
+                  {isSoloCoding && (
                     <Suspense
                       fallback={<div role="status">Loading code practice…</div>}
                     >
@@ -1884,6 +1927,7 @@ export default function CodePace({
                               className="button primary small"
                               disabled={
                                 pending ||
+                                roomDraftPending ||
                                 room.players.filter(
                                   (p) => room.serverNow - p.seenAt < 30000,
                                 ).length < 2

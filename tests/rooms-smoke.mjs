@@ -49,6 +49,22 @@ const friend = await request(
 );
 assert.equal(friend.room.players.length, 2);
 assert.equal(friend.room.passage, host.room.passage);
+assert.deepEqual(host.room.content, { mode: "quotes" });
+const codeContent = { mode: "code", language: "typescript", snippet: 0 };
+await request(
+  `/api/rooms/${code}`,
+  { action: "configure", round: 1, duration: 15, content: codeContent },
+  friend.session,
+  403,
+);
+const configured = await request(
+  `/api/rooms/${code}`,
+  { action: "configure", round: 1, duration: 15, content: codeContent },
+  host.session,
+);
+assert.deepEqual(configured.room.content, codeContent);
+assert.ok(configured.room.passage.includes("values: number[]"));
+host.room = configured.room;
 await request(
   `/api/rooms/${code}`,
   { action: "start", round: 1 },
@@ -76,6 +92,14 @@ await request(
 );
 const peer = await request(`/api/rooms/${code}`, undefined, friend.session);
 assert.equal(peer.room.startAt, started.room.startAt);
+assert.deepEqual(peer.room.content, codeContent);
+assert.equal(peer.room.passage, configured.room.passage);
+await request(
+  `/api/rooms/${code}`,
+  { action: "configure", round: 1, duration: 30, content: { mode: "words" } },
+  host.session,
+  409,
+);
 await request(
   `/api/rooms/${code}`,
   { action: "join", name: "Late racer" },
@@ -216,6 +240,8 @@ checks += 2;
 const rematch = rematches.find((r) => r.status === 200).body;
 assert.equal(rematch.room.round, 2);
 assert.equal(rematch.room.phase, "lobby");
+assert.deepEqual(rematch.room.content, codeContent);
+assert.equal(rematch.room.passage, configured.room.passage);
 assert.ok(
   rematch.room.players.every((p) => p.correct === 0 && p.strokes === 0),
 );
@@ -233,6 +259,53 @@ await request(
 );
 const intact = await request(`/api/rooms/${code}`, undefined, friend.session);
 assert.equal(intact.room.round, 2);
+for (const content of [
+  { mode: "words" },
+  { mode: "quotes" },
+  {
+    mode: "custom",
+    text: "Everyone will type this same custom passage in the room.",
+  },
+  {
+    mode: "code",
+    language: "python",
+    snippet: -1,
+    text: "def hello():\n    return 123",
+  },
+]) {
+  const selected = await request(
+    `/api/rooms/${code}`,
+    { action: "configure", round: 2, duration: 30, content },
+    host.session,
+  );
+  assert.deepEqual(selected.room.content, content);
+  const shared = await request(`/api/rooms/${code}`, undefined, friend.session);
+  assert.deepEqual(shared.room.content, content);
+  assert.equal(shared.room.passage, selected.room.passage);
+  assert.equal(shared.room.duration, 30);
+  if (content.text) assert.equal(shared.room.passage, content.text);
+}
+await request(
+  "/api/rooms",
+  {
+    name: "Invalid content",
+    duration: 15,
+    content: { mode: "code", language: "invalid", snippet: 0 },
+  },
+  null,
+  400,
+);
+await request(
+  `/api/rooms/${code}`,
+  {
+    action: "configure",
+    round: 2,
+    duration: 30,
+    content: { mode: "custom", text: "too short" },
+  },
+  host.session,
+  400,
+);
 await request(`/api/rooms/${code}`, { action: "leave" }, host.session);
 const transferred = await request(
   `/api/rooms/${code}`,

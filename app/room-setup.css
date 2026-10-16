@@ -1,0 +1,65 @@
+.room-setup-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+.friends-form .room-setup-fields {
+  margin: 20px 0;
+}
+.room-setup-fields .code-field,
+.room-text-field {
+  font-size: 13px;
+}
+.room-setup-fields .code-select-menu {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--line);
+}
+.room-setup-fields .code-select-menu > li {
+  min-height: 44px;
+  font-size: 14px;
+}
+.room-text-field {
+  display: flex;
+  flex-direction: column;
+  grid-column: 1 / -1;
+  gap: 8px;
+  color: var(--muted);
+}
+.room-text-field textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--ink);
+  font: 14px/1.6 var(--sans);
+  resize: vertical;
+}
+.room-text-field .room-code-input {
+  font-family: var(--mono);
+}
+.room-configuration {
+  margin-bottom: 20px;
+}
+.room-configuration .room-setup-fields {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.room-configuration > .button {
+  margin-top: 16px;
+}
+.slick-codepace .room-race .coding-panel .typing-surface {
+  height: 220px;
+}
+@media (max-width: 760px) {
+  .room-configuration .room-setup-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 360px) {
+  .friends-form .room-setup-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
