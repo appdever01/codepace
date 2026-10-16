@@ -18,7 +18,13 @@ async function request(path, data, token, expected = 200) {
   });
   const result = await response.json();
   assert.equal(response.status, expected, result.error);
-  timings.push(performance.now() - start);
+  timings.push({
+    action: data?.action || (data ? "create" : "read"),
+    totalMs: performance.now() - start,
+    serverMs: Number(
+      response.headers.get("server-timing")?.match(/app;dur=([\d.]+)/)?.[1],
+    ),
+  });
   return result;
 }
 try {
@@ -77,15 +83,28 @@ try {
   }
   const { room } = await request(path, undefined, sessions[0].token);
   assert.ok(room.players.every((player) => player.correct === 32));
-  timings.sort((a, b) => a - b);
+  const summary = (values) => {
+    const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+    return sorted.length
+      ? {
+          medianMs: Math.round(sorted[Math.floor(sorted.length / 2)]),
+          p95Ms: Math.round(sorted[Math.floor(sorted.length * 0.95)]),
+          maxMs: Math.round(sorted.at(-1)),
+        }
+      : null;
+  };
   console.log(
     JSON.stringify({
       players: sessions.length,
       requests: timings.length,
       errors: 0,
-      medianMs: Math.round(timings[Math.floor(timings.length / 2)]),
-      p95Ms: Math.round(timings[Math.floor(timings.length * 0.95)]),
-      maxMs: Math.round(timings.at(-1)),
+      total: summary(timings.map((timing) => timing.totalMs)),
+      progress: summary(
+        timings
+          .filter((timing) => timing.action === "sync")
+          .map((timing) => timing.totalMs),
+      ),
+      server: summary(timings.map((timing) => timing.serverMs)),
     }),
   );
 } finally {

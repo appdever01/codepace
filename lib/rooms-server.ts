@@ -239,13 +239,19 @@ async function transaction<T>(operation: (db: PoolClient) => Promise<T>) {
   }
 }
 export async function handleApi(operation: () => Promise<Response>) {
+  const started = performance.now();
   try {
     if (!process.env.DATABASE_URL)
       throw new ApiError(
         503,
         "Friend rooms are temporarily unavailable. Solo races still work.",
       );
-    return await operation();
+    const response = await operation();
+    response.headers.set(
+      "Server-Timing",
+      `app;dur=${(performance.now() - started).toFixed(1)}`,
+    );
+    return response;
   } catch (error) {
     if (error instanceof ApiError)
       return reply({ error: error.message }, error.status);
