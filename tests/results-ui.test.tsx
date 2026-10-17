@@ -27,7 +27,7 @@ const result: RaceResult = {
   missed: { a: 2 },
 };
 
-test("an untouched timed round shows a retry state without scores, placing, reward or a zero chart", async () => {
+test("an untouched race stays open after the listed time until the passage is finished", async () => {
   const clock = Date.now;
   let offset = 0;
   Date.now = () => clock() + offset;
@@ -49,22 +49,15 @@ test("an untouched timed round shows a retry state without scores, placing, rewa
     fireEvent.click(screen.getByRole("button", { name: /Start race/ }));
     await tick(3100);
     await tick(15000);
-    const summary = screen.getByRole("region", { name: "Your result" });
-    assert.ok(
-      within(summary).getByRole("heading", { name: "No typing recorded" }),
-    );
-    assert.equal(summary.querySelector(".result-scoreboard"), null);
-    assert.equal(summary.querySelector(".result-context"), null);
-    assert.equal(summary.querySelector(".result-award"), null);
-    assert.equal(within(summary).queryByRole("img"), null);
-    assert.ok(within(summary).getByText(/No result was saved/));
+    const input = screen.getByRole("textbox", {
+      name: /^Type this passage:/,
+    }) as HTMLTextAreaElement;
+    assert.equal(input.disabled, false);
+    assert.equal(screen.queryByRole("region", { name: "Your result" }), null);
     assert.deepEqual(
       JSON.parse(localStorage.getItem("codepace:history") || "[]"),
       [],
     );
-    fireEvent.click(screen.getByRole("button", { name: /Race again/ }));
-    assert.equal(screen.queryByRole("region", { name: "Your result" }), null);
-    assert.ok(document.querySelector(".countdown"));
   } finally {
     Date.now = clock;
     cleanup();

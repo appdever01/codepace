@@ -8,7 +8,7 @@ import {
   isImpossibleProgress,
   MAX_FAIR_WPM,
 } from "../lib/fair-play.ts";
-import { roomRaceFinished } from "../lib/room-race.ts";
+import { roomRaceFinished, roomTimedOut } from "../lib/room-race.ts";
 
 test("200 wpm or faster is treated as automated typing", () => {
   assert.equal(isImpossibleProgress(0, 30000), false);
@@ -57,6 +57,18 @@ test("a friend room stays open until every connected racer finishes", () => {
     }),
     true,
   );
+  assert.equal(
+    roomRaceFinished({
+      startAt: now - 45_000,
+      now,
+      players: [
+        { finishedAt: now - 1000, seenAt: now },
+        { finishedAt: null, seenAt: now },
+      ],
+    }),
+    false,
+  );
+  assert.equal(roomTimedOut(now - 45_000, 30, now), true);
 });
 
 test("a banned session wipes local play data", () => {

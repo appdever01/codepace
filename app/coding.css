@@ -13,7 +13,6 @@
   row-gap: 0;
 }
 .code-workspace > .race-toolbar,
-.code-workspace > .track-drawer,
 .code-workspace > .mistake-drill {
   grid-column: 1 / -1;
 }
@@ -515,7 +514,7 @@
   display: none;
 }
 .slick-codepace .coding-panel .live-stats b {
-  font: 500 22px var(--sans);
+  font: 500 16px var(--sans);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }

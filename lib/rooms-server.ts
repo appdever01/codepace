@@ -18,7 +18,7 @@ import {
   scheduledStartTime,
 } from "./room-schedule";
 import { BAN_MESSAGE, fairCharacterLimit, isImpossibleProgress } from "./fair-play";
-import { roomRaceFinished, roomTimedOut } from "./room-race";
+import { roomRaceFinished } from "./room-race";
 
 type StoredPlayer = {
   id: string;
@@ -247,15 +247,14 @@ function snapshot(room: StoredRoom): RoomSnapshot {
   const started = room.start_at !== null && now >= room.start_at;
   const finished =
     started &&
-    (roomRaceFinished({
+    roomRaceFinished({
       startAt: room.start_at,
       now,
       players: room.players.map((player) => ({
         finishedAt: player.finished_at,
         seenAt: player.seen_at,
       })),
-    }) ||
-      roomTimedOut(room.start_at, room.duration, now));
+    });
   return {
     code: room.code,
     hostId: room.host_id,
@@ -289,13 +288,7 @@ function snapshot(room: StoredRoom): RoomSnapshot {
       wpm: started
         ? wpm(
             p.correct,
-            Math.max(
-              0,
-              Math.min(
-                p.finished_at ?? now,
-                room.start_at! + room.duration * 1000,
-              ) - room.start_at!,
-            ),
+            Math.max(0, (p.finished_at ?? now) - room.start_at!),
           )
         : 0,
       accuracy: accuracy(p.strokes, p.errors),
@@ -584,7 +577,7 @@ export async function updateRoom(request: Request, code: string) {
       const elapsed = room.start_at === null ? -1 : now - room.start_at;
       if (
         elapsed >= 0 &&
-        elapsed <= room.duration * 1000 + 2000 &&
+        now < room.expires_at &&
         player.finished_at === null &&
         input.seq > player.seq
       ) {
@@ -609,9 +602,7 @@ export async function updateRoom(request: Request, code: string) {
           return { banned: true };
         }
         const finishedAt =
-          correct === room.passage.length
-            ? Math.min(now, room.start_at! + room.duration * 1000)
-            : null;
+          correct === room.passage.length ? now : null;
         if (
           input.typed !== player.typed ||
           input.strokes !== player.strokes ||

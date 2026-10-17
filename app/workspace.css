@@ -243,23 +243,23 @@
   background: var(--surface);
 }
 .slick-codepace .live-stats {
-  width: min(100%, 540px);
+  width: min(100%, 360px);
 }
 .slick-codepace .live-stats b {
-  font-size: 34px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: -0.04em;
 }
 .slick-codepace .live-stats > span {
-  gap: 5px;
+  gap: 2px;
 }
 .slick-codepace .live-stats > span > span {
-  font-size: 12px;
+  font-size: 8px;
   letter-spacing: 0;
 }
 .slick-codepace .live-stats > span + span::before {
-  top: 5px;
-  height: 32px;
+  top: 3px;
+  height: 18px;
 }
 .slick-codepace .play-hud {
   margin: 28px 0 18px;
@@ -312,14 +312,15 @@
   box-shadow: 0 3px 1px #b8912e, 0 5px 9px #0003;
 }
 .slick-codepace .track-drawer {
-  padding-top: 18px;
+  padding-top: 0;
   margin-top: 0;
+  margin-bottom: 12px;
 }
 .slick-codepace .track-drawer > summary {
   border: 0;
   background: var(--surface);
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 11px;
 }
 .slick-codepace .track-drawer[open] > summary {
   border-radius: 20px 20px 0 0;
@@ -327,8 +328,8 @@
 .slick-codepace .track-panel {
   margin-top: 0;
   border: 0;
-  border-radius: 0 0 20px 20px;
-  padding: 20px 24px;
+  border-radius: 0 0 12px 12px;
+  padding: 8px 12px 10px;
 }
 .slick-codepace .lane {
   min-height: 56px;
@@ -573,7 +574,7 @@
     padding: 22px 18px 0;
   }
   .slick-codepace .live-stats b {
-    font-size: 28px;
+    font-size: 15px;
   }
   .slick-codepace .typing-surface {
     height: 205px;

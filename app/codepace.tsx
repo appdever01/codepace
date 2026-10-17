@@ -41,6 +41,7 @@ import {
   type CodeExercise,
 } from "@/lib/coding";
 import { useBackgroundMusic } from "@/components/use-background-music";
+import CheckeredFlag from "@/components/checkered-flag";
 import { FlagIcon } from "@solar-icons/react/linear/flag";
 import { TargetIcon } from "@solar-icons/react/linear/target";
 import { Chart2Icon } from "@solar-icons/react/linear/chart-2";
@@ -113,6 +114,10 @@ const formatDate = (date: string) =>
     month: "short",
     day: "numeric",
   });
+const formatClock = (totalSeconds: number) => {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+};
 
 export default function CodePace({
   initialRoom = "",
@@ -322,12 +327,7 @@ export default function CodePace({
       }
       if (savedRef.current) return;
       if (snapshot.phase === "finished")
-        finish(
-          Math.min(
-            snapshot.duration * 1000,
-            Math.max(0, Date.now() - startRef.current),
-          ),
-        );
+        finish(Math.max(0, Date.now() - startRef.current));
       else
         changePhase(snapshot.phase === "countdown" ? "countdown" : "running");
     },
@@ -539,19 +539,25 @@ export default function CodePace({
         return;
       }
       if (currentPhase === "countdown") changePhase("running");
-      const limit = configRef.current.duration
-        ? configRef.current.duration * 1000
-        : Infinity;
-      setElapsed(Math.min(time, limit));
+      const timedCode =
+        configRef.current.tab === "code" &&
+        !sessionRef.current &&
+        configRef.current.duration
+          ? configRef.current.duration * 1000
+          : 0;
+      setElapsed(timedCode ? Math.min(time, timedCode) : Math.max(0, time));
       const second = Math.floor(time / 1000);
       if (second > secondRef.current) {
         samplesRef.current.push(
-          stats(engineRef.current, passageRef.current, Math.min(time, limit))
-            .wpm,
+          stats(
+            engineRef.current,
+            passageRef.current,
+            timedCode ? Math.min(time, timedCode) : Math.max(0, time),
+          ).wpm,
         );
         secondRef.current = second;
       }
-      if (time >= limit && !sessionRef.current) finish(limit);
+      if (timedCode && time >= timedCode) finish(timedCode);
     }, 100);
     return () => clearInterval(timer);
   }, [changePhase, finish]);
@@ -639,7 +645,12 @@ export default function CodePace({
   function onInput(value: string) {
     if (phaseRef.current !== "running") return;
     const time = Date.now() - startRef.current;
-    if (effectiveDuration && time >= effectiveDuration * 1000) {
+    if (
+      tab === "code" &&
+      !sessionRef.current &&
+      effectiveDuration &&
+      time >= effectiveDuration * 1000
+    ) {
       finish(effectiveDuration * 1000);
       return;
     }
@@ -809,10 +820,11 @@ export default function CodePace({
   const isBusy = phase === "running" || phase === "countdown";
   const isFriends = tab === "friends";
   const host = !!room && room.hostId === session?.id;
-  const remaining = effectiveDuration
-    ? Math.max(0, Math.ceil(effectiveDuration - elapsed / 1000))
-    : Math.floor(elapsed / 1000);
   const isSoloCoding = tab === "code" && !room;
+  const timedSoloCode = isSoloCoding && !!effectiveDuration;
+  const clockSeconds = timedSoloCode
+    ? Math.max(0, Math.ceil(effectiveDuration - elapsed / 1000))
+    : Math.max(0, Math.floor(elapsed / 1000));
   const isCoding = isSoloCoding || room?.content?.mode === "code";
   const activeCodeLanguage =
     room?.content?.mode === "code"
@@ -826,6 +838,7 @@ export default function CodePace({
       correct: botProgress(Math.max(20, pace), elapsed, passage.length),
       finishedMs: (passage.length / (Math.max(20, pace) * 5)) * 60000,
       wpm: phase === "ready" || phase === "countdown" ? 0 : Math.max(20, pace),
+      accuracy: 100,
       bot: true,
     }),
   );
@@ -834,6 +847,7 @@ export default function CodePace({
         ...p,
         correct: p.id === session?.id ? live.correct : p.correct,
         wpm: p.id === session?.id ? live.wpm : p.wpm,
+        accuracy: p.id === session?.id ? live.accuracy : p.accuracy,
         bot: false,
         finishedMs:
           p.finishedAt && room.startAt
@@ -849,6 +863,7 @@ export default function CodePace({
           name: settings.name,
           correct: live.correct,
           wpm: live.wpm,
+          accuracy: live.accuracy,
           bot: false,
           finishedMs: engine.typed === passage ? elapsed : Infinity,
           color: "cobalt",
@@ -923,6 +938,35 @@ export default function CodePace({
     </div>
   );
 
+  const liveStats = (
+    <div
+      className="live-stats"
+      aria-label="Live race statistics"
+      onClick={(event) => event.preventDefault()}
+    >
+      <span
+        className={
+          timedSoloCode && clockSeconds <= 5 && phase === "running"
+            ? "time-urgent"
+            : ""
+        }
+      >
+        <b>{formatClock(clockSeconds)}</b>
+        <span>Time</span>
+      </span>
+      <span>
+        <b>{live.wpm}</b>
+        <span>WPM</span>
+      </span>
+      <span>
+        <b>
+          {live.accuracy}
+          <small>%</small>
+        </b>
+        <span>Accuracy</span>
+      </span>
+    </div>
+  );
   const typingPanel = (
     <section
       className={`typing-panel ${hasError ? "has-error" : ""} ${isCoding ? "coding-panel" : ""}`}
@@ -969,34 +1013,6 @@ export default function CodePace({
           </div>
         </div>
       )}
-      <div className="typing-top">
-        <div className="live-stats" aria-label="Live race statistics">
-          <span
-            className={
-              effectiveDuration && remaining <= 5 && phase === "running"
-                ? "time-urgent"
-                : ""
-            }
-          >
-            <b>
-              {String(Math.floor(remaining / 60)).padStart(2, "0")}:
-              {String(remaining % 60).padStart(2, "0")}
-            </b>
-            <span>{effectiveDuration ? "Time" : "Elapsed"}</span>
-          </span>
-          <span>
-            <b>{live.wpm}</b>
-            <span>WPM</span>
-          </span>
-          <span>
-            <b>
-              {live.accuracy}
-              <small>%</small>
-            </b>
-            <span>Accuracy</span>
-          </span>
-        </div>
-      </div>
       <div className="play-hud">
         <span className="passage-label">
           <KeyboardIcon />
@@ -1241,6 +1257,176 @@ export default function CodePace({
         </RaceResults>
       )}
     </section>
+  );
+
+  const trackDrawer = (
+                  <details className="track-drawer" open>
+                    <summary>
+                      <span>
+                        <CarIcon />
+                        {room
+                          ? "Room grid"
+                          : tab === "practice" || isCoding
+                            ? "Your lane"
+                            : "Race grid"}
+                      </span>
+                      <span>
+                        {racers.length}{" "}
+                        {racers.length === 1 ? "racer" : "racers"}
+                        <span className="grid-toggle">
+                          <span className="grid-show-label">View</span>
+                          <span className="grid-hide-label">Hide</span>
+                        </span>
+                      </span>
+                    </summary>
+                    <section className="track-panel" aria-label="Race progress">
+                      <div className="track-heading">
+                        <h2>
+                          {room
+                            ? "Starting grid"
+                            : tab === "practice" || isCoding
+                              ? "Your lane"
+                              : "Meet your competition"}
+                        </h2>
+                        <span className="track-status">
+                          <span
+                            className={`tiny-dot ${phase === "running" ? "active-dot" : ""}`}
+                          />
+                          {phase === "running"
+                            ? "Race in progress"
+                            : phase === "countdown"
+                              ? "Starting…"
+                              : phase === "finished"
+                                ? "Finish line"
+                                : room
+                                  ? "Waiting for racers"
+                                  : tab === "race"
+                                    ? "You + 3 pace bots"
+                                    : "Just you, no pressure"}
+                        </span>
+                      </div>
+                      <div
+                        className={`lanes ${largeRoom ? "room-lanes" : ""}`}
+                        role={largeRoom ? "region" : undefined}
+                        aria-label={largeRoom ? "All racers" : undefined}
+                        tabIndex={largeRoom ? 0 : undefined}
+                      >
+                        {gridRacers.map((racer) => (
+                          <div
+                            className={`lane ${racer.color} ${racer.id === ownId ? "own-lane" : ""}`}
+                            key={racer.id}
+                          >
+                            <div className="racer-identity">
+                              <span className="racer-avatar">
+                                {racer.id === ownId ? (
+                                  <BoltIcon />
+                                ) : racer.bot ? (
+                                  <CarIcon />
+                                ) : (
+                                  racer.name.charAt(0).toUpperCase()
+                                )}
+                              </span>
+                              <div>
+                                <b>
+                                  {racer.id === ownId ? "You" : racer.name}
+                                  {room?.hostId === racer.id && (
+                                    <CrownIcon className="host-crown" />
+                                  )}
+                                </b>
+                                <span>
+                                  {racer.bot
+                                    ? `${"pace" in racer ? racer.pace : ""} wpm · bot`
+                                    : racer.id === ownId
+                                      ? "This is your lane"
+                                      : (room?.serverNow || 0) -
+                                            (room?.players.find(
+                                              (p) => p.id === racer.id,
+                                            )?.seenAt || 0) >
+                                          10000
+                                        ? "Away"
+                                        : "Ready to race"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="lane-road">
+                              <div className="road-line" />
+                              <div
+                                className="road-fill"
+                                style={{
+                                  transform: `scaleX(${racer.correct / Math.max(1, passage.length)})`,
+                                }}
+                              />
+                              <div
+                                className="race-car"
+                                aria-hidden="true"
+                                style={{
+                                  transform: `translateX(calc(${Math.min(100, (racer.correct / Math.max(1, passage.length)) * 100)}% - 2px))`,
+                                }}
+                              >
+                                <Image
+                                  unoptimized
+                                  src={
+                                    racer.id === ownId
+                                      ? "/game/rally-blue.webp"
+                                      : "/game/rally-orange.webp"
+                                  }
+                                  alt=""
+                                  width={68}
+                                  height={34}
+                                />
+                              </div>
+                              <CheckeredFlag className="finish-flag" />
+                            </div>
+                            <div className="lane-speed">
+                              <b>{racer.wpm}</b>
+                              <span>wpm</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {!room && tab === "race" && (
+                        <div className="pace-select">
+                          <span>Pick your competition</span>
+                          <div className="pace-options">
+                            {[
+                              [50, "Chill"],
+                              [80, "Quick"],
+                              [110, "Turbo"],
+                            ].map(([pace, label]) => (
+                              <button
+                                key={pace}
+                                disabled={isBusy}
+                                className={
+                                  (settings.pace < 65
+                                    ? 50
+                                    : settings.pace < 95
+                                      ? 80
+                                      : 110) === pace
+                                    ? "selected"
+                                    : ""
+                                }
+                                aria-pressed={
+                                  (settings.pace < 65
+                                    ? 50
+                                    : settings.pace < 95
+                                      ? 80
+                                      : 110) === pace
+                                }
+                                onClick={() =>
+                                  setSettings((previous) => ({
+                                    ...previous,
+                                    pace: Number(pace),
+                                  }))
+                                }
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  </details>
   );
 
   if (banned) {
@@ -1807,7 +1993,7 @@ export default function CodePace({
                           aria-label={
                             isCoding
                               ? "Code practice duration"
-                              : "Race duration"
+                              : "Passage length"
                           }
                         >
                           {(isCoding ? [0, 60, 180] : [15, 30, 60]).map(
@@ -1903,6 +2089,7 @@ export default function CodePace({
                     </div>
                   )}
                   <div className="arena">
+                    {trackDrawer}
                     {typingPanel}
                     {roomError && (
                       <p className="form-error" role="alert">
@@ -1968,173 +2155,6 @@ export default function CodePace({
                       content={room.content}
                     />
                   )}
-                  <details className="track-drawer" open>
-                    <summary>
-                      <span>
-                        <CarIcon />
-                        {room
-                          ? "Room grid"
-                          : tab === "practice" || isCoding
-                            ? "Your lane"
-                            : "Race grid"}
-                      </span>
-                      <span>
-                        {racers.length}{" "}
-                        {racers.length === 1 ? "racer" : "racers"}
-                        <span className="grid-toggle">
-                          <span className="grid-show-label">View</span>
-                          <span className="grid-hide-label">Hide</span>
-                        </span>
-                      </span>
-                    </summary>
-                    <section className="track-panel" aria-label="Race progress">
-                      <div className="track-heading">
-                        <h2>
-                          {room
-                            ? "Starting grid"
-                            : tab === "practice" || isCoding
-                              ? "Your lane"
-                              : "Meet your competition"}
-                        </h2>
-                        <span className="track-status">
-                          <span
-                            className={`tiny-dot ${phase === "running" ? "active-dot" : ""}`}
-                          />
-                          {phase === "running"
-                            ? "Race in progress"
-                            : phase === "countdown"
-                              ? "Starting…"
-                              : phase === "finished"
-                                ? "Finish line"
-                                : room
-                                  ? "Waiting for racers"
-                                  : tab === "race"
-                                    ? "You + 3 pace bots"
-                                    : "Just you, no pressure"}
-                        </span>
-                      </div>
-                      <div
-                        className={`lanes ${largeRoom ? "room-lanes" : ""}`}
-                        role={largeRoom ? "region" : undefined}
-                        aria-label={largeRoom ? "All racers" : undefined}
-                        tabIndex={largeRoom ? 0 : undefined}
-                      >
-                        {gridRacers.map((racer) => (
-                          <div
-                            className={`lane ${racer.color} ${racer.id === ownId ? "own-lane" : ""}`}
-                            key={racer.id}
-                          >
-                            <div className="racer-identity">
-                              <span className="racer-avatar">
-                                {racer.id === ownId ? (
-                                  <BoltIcon />
-                                ) : racer.bot ? (
-                                  <CarIcon />
-                                ) : (
-                                  racer.name.charAt(0).toUpperCase()
-                                )}
-                              </span>
-                              <div>
-                                <b>
-                                  {racer.id === ownId ? "You" : racer.name}
-                                  {room?.hostId === racer.id && (
-                                    <CrownIcon className="host-crown" />
-                                  )}
-                                </b>
-                                <span>
-                                  {racer.bot
-                                    ? `${"pace" in racer ? racer.pace : ""} wpm · bot`
-                                    : racer.id === ownId
-                                      ? "This is your lane"
-                                      : (room?.serverNow || 0) -
-                                            (room?.players.find(
-                                              (p) => p.id === racer.id,
-                                            )?.seenAt || 0) >
-                                          10000
-                                        ? "Away"
-                                        : "Ready to race"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="lane-road">
-                              <div className="road-line" />
-                              <div
-                                className="road-fill"
-                                style={{
-                                  transform: `scaleX(${racer.correct / Math.max(1, passage.length)})`,
-                                }}
-                              />
-                              <div
-                                className="race-car"
-                                aria-hidden="true"
-                                style={{
-                                  transform: `translateX(calc(${Math.min(100, (racer.correct / Math.max(1, passage.length)) * 100)}% - 2px))`,
-                                }}
-                              >
-                                <Image
-                                  unoptimized
-                                  src={
-                                    racer.id === ownId
-                                      ? "/game/rally-blue.webp"
-                                      : "/game/rally-orange.webp"
-                                  }
-                                  alt=""
-                                  width={68}
-                                  height={34}
-                                />
-                              </div>
-                              <FlagIcon className="finish-flag" />
-                            </div>
-                            <div className="lane-speed">
-                              <b>{racer.wpm}</b>
-                              <span>wpm</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {!room && tab === "race" && (
-                        <div className="pace-select">
-                          <span>Pick your competition</span>
-                          <div className="pace-options">
-                            {[
-                              [50, "Chill"],
-                              [80, "Quick"],
-                              [110, "Turbo"],
-                            ].map(([pace, label]) => (
-                              <button
-                                key={pace}
-                                disabled={isBusy}
-                                className={
-                                  (settings.pace < 65
-                                    ? 50
-                                    : settings.pace < 95
-                                      ? 80
-                                      : 110) === pace
-                                    ? "selected"
-                                    : ""
-                                }
-                                aria-pressed={
-                                  (settings.pace < 65
-                                    ? 50
-                                    : settings.pace < 95
-                                      ? 80
-                                      : 110) === pace
-                                }
-                                onClick={() =>
-                                  setSettings((previous) => ({
-                                    ...previous,
-                                    pace: Number(pace),
-                                  }))
-                                }
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </section>
-                  </details>
                   {phase === "finished" &&
                     result &&
                     result.errors > 0 &&

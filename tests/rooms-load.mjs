@@ -239,19 +239,32 @@ try {
       }
     }),
   );
-  await sleep(
-    Math.max(
-      100,
-      started.room.startAt + duration * 1000 - Date.now() - clockOffset + 150,
-    ),
+  await all(
+    sessions.map(async (session) => {
+      const previous = progress.get(session.id);
+      const typed = created.room.passage;
+      const result = await request(
+        roomPath,
+        {
+          action: "sync",
+          round: 1,
+          seq: (previous?.seq || 0) + 1,
+          typed,
+          strokes: typed.length,
+          errors: 0,
+        },
+        session.token,
+      );
+      checkRoom(result.room, started);
+      progress.set(session.id, {
+        typed,
+        seq: (previous?.seq || 0) + 1,
+        correct: typed.length,
+        updates: (previous?.updates || 0) + 1,
+      });
+    }),
   );
-  const finishDeadline = performance.now() + 5000;
-  let finished;
-  do {
-    finished = await request(roomPath, undefined, host.token);
-    if (finished.room.phase === "finished") break;
-    await sleep(50);
-  } while (performance.now() < finishDeadline);
+  const finished = await request(roomPath, undefined, host.token);
   assert.equal(finished.room.phase, "finished");
   const restored = await all(
     sessions.map((session) => request(roomPath, undefined, session.token)),

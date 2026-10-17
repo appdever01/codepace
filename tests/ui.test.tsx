@@ -11,6 +11,7 @@ import {
   within,
 } from "@testing-library/react";
 import CodePace from "../app/codepace";
+import { accuracy, wpm } from "../lib/scoring";
 
 const testOrigin = process.env.CODEPACE_TEST_URL || "http://127.0.0.1:5189";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -60,13 +61,19 @@ test("complete a corrected race, save it, inspect progress and reload it", async
     assert.equal(pasted.defaultPrevented, true);
     assert.equal(input.value, text.slice(0, 30));
     await tick(15000);
+    assert.deepEqual(
+      JSON.parse(localStorage.getItem("codepace:history") || "[]"),
+      [],
+    );
+    fireEvent.change(input, { target: { value: text } });
     const saved = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(saved.length, 1);
-    assert.equal(saved[0].wpm, 24);
-    assert.equal(saved[0].accuracy, 96.8);
+    assert.equal(saved[0].correct, text.length);
+    assert.equal(saved[0].wpm, wpm(text.length, saved[0].duration * 1000));
+    assert.equal(saved[0].accuracy, accuracy(text.length + 1, 1));
     fireEvent.click(screen.getByRole("button", { name: "Progress" }));
     assert.ok(screen.getByRole("table"));
-    assert.ok(screen.getByRole("cell", { name: "24 wpm" }));
+    assert.ok(screen.getByRole("cell", { name: `${saved[0].wpm} wpm` }));
     cleanup();
     await act(async () => {
       render(<CodePace />);
@@ -74,7 +81,9 @@ test("complete a corrected race, save it, inspect progress and reload it", async
     });
     fireEvent.click(screen.getByRole("button", { name: "Race" }));
     assert.ok(
-      document.querySelector(".personal-best")?.textContent?.includes("24"),
+      document
+        .querySelector(".personal-best")
+        ?.textContent?.includes(String(saved[0].wpm)),
     );
     fireEvent.click(
       screen.getByRole("button", { name: "Open profile and settings" }),

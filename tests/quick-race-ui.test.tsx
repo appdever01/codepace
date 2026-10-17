@@ -9,6 +9,7 @@ import {
   screen,
 } from "@testing-library/react";
 import CodePace from "../app/codepace";
+import { wpm } from "../lib/scoring";
 
 test("a 15-second race records clean-key streaks without the daily sprint", async () => {
   const clock = Date.now;
@@ -48,11 +49,17 @@ test("a 15-second race records clean-key streaks without the daily sprint", asyn
     fireEvent.change(input, { target: { value: text.slice(0, 50) } });
     assert.equal(document.querySelector(".combo-chip b")?.textContent, "50");
     await tick(15000);
+    assert.deepEqual(
+      JSON.parse(localStorage.getItem("codepace:history") || "[]"),
+      [],
+    );
+    fireEvent.change(input, { target: { value: text } });
     const history = JSON.parse(localStorage.getItem("codepace:history")!);
     assert.equal(history[0].mode, "Race");
-    assert.equal(history[0].wpm, 40);
+    assert.equal(history[0].correct, text.length);
+    assert.equal(history[0].wpm, wpm(text.length, history[0].duration * 1000));
     assert.equal(history[0].accuracy, 100);
-    assert.equal(history[0].bestStreak, 50);
+    assert.equal(history[0].bestStreak, text.length);
     fireEvent.click(screen.getByRole("button", { name: /Race again/ }));
     const next = screen.getByRole("textbox", {
       name: /^Type this passage:/,
