@@ -17,6 +17,8 @@ import {
   scheduleProblem,
   scheduledStartTime,
 } from "./room-schedule";
+import { BAN_MESSAGE, fairCharacterLimit, isImpossibleProgress } from "./fair-play";
+import { roomRaceFinished, roomTimedOut } from "./room-race";
 
 type StoredPlayer = {
   id: string;
@@ -153,20 +155,38 @@ async function body(request: Request) {
   }
 }
 
-async function rateLimit(request: Request, bucket: string, maximum: number) {
-  const ip =
+function clientAddress(request: Request) {
+  return (
     request.headers
       .get(process.env.VERCEL ? "x-vercel-forwarded-for" : "x-forwarded-for")
       ?.split(",")[0]
-      .trim() || "local";
+      .trim() || "local"
+  );
+}
+async function rateLimit(request: Request, bucket: string, maximum: number) {
   const now = Date.now();
-  const key = await hash(`${bucket}:${ip}:${Math.floor(now / 3600000)}`);
+  const key = await hash(
+    `${bucket}:${clientAddress(request)}:${Math.floor(now / 3600000)}`,
+  );
   const { rows } = await getPool().query<{ count: number }>(
     "INSERT INTO rate_limits (key, count, expires_at) VALUES ($1, 1, $2) ON CONFLICT(key) DO UPDATE SET count = rate_limits.count + 1 RETURNING count",
     [key, now + 3600000],
   );
   if (rows[0].count > maximum)
     throw new ApiError(429, "Too many attempts. Try again in an hour.");
+}
+async function assertNotBanned(request: Request) {
+  const { rows } = await getPool().query(
+    "SELECT 1 FROM rate_limits WHERE key = $1 AND expires_at > $2",
+    [`ban:${clientAddress(request)}`, Date.now()],
+  );
+  if (rows[0]) throw new ApiError(403, BAN_MESSAGE);
+}
+async function banClient(request: Request) {
+  await getPool().query(
+    "INSERT INTO rate_limits (key, count, expires_at) VALUES ($1, 1, $2) ON CONFLICT(key) DO UPDATE SET expires_at = EXCLUDED.expires_at, count = 1",
+    [`ban:${clientAddress(request)}`, Date.now() + 315_360_000_000],
+  );
 }
 function checkCode(code: string) {
   if (!/^[A-Z2-9]{6}$/.test(code))
@@ -227,8 +247,15 @@ function snapshot(room: StoredRoom): RoomSnapshot {
   const started = room.start_at !== null && now >= room.start_at;
   const finished =
     started &&
-    (now >= room.start_at! + room.duration * 1000 ||
-      room.players.every((p) => p.finished_at !== null));
+    (roomRaceFinished({
+      startAt: room.start_at,
+      now,
+      players: room.players.map((player) => ({
+        finishedAt: player.finished_at,
+        seenAt: player.seen_at,
+      })),
+    }) ||
+      roomTimedOut(room.start_at, room.duration, now));
   return {
     code: room.code,
     hostId: room.host_id,
@@ -332,6 +359,7 @@ export async function createRoom(request: Request) {
       content: roomContentSchema.default({ mode: "quotes" }),
     })
     .parse(await body(request));
+  await assertNotBanned(request);
   await rateLimit(request, "create", 30);
   const now = Date.now();
   await getPool().query(
@@ -380,6 +408,7 @@ export async function createRoom(request: Request) {
   throw new ApiError(503, "Could not create a room. Try again.");
 }
 export async function readRoom(request: Request, code: string) {
+  await assertNotBanned(request);
   let room = await getRoom(code);
   let player = await member(request, room);
   if (
@@ -409,6 +438,7 @@ export async function readRoom(request: Request, code: string) {
 export async function updateRoom(request: Request, code: string) {
   const input = actionSchema.parse(await body(request));
   checkCode(code);
+  await assertNotBanned(request);
   if (input.action === "join") await rateLimit(request, "join", 100);
   const result = await transaction(async (db) => {
     const room = await getRoom(code, db, true);
@@ -567,11 +597,17 @@ export async function updateRoom(request: Request, code: string) {
         )
           throw new ApiError(400, "Invalid typing progress.");
         const correct = correctPrefix(input.typed, room.passage);
-        if (correct > Math.max(30, (elapsed / 60000) * 400 * 5))
-          throw new ApiError(
-            400,
-            "Progress arrived too quickly. Type the passage without pasting.",
+        if (
+          correct > Math.max(30, fairCharacterLimit(elapsed)) ||
+          isImpossibleProgress(correct, Math.max(0, elapsed))
+        ) {
+          await banClient(request);
+          await db.query(
+            "DELETE FROM players WHERE id = $1 AND room_code = $2",
+            [player.id, code],
           );
+          return { banned: true };
+        }
         const finishedAt =
           correct === room.passage.length
             ? Math.min(now, room.start_at! + room.duration * 1000)
@@ -633,5 +669,6 @@ export async function updateRoom(request: Request, code: string) {
       );
     return { room: snapshot(await getRoom(code, db)) };
   });
+  if ("banned" in result && result.banned) throw new ApiError(403, BAN_MESSAGE);
   return reply(result, input.action === "join" ? 201 : 200);
 }

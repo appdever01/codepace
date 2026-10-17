@@ -2,6 +2,7 @@
   position: relative;
   isolation: isolate;
   background: transparent;
+  padding-left: 80px;
 }
 
 .slick-codepace::before {
@@ -24,7 +25,7 @@
   width: 100%;
   max-width: none;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   padding: 28px 4.5%;
   gap: 32px;
   background: transparent;
@@ -54,25 +55,87 @@
   height: 28px;
 }
 .slick-codepace .header nav {
-  background: transparent;
-  padding: 0;
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-self: auto;
   gap: 6px;
+  padding: 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(16px);
+  transform: translateY(-50%);
+  transition:
+    transform 220ms var(--ease),
+    background 220ms var(--ease),
+    opacity 220ms var(--ease);
 }
 .slick-codepace .header nav button {
-  min-height: 42px;
-  border-radius: 10px;
+  position: relative;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 14px;
   font-size: 13px;
-  padding: 9px 14px;
   font-weight: 450;
+  transition:
+    background 180ms var(--ease),
+    color 180ms var(--ease),
+    transform 180ms var(--ease);
 }
 .slick-codepace .header nav button > svg {
-  width: 17px;
-  height: 17px;
+  width: 19px;
+  height: 19px;
+}
+.slick-codepace .header nav button:hover,
+.slick-codepace .header nav button:focus-visible {
+  transform: translateY(-1px);
 }
 .slick-codepace .header nav .nav-active {
   background: #a0b9eb12;
   box-shadow: none;
   color: var(--ink);
+}
+.slick-codepace .header nav .nav-label {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-4px, -50%);
+  transition:
+    opacity 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+.slick-codepace .header nav button:hover .nav-label,
+.slick-codepace .header nav button:focus-visible .nav-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+.slick-codepace .main {
+  padding-left: 0;
+}
+.slick-codepace .field-wait {
+  margin: 16px 28px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.slick-codepace.banned-session {
+  padding-left: 0;
 }
 .slick-codepace .header-tools {
   justify-self: end;
@@ -651,22 +714,15 @@
     padding-inline: 4%;
     gap: 20px;
   }
-  .slick-codepace .header nav button {
-    padding-inline: 10px;
-  }
   .slick-codepace .main {
     width: 88%;
+    padding-left: 20px;
   }
 }
 
 @media (max-width: 960px) {
   .slick-codepace .header {
     grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .slick-codepace .header nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: center;
   }
 }
 
@@ -703,18 +759,36 @@
     height: 44px;
   }
   .slick-codepace .header nav {
-    order: 2;
-    width: 100%;
-    flex-basis: 100%;
+    left: 50%;
+    top: auto;
+    bottom: 18px;
+    flex-direction: row;
+    width: auto;
+    flex-basis: auto;
     justify-content: center;
-    gap: 8px;
+    transform: translateX(-50%);
   }
   .slick-codepace .header nav button {
-    flex: 1;
-    justify-content: center;
-    padding: 10px 6px;
-    min-height: 44px;
-    font-size: 12px;
+    flex: 0 0 auto;
+    width: 44px;
+    padding: 0;
+  }
+  .slick-codepace .header nav .nav-label {
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 8px);
+    transform: translate(-50%, 4px);
+  }
+  .slick-codepace .header nav button:hover .nav-label,
+  .slick-codepace .header nav button:focus-visible .nav-label {
+    transform: translate(-50%, 0);
+  }
+  .slick-codepace {
+    padding-left: 0;
+  }
+  .slick-codepace .main {
+    padding-left: 0;
+    padding-bottom: 72px;
   }
   .slick-codepace .main {
     width: 90%;

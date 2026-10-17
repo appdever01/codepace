@@ -82,6 +82,13 @@ import { makePassage } from "@/lib/passages";
 import type { RoomSession, RoomSnapshot } from "@/lib/room-types";
 import { ROOM_CAPACITY } from "@/lib/room-limits";
 import { readSavedValue, removeSavedValue } from "@/lib/storage";
+import {
+  BAN_MESSAGE,
+  destroyLocalPlay,
+  isBanned,
+  isImpossibleProgress,
+  MAX_FAIR_WPM,
+} from "@/lib/fair-play";
 
 type Tab = "code" | "race" | "practice" | "friends" | "progress";
 type Phase = "ready" | "countdown" | "running" | "finished";
@@ -159,6 +166,7 @@ export default function CodePace({
   const [connection, setConnection] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   const [storageWorks, setStorageWorks] = useState(true);
+  const [banned, setBanned] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const passageBox = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -203,6 +211,18 @@ export default function CodePace({
     seqRef.current = 0;
     if (passageBox.current) passageBox.current.scrollTop = 0;
   }, []);
+  const punishCheat = useCallback(() => {
+    destroyLocalPlay(localStorage, sessionStorage);
+    setBanned(true);
+    setSession(null);
+    setRoom(null);
+    setHistory([]);
+    setResult(null);
+    snapshotRef.current = null;
+    sessionRef.current = null;
+    changePhase("ready");
+    clearEngine();
+  }, [changePhase, clearEngine]);
   const codingStorageError = useCallback(() => setStorageWorks(false), []);
   const selectCodeExercise = useCallback(
     (exercise: CodeExercise | null) => {
@@ -222,6 +242,10 @@ export default function CodePace({
       savedRef.current = true;
       const config = configRef.current;
       const current = stats(engineRef.current, passageRef.current, time);
+      if (isImpossibleProgress(current.correct, time)) {
+        punishCheat();
+        return;
+      }
       const joined = sessionRef.current;
       const completed: RaceResult = {
         id: joined
@@ -265,7 +289,7 @@ export default function CodePace({
             : [completed, ...previous].slice(0, 100),
         );
     },
-    [changePhase],
+    [changePhase, punishCheat],
   );
   const acceptRoom = useCallback(
     (snapshot: RoomSnapshot, sentAt: number) => {
@@ -316,6 +340,11 @@ export default function CodePace({
     const load = async () => {
       await Promise.resolve();
       try {
+        if (isBanned(localStorage)) {
+          setBanned(true);
+          setHydrated(true);
+          return;
+        }
         setHistory(
           readHistory(readSavedValue(localStorage, "codepace:history")),
         );
@@ -384,10 +413,16 @@ export default function CodePace({
             if (!mounted) return;
             if (
               error instanceof RequestError &&
-              [400, 401, 404].includes(error.status)
+              [400, 401, 403, 404].includes(error.status)
             ) {
               removeSavedValue(sessionStorage, "codepace:room");
-              setRoomError(error.message);
+              if (
+                error instanceof RequestError &&
+                error.status === 403 &&
+                error.message === BAN_MESSAGE
+              )
+                punishCheat();
+              else setRoomError(error.message);
             }
           } finally {
             if (mounted) setPending(false);
@@ -403,7 +438,7 @@ export default function CodePace({
       mounted = false;
       controller.abort();
     };
-  }, [acceptRoom]);
+  }, [acceptRoom, punishCheat]);
   useEffect(() => {
     if (!hydrated) return;
     try {
@@ -481,6 +516,9 @@ export default function CodePace({
           setRoom(null);
           changePhase("ready");
           clearEngine();
+        } else if (error instanceof RequestError && error.status === 403) {
+          if (error.message === BAN_MESSAGE) punishCheat();
+          else notify(error.message);
         } else if (error instanceof RequestError && error.status === 400)
           notify(error.message);
       },
@@ -490,7 +528,7 @@ export default function CodePace({
       synchronizer.stop();
       roomSyncRef.current = null;
     };
-  }, [session, acceptRoom, changePhase, clearEngine, notify]);
+  }, [session, acceptRoom, changePhase, clearEngine, notify, punishCheat]);
   useEffect(() => {
     const timer = setInterval(() => {
       const currentPhase = phaseRef.current;
@@ -513,7 +551,7 @@ export default function CodePace({
         );
         secondRef.current = second;
       }
-      if (time >= limit) finish(limit);
+      if (time >= limit && !sessionRef.current) finish(limit);
     }, 100);
     return () => clearInterval(timer);
   }, [changePhase, finish]);
@@ -627,7 +665,17 @@ export default function CodePace({
       oscillator.start();
       oscillator.stop(context.currentTime + 0.04);
     }
-    if (next.typed === passage) finish(time);
+    if (isImpossibleProgress(stats(next, passage, time).correct, time)) {
+      punishCheat();
+      return;
+    }
+    if (next.typed === passage) {
+      if (sessionRef.current) {
+        roomSyncRef.current?.push();
+        return;
+      }
+      finish(time);
+    }
   }
   function navigate(next: Tab) {
     if (session && next !== "friends") {
@@ -676,9 +724,16 @@ export default function CodePace({
       url.searchParams.set("room", data.session.code);
       window.history.replaceState(null, "", url);
     } catch (error) {
-      setRoomError(
-        error instanceof Error ? error.message : "Could not join the room.",
-      );
+      if (
+        error instanceof RequestError &&
+        error.status === 403 &&
+        error.message === BAN_MESSAGE
+      )
+        punishCheat();
+      else
+        setRoomError(
+          error instanceof Error ? error.message : "Could not join the room.",
+        );
     } finally {
       setPending(false);
     }
@@ -1015,6 +1070,17 @@ export default function CodePace({
                 event.preventDefault();
                 notify("Type each character to keep the race fair.");
               }}
+              onBeforeInput={(event) => {
+                const type = event.nativeEvent.inputType;
+                if (
+                  type === "insertFromPaste" ||
+                  type === "insertFromDrop" ||
+                  type === "insertReplacementText"
+                ) {
+                  event.preventDefault();
+                  notify("Type each character to keep the race fair.");
+                }
+              }}
               onDrop={(event) => event.preventDefault()}
               onKeyDown={(event) => {
                 if (
@@ -1055,6 +1121,15 @@ export default function CodePace({
                 <p>Hands on the keys.</p>
               </div>
             )}
+            {room &&
+              phase === "running" &&
+              passage.length > 0 &&
+              engine.typed === passage && (
+                <p className="field-wait" role="status">
+                  You finished. The race stays open until the last racer is
+                  done.
+                </p>
+              )}
             {phase === "running" && !focused && (
               <button
                 className="focus-prompt"
@@ -1168,6 +1243,32 @@ export default function CodePace({
     </section>
   );
 
+  if (banned) {
+    return (
+      <div className="app slick-codepace banned-session">
+        <header className="header">
+          <span className="brand">
+            <span className="brand-mark" aria-hidden="true">
+              <BoltIcon />
+            </span>
+            codepace<span className="brand-period">.</span>
+          </span>
+        </header>
+        <main id="main" className="main">
+          <div className="page-heading">
+            <div>
+              <h1>This session was removed.</h1>
+              <p>
+                Speeds of {MAX_FAIR_WPM} wpm or more are treated as automated typing.
+                Local results were cleared and this browser cannot join rooms.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`app slick-codepace view-${tab} ${zen ? "zen" : ""} phase-${phase}`}
@@ -1210,9 +1311,11 @@ export default function CodePace({
               className={tab === value ? "nav-active" : ""}
               onClick={() => navigate(value)}
               aria-current={tab === value ? "page" : undefined}
+              aria-label={label}
+              title={label}
             >
               <Icon />
-              <span>{label}</span>
+              <span className="nav-label">{label}</span>
             </button>
           ))}
         </nav>

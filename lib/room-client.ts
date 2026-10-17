@@ -199,7 +199,7 @@ export async function restoreRoom(
       if (
         signal.aborted ||
         (error instanceof RequestError &&
-          [400, 401, 404].includes(error.status))
+          [400, 401, 403, 404].includes(error.status))
       )
         throw error;
       onRetry();
