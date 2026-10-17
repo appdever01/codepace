@@ -479,10 +479,10 @@
 .slick-codepace .track-drawer > summary {
   list-style: none;
   cursor: pointer;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   min-height: 28px;
   padding: 4px 10px;
   font-size: 11px;
@@ -497,6 +497,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.slick-codepace .track-drawer > summary > span:last-of-type {
+  justify-self: end;
+}
+.slick-codepace .track-drawer > summary > .live-stats {
+  width: auto;
+  gap: 16px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span + span::before {
+  display: none;
+}
+.slick-codepace .track-drawer > summary > .live-stats b {
+  font-size: 13px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span > span {
+  font-size: 8px;
 }
 .slick-codepace .track-drawer > summary svg {
   width: 14px;

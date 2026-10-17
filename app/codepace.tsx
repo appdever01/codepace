@@ -1270,6 +1270,7 @@ export default function CodePace({
                             ? "Your lane"
                             : "Race grid"}
                       </span>
+                      {liveStats}
                       <span>
                         {racers.length}{" "}
                         {racers.length === 1 ? "racer" : "racers"}
@@ -1280,31 +1281,6 @@ export default function CodePace({
                       </span>
                     </summary>
                     <section className="track-panel" aria-label="Race progress">
-                      <div className="track-heading">
-                        <h2>
-                          {room
-                            ? "Starting grid"
-                            : tab === "practice" || isCoding
-                              ? "Your lane"
-                              : "Meet your competition"}
-                        </h2>
-                        <span className="track-status">
-                          <span
-                            className={`tiny-dot ${phase === "running" ? "active-dot" : ""}`}
-                          />
-                          {phase === "running"
-                            ? "Race in progress"
-                            : phase === "countdown"
-                              ? "Starting…"
-                              : phase === "finished"
-                                ? "Finish line"
-                                : room
-                                  ? "Waiting for racers"
-                                  : tab === "race"
-                                    ? "You + 3 pace bots"
-                                    : "Just you, no pressure"}
-                        </span>
-                      </div>
                       <div
                         className={`lanes ${largeRoom ? "room-lanes" : ""}`}
                         role={largeRoom ? "region" : undefined}
