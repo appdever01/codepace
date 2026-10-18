@@ -475,7 +475,7 @@ kbd {
   font-size: 11px;
 }
 .live-stats b {
-  font: 500 20px var(--display);
+  font: 500 16px var(--display);
   color: var(--ink);
   margin-right: 3px;
   font-variant-numeric: tabular-nums;
@@ -865,10 +865,12 @@ kbd {
 .finish-flag {
   position: absolute;
   right: 4px;
-  top: 6px;
-  width: 16px;
-  height: 16px;
-  color: var(--muted);
+  top: 12px;
+  width: 22px;
+  height: 15px;
+  color: unset;
+  filter: drop-shadow(0 1px 1px #0006);
+  pointer-events: none;
 }
 .lane-speed {
   text-align: right;
@@ -1993,10 +1995,10 @@ td {
     height: 27px;
   }
   .finish-flag {
-    height: 13px;
-    width: 13px;
+    height: 12px;
+    width: 18px;
     right: 3px;
-    top: 6px;
+    top: 14px;
   }
   .pace-select {
     font-size: 10px;

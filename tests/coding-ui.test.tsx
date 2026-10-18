@@ -95,6 +95,7 @@ test("Rust Two Sum accepts Enter on blank lines without typing invisible indenta
     fireEvent.keyDown(input, { key: "Tab" });
     assert.equal(input.value.endsWith("\n        "), true);
     assert.equal(document.querySelectorAll(".wrong-char").length, 0);
+    await tick(120000);
     fireEvent.change(input, { target: { value: target() } });
     await waitFor(() =>
       assert.ok(screen.getByText("Code typed. Nicely done.")),
@@ -215,7 +216,7 @@ test("filter real LeetCode solutions, save completion and distinguish timed part
     fireEvent.click(
       screen.getByRole("button", { name: /Start coding practice/ }),
     );
-    await tick(3100);
+    await tick(123100);
     fireEvent.change(
       screen.getByRole("textbox", { name: /^Type this passage:/ }),
       { target: { value: text } },

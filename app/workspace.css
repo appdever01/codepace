@@ -1,42 +1,14 @@
 .slick-codepace .header {
   padding: 20px 4%;
   gap: 20px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 .slick-codepace .brand {
   font-size: 24px;
   letter-spacing: -0.035em;
 }
-.slick-codepace .header nav {
-  justify-self: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-}
-.slick-codepace .header nav button {
-  padding: 9px 14px;
-  min-height: 40px;
-  font-size: 14px;
-  border-radius: 999px;
-}
 .slick-codepace .header nav button:hover {
   background: var(--surface-raised);
-}
-.slick-codepace .header nav .nav-active {
-  background: var(--surface-hover);
-}
-@media (max-width: 480px) {
-  .slick-codepace .header nav button {
-    flex: 1 1 0;
-    min-width: 0;
-    gap: 0;
-    padding-inline: 4px;
-  }
-  .slick-codepace .header nav button > svg {
-    display: none;
-  }
 }
 .slick-codepace .header-tools {
   gap: 6px;
@@ -88,10 +60,6 @@
 @media (max-width: 1100px) {
   .slick-codepace .header {
     grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .slick-codepace .header nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
   }
 }
 .slick-codepace .header-tools > .icon-button,
@@ -275,23 +243,23 @@
   background: var(--surface);
 }
 .slick-codepace .live-stats {
-  width: min(100%, 540px);
+  width: min(100%, 360px);
 }
 .slick-codepace .live-stats b {
-  font-size: 34px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: -0.04em;
 }
 .slick-codepace .live-stats > span {
-  gap: 5px;
+  gap: 2px;
 }
 .slick-codepace .live-stats > span > span {
-  font-size: 12px;
+  font-size: 8px;
   letter-spacing: 0;
 }
 .slick-codepace .live-stats > span + span::before {
-  top: 5px;
-  height: 32px;
+  top: 3px;
+  height: 18px;
 }
 .slick-codepace .play-hud {
   margin: 28px 0 18px;
@@ -344,14 +312,15 @@
   box-shadow: 0 3px 1px #b8912e, 0 5px 9px #0003;
 }
 .slick-codepace .track-drawer {
-  padding-top: 18px;
+  padding-top: 0;
   margin-top: 0;
+  margin-bottom: 12px;
 }
 .slick-codepace .track-drawer > summary {
   border: 0;
   background: var(--surface);
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 11px;
 }
 .slick-codepace .track-drawer[open] > summary {
   border-radius: 20px 20px 0 0;
@@ -359,8 +328,8 @@
 .slick-codepace .track-panel {
   margin-top: 0;
   border: 0;
-  border-radius: 0 0 20px 20px;
-  padding: 20px 24px;
+  border-radius: 0 0 12px 12px;
+  padding: 8px 12px 10px;
 }
 .slick-codepace .lane {
   min-height: 56px;
@@ -589,13 +558,7 @@
     height: 44px;
   }
   .slick-codepace .header nav {
-    gap: 4px;
-  }
-  .slick-codepace .header nav button {
-    font-size: 12px;
-    min-height: 44px;
-    padding: 10px 4px;
-    gap: 5px;
+    gap: 6px;
   }
   .slick-codepace .main {
     margin-top: 18px;
@@ -611,7 +574,7 @@
     padding: 22px 18px 0;
   }
   .slick-codepace .live-stats b {
-    font-size: 28px;
+    font-size: 15px;
   }
   .slick-codepace .typing-surface {
     height: 205px;

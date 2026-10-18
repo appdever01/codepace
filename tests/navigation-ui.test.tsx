@@ -24,7 +24,7 @@ test("Code is the first navigation item, opens by default and is the home destin
     assert.deepEqual(
       within(navigation)
         .getAllByRole("button")
-        .map((button) => button.textContent),
+        .map((button) => button.getAttribute("aria-label")),
       ["Code", "Race", "Practice", "Friends", "Progress"],
     );
     assert.equal(

@@ -188,21 +188,57 @@ try {
     3,
   );
   await sleep(Math.max(0, started.startAt + 15100 - Date.now()));
-  assert.equal((await request(guest)).room.phase, "finished");
-  const next = await request(host, { action: "rematch", round: 1 });
+  assert.equal((await request(guest)).room.phase, "running");
+  await request(host, { action: "rematch", round: 1 }, 409);
+  const short = await request(
+    null,
+    {
+      name: "Short host",
+      duration: 15,
+      content: content("python"),
+    },
+    201,
+  );
+  const shortGuest = (
+    await request(short.session, { action: "join", name: "Short guest" }, 201)
+  ).session;
+  const shortStart = await request(short.session, {
+    action: "start",
+    round: 1,
+  });
+  await sleep(Math.max(0, shortStart.room.startAt + 19000 - Date.now()));
+  const shortPassage = shortStart.room.passage;
+  await request(short.session, {
+    action: "sync",
+    round: 1,
+    seq: 1,
+    typed: shortPassage,
+    strokes: shortPassage.length,
+    errors: 0,
+  });
+  const closed = await request(shortGuest, {
+    action: "sync",
+    round: 1,
+    seq: 1,
+    typed: shortPassage,
+    strokes: shortPassage.length,
+    errors: 0,
+  });
+  assert.equal(closed.room.phase, "finished");
+  const next = await request(short.session, { action: "rematch", round: 1 });
   assert.equal(next.room.round, 2);
-  assert.equal(next.room.passage, fullCode);
-  assert.deepEqual(next.room.content, content("javascript", longestId));
+  assert.equal(next.room.passage, shortPassage);
+  assert.deepEqual(next.room.content, content("python"));
   assert.equal(next.room.scheduledAt, null);
-  assert.equal((await request(host)).self.typed, "");
-  const ordinary = await request(host, {
+  assert.equal((await request(short.session)).self.typed, "");
+  const ordinary = await request(short.session, {
     action: "configure",
     round: 2,
     duration: 15,
     content: { mode: "code", language: "python", snippet: 1 },
   });
   assert.equal(ordinary.room.content.problemId, undefined);
-  assert.notEqual(ordinary.room.passage, fullCode);
+  assert.notEqual(ordinary.room.passage, shortPassage);
   console.log(
     `Passed ${checks} HTTP checks across seven languages, scheduled start, long input, shared progress and rematch.`,
   );

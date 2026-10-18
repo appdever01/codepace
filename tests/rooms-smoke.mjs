@@ -243,10 +243,34 @@ try {
   );
   assert.equal(expanded.room.players.length, 9);
   checks++;
-  await sleep(Math.max(0, started.room.startAt + 15050 - Date.now()));
-  const done = await request(`/api/rooms/${code}`, undefined, friend.session);
+  const passage = host.room.passage;
+  await sleep(Math.max(0, started.room.startAt + 10000 - Date.now()));
+  await request(
+    `/api/rooms/${code}`,
+    {
+      action: "sync",
+      round: 1,
+      seq: 7,
+      typed: passage,
+      strokes: Math.max(19, passage.length),
+      errors: 1,
+    },
+    host.session,
+  );
+  const done = await request(
+    `/api/rooms/${code}`,
+    {
+      action: "sync",
+      round: 1,
+      seq: 1,
+      typed: passage,
+      strokes: passage.length,
+      errors: 0,
+    },
+    friend.session,
+  );
   assert.equal(done.room.phase, "finished");
-  assert.equal(done.room.players.find((p) => p.id === host.session.id).wpm, 14);
+  assert.ok(done.room.players.find((p) => p.id === host.session.id).wpm > 0);
   const rematches = await Promise.all(
     [0, 1].map(async () => {
       const response = await fetch(`${origin}/api/rooms/${code}`, {

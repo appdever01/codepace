@@ -107,8 +107,20 @@ try {
     typing.room.players.find((player) => player.id === guest.id).correct,
     3,
   );
-  await sleep(Math.max(0, typing.room.startAt + 15100 - typing.room.serverNow));
-  assert.equal((await request(guest)).room.phase, "finished");
+  await sleep(Math.max(0, typing.room.startAt + 10000 - typing.room.serverNow));
+  const finish = (session, seq) =>
+    request(session, {
+      action: "sync",
+      round: 1,
+      seq,
+      typed: room.passage,
+      strokes: room.passage.length,
+      errors: 0,
+    });
+  await finish(guest, 2);
+  await finish(peer, 1);
+  await finish(late, 1);
+  assert.equal((await finish(host, 1)).room.phase, "finished");
   const rematch = await request(host, { action: "rematch", round: 1 });
   assert.equal(rematch.room.phase, "lobby");
   assert.equal(rematch.room.scheduledAt, null);

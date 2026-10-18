@@ -2,6 +2,7 @@
   position: relative;
   isolation: isolate;
   background: transparent;
+  padding-left: 80px;
 }
 
 .slick-codepace::before {
@@ -24,7 +25,7 @@
   width: 100%;
   max-width: none;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   padding: 28px 4.5%;
   gap: 32px;
   background: transparent;
@@ -54,25 +55,84 @@
   height: 28px;
 }
 .slick-codepace .header nav {
-  background: transparent;
-  padding: 0;
-  gap: 6px;
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-self: auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: visible;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(16px);
+  transform: translateY(-50%);
+  transition:
+    transform 220ms var(--ease),
+    background 220ms var(--ease),
+    opacity 220ms var(--ease);
 }
 .slick-codepace .header nav button {
-  min-height: 42px;
-  border-radius: 10px;
+  position: relative;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 999px;
   font-size: 13px;
-  padding: 9px 14px;
   font-weight: 450;
+  transition:
+    background 180ms var(--ease),
+    color 180ms var(--ease);
 }
 .slick-codepace .header nav button > svg {
-  width: 17px;
-  height: 17px;
+  width: 19px;
+  height: 19px;
 }
 .slick-codepace .header nav .nav-active {
   background: #a0b9eb12;
   box-shadow: none;
   color: var(--ink);
+}
+.slick-codepace .header nav .nav-label {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-4px, -50%);
+  transition:
+    opacity 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+.slick-codepace .header nav button:hover .nav-label,
+.slick-codepace .header nav button:focus-visible .nav-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+.slick-codepace .main {
+  padding-left: 0;
+}
+.slick-codepace .field-wait {
+  margin: 16px 28px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.slick-codepace.banned-session {
+  padding-left: 0;
 }
 .slick-codepace .header-tools {
   justify-self: end;
@@ -182,7 +242,7 @@
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
-  padding-top: clamp(36px, 6svh, 76px);
+  padding-top: clamp(16px, 3svh, 28px);
 }
 .slick-codepace .arena:focus-within,
 .slick-codepace .arena:has(.has-error) {
@@ -194,7 +254,7 @@
 }
 .slick-codepace .live-stats {
   gap: 0;
-  width: min(100%, 680px);
+  width: min(100%, 360px);
   justify-content: center;
 }
 .slick-codepace .live-stats > span {
@@ -202,7 +262,7 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
   min-width: 0;
   position: relative;
 }
@@ -210,32 +270,32 @@
   content: "";
   position: absolute;
   left: 0;
-  top: 10px;
-  height: 38px;
+  top: 3px;
+  height: 18px;
   width: 1px;
   background: var(--line);
 }
 .slick-codepace .live-stats b {
-  font: 400 clamp(30px, 3.1vw, 40px)/1.1 var(--mono);
+  font: 400 16px/1.1 var(--mono);
   margin: 0;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   color: var(--ink);
 }
 .slick-codepace .live-stats > span:last-child b {
   color: var(--ink);
 }
 .slick-codepace .live-stats small {
-  font-size: 0.74em;
+  font-size: 0.7em;
 }
 .slick-codepace .live-stats > span > span {
-  font-size: 11px;
+  font-size: 8px;
   color: var(--muted);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .slick-codepace .play-hud {
   padding: 0;
-  margin: clamp(40px, 7svh, 80px) 0 22px;
+  margin: 18px 0 14px;
   gap: 16px;
   min-height: 24px;
 }
@@ -411,22 +471,23 @@
   font-size: 13px;
 }
 .slick-codepace .track-drawer {
-  margin-top: auto;
+  margin-top: 0;
+  margin-bottom: 8px;
   width: 100%;
-  padding-top: 16px;
+  padding-top: 0;
 }
 .slick-codepace .track-drawer > summary {
   list-style: none;
   cursor: pointer;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 48px;
-  padding: 12px 16px;
-  font-size: 12px;
+  gap: 12px;
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 11px;
   color: var(--muted);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #a0b9eb0a;
 }
 .slick-codepace .track-drawer > summary::-webkit-details-marker {
@@ -437,9 +498,31 @@
   align-items: center;
   gap: 10px;
 }
+.slick-codepace .track-drawer > summary > span:last-of-type {
+  justify-self: end;
+}
+.slick-codepace .track-drawer > summary > .live-stats {
+  width: auto;
+  gap: 20px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span + span::before {
+  display: none;
+}
+.slick-codepace .track-drawer > summary > .live-stats b {
+  font-size: 16px;
+}
+.slick-codepace .track-drawer > summary > .live-stats > span > span {
+  font-size: 10px;
+}
 .slick-codepace .track-drawer > summary svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   color: var(--accent);
 }
 .slick-codepace .track-drawer > summary:focus-visible {
@@ -448,8 +531,8 @@
 }
 .slick-codepace .grid-toggle {
   color: var(--ink);
-  margin-left: 12px;
-  font-size: 11px;
+  margin-left: 8px;
+  font-size: 10px;
 }
 .slick-codepace .grid-hide-label,
 .slick-codepace .track-drawer[open] .grid-show-label {
@@ -459,18 +542,21 @@
   display: inline;
 }
 .slick-codepace .track-panel {
-  margin-top: 8px;
-  padding: 20px 24px;
-  border-radius: 18px;
+  margin-top: 4px;
+  padding: 8px 12px 10px;
+  border-radius: 12px;
   background: var(--surface);
   box-shadow: none;
 }
+.slick-codepace .track-heading {
+  margin-bottom: 4px;
+}
 .slick-codepace .track-heading h2 {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 12px;
 }
 .slick-codepace .track-status {
-  font-size: 11px;
+  font-size: 9px;
 }
 .slick-codepace .lane {
   grid-template-columns: 150px minmax(68px, 1fr) 65px;
@@ -651,22 +737,15 @@
     padding-inline: 4%;
     gap: 20px;
   }
-  .slick-codepace .header nav button {
-    padding-inline: 10px;
-  }
   .slick-codepace .main {
     width: 88%;
+    padding-left: 20px;
   }
 }
 
 @media (max-width: 960px) {
   .slick-codepace .header {
     grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .slick-codepace .header nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: center;
   }
 }
 
@@ -703,18 +782,36 @@
     height: 44px;
   }
   .slick-codepace .header nav {
-    order: 2;
-    width: 100%;
-    flex-basis: 100%;
+    left: 50%;
+    top: auto;
+    bottom: 18px;
+    flex-direction: row;
+    width: auto;
+    flex-basis: auto;
     justify-content: center;
-    gap: 8px;
+    transform: translateX(-50%);
   }
   .slick-codepace .header nav button {
-    flex: 1;
-    justify-content: center;
-    padding: 10px 6px;
-    min-height: 44px;
-    font-size: 12px;
+    flex: 0 0 auto;
+    width: 44px;
+    padding: 0;
+  }
+  .slick-codepace .header nav .nav-label {
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 8px);
+    transform: translate(-50%, 4px);
+  }
+  .slick-codepace .header nav button:hover .nav-label,
+  .slick-codepace .header nav button:focus-visible .nav-label {
+    transform: translate(-50%, 0);
+  }
+  .slick-codepace {
+    padding-left: 0;
+  }
+  .slick-codepace .main {
+    padding-left: 0;
+    padding-bottom: 72px;
   }
   .slick-codepace .main {
     width: 90%;
@@ -745,21 +842,21 @@
     font-size: 12px;
   }
   .slick-codepace .arena {
-    padding-top: 32px;
+    padding-top: 16px;
   }
   .slick-codepace .live-stats {
-    max-width: 480px;
+    max-width: 320px;
   }
   .slick-codepace .live-stats b {
-    font-size: 30px;
+    font-size: 15px;
   }
   .slick-codepace .live-stats > span > span {
-    font-size: 9px;
-    letter-spacing: 0.12em;
+    font-size: 8px;
+    letter-spacing: 0.1em;
   }
   .slick-codepace .live-stats > span + span::before {
-    height: 30px;
-    top: 8px;
+    height: 16px;
+    top: 2px;
   }
   .slick-codepace .play-hud {
     margin-top: 38px;
@@ -818,14 +915,14 @@
     font-size: 9px;
   }
   .slick-codepace .track-drawer {
-    padding-top: 12px;
+    padding-top: 4px;
   }
   .slick-codepace .track-drawer > summary {
-    min-height: 48px;
-    padding-inline: 12px;
+    min-height: 32px;
+    padding-inline: 10px;
   }
   .slick-codepace .track-panel {
-    padding: 20px 16px;
+    padding: 8px 12px;
   }
   .slick-codepace .track-status {
     font-size: 9px;
@@ -896,10 +993,10 @@
     margin-top: 16px;
   }
   .slick-codepace .arena {
-    padding-top: 32px;
+    padding-top: 16px;
   }
   .slick-codepace .play-hud {
-    margin-top: 36px;
+    margin-top: 16px;
   }
   .slick-codepace .typing-surface {
     height: 154px;
